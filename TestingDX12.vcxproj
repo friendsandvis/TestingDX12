@@ -139,10 +139,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DX12Manager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="windmaker.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DX12Manager.h" />
+    <ClInclude Include="DXUtils.h" />
     <ClInclude Include="Renderable.h" />
     <ClInclude Include="windmaker.h" />
   </ItemGroup>
