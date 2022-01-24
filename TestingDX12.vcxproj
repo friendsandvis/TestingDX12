@@ -72,6 +72,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>D:\Developenment\TestingDX12\Includes\directx;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\Developenment\TestingDX12\Libraries;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -139,14 +141,30 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DX12ApplicationManager.cpp" />
+    <ClCompile Include="DX12Buffer.cpp" />
+    <ClCompile Include="DX12CommandQueue.cpp" />
+    <ClCompile Include="DX12DESCHEAP.cpp" />
     <ClCompile Include="DX12Manager.cpp" />
+    <ClCompile Include="DX12PSO.cpp" />
+    <ClCompile Include="DX12Swapchain.cpp" />
+    <ClCompile Include="DXUtils.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ShaderManager.cpp" />
     <ClCompile Include="windmaker.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DX12ApplicationManager.h" />
+    <ClInclude Include="DX12Buffer.h" />
+    <ClInclude Include="DX12CommandQueue.h" />
+    <ClInclude Include="DX12DESCHEAP.h" />
     <ClInclude Include="DX12Manager.h" />
+    <ClInclude Include="DX12PSO.h" />
+    <ClInclude Include="DX12Resource.h" />
+    <ClInclude Include="DX12Swapchain.h" />
     <ClInclude Include="DXUtils.h" />
     <ClInclude Include="Renderable.h" />
+    <ClInclude Include="ShaderManager.h" />
     <ClInclude Include="windmaker.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
