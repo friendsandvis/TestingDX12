@@ -23,6 +23,8 @@ private:
 	DX12Swapchain m_swapchain;
 	DX12DESCHEAP m_rtvdescheap;
 	DX12PSO m_basicpso;
+	ComPtr<ID3DBlob> m_emptyrootsignatureblob,m_rootsignatureerrors;
+	ComPtr<ID3D12RootSignature> m_emptyrootsignature;
 };
 
 
