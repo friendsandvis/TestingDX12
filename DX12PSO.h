@@ -29,6 +29,8 @@ public:
 	DX12PSO();
 	~DX12PSO();
 
+	inline ID3D12PipelineState* GetPSO() { return m_pso.Get(); }
+
 	void Init(ComPtr< ID3D12Device> creationdevice,PSOInitData initdata);
 
 private:

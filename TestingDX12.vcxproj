@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -143,6 +143,7 @@
   <ItemGroup>
     <ClCompile Include="DX12ApplicationManager.cpp" />
     <ClCompile Include="DX12Buffer.cpp" />
+    <ClCompile Include="DX12Commandlist.cpp" />
     <ClCompile Include="DX12CommandQueue.cpp" />
     <ClCompile Include="DX12DESCHEAP.cpp" />
     <ClCompile Include="DX12Manager.cpp" />
@@ -156,6 +157,7 @@
   <ItemGroup>
     <ClInclude Include="DX12ApplicationManager.h" />
     <ClInclude Include="DX12Buffer.h" />
+    <ClInclude Include="DX12CommandList.h" />
     <ClInclude Include="DX12CommandQueue.h" />
     <ClInclude Include="DX12DESCHEAP.h" />
     <ClInclude Include="DX12Manager.h" />

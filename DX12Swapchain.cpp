@@ -18,6 +18,11 @@ UINT DX12Swapchain::UpdateandGetCurrentbackbufferIndex()
 	return m_currentbackbufferindex;
 }
 
+void DX12Swapchain::UpdatebackbufferIndex()
+{
+	m_currentbackbufferindex = m_swapchainv4->GetCurrentBackBufferIndex();
+}
+
 void DX12Swapchain::InitBackBufferRTV(ComPtr< ID3D12Device> creationdevice, DX12DESCHEAP& rtvdescheap)
 {
 	
@@ -35,6 +40,7 @@ void DX12Swapchain::InitBackBufferRTV(ComPtr< ID3D12Device> creationdevice, DX12
 
 void DX12Swapchain::Init(ComPtr<IDXGIFactory2> factory, unsigned width, unsigned height, HWND hwnd, ComPtr<ID3D12CommandQueue> creationqueue)
 {
+	
 	DXGI_SWAP_CHAIN_DESC1 swapchaindesc = {};
 	swapchaindesc.BufferCount = BACKBUFFERCOUNT;
 	swapchaindesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
@@ -60,5 +66,6 @@ void DX12Swapchain::RetiveBackBuffers()
 	for (size_t i = 0; i < BACKBUFFERCOUNT; i++)
 	{
 		DXASSERT(m_swapchain->GetBuffer(i, IID_PPV_ARGS(m_backbuffers[i].GetAddressOf())))
+			
 	}
 }

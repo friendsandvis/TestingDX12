@@ -17,7 +17,10 @@ void DX12ApplicationManager::Init(ComPtr< ID3D12Device> creationdevice)
 	mainqueuedesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
 
 	m_mainqueue.Init(mainqueuedesc, creationdevice);
+	m_syncunitprime.Init(m_creationdevice, 0);
 	InitBasicPSO();
+	m_primarycmdlist.Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
+	m_primarycmdlist.SetName(L"primarycmdlist");
 
 	
 }
@@ -143,7 +146,40 @@ void DX12ApplicationManager::InitBasicPSO()
 
 void DX12ApplicationManager::Render()
 {
+	{
+		m_primarycmdlist.Reset();
+		m_primarycmdlist.GetcmdList()->SetPipelineState(m_basicpso.GetPSO());
+		m_primarycmdlist.GetcmdList()->SetGraphicsRootSignature(m_emptyrootsignature.Get());
+		m_primarycmdlist.GetcmdList()->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
+
+		//transition backbuffer state
+		D3D12_RESOURCE_BARRIER backbufferbarrier = {};
+		backbufferbarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		backbufferbarrier.Transition.pResource = m_swapchain.GetBackBuffer(m_swapchain.GetCurrentbackbufferIndex());
+		backbufferbarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		backbufferbarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+		backbufferbarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		m_primarycmdlist.GetcmdList()->ResourceBarrier(1, &backbufferbarrier);
+		m_primarycmdlist.GetcmdList()->OMSetRenderTargets(1,&rtvhandle, FALSE, nullptr);
+		float rtclearcolour[4] = {1.0f,1.0f,1.0f,1.0f};
+		m_primarycmdlist.GetcmdList()->ClearRenderTargetView(rtvhandle, rtclearcolour, 0, nullptr);
 	
+		backbufferbarrier.Transition.StateBefore =D3D12_RESOURCE_STATE_RENDER_TARGET;
+		backbufferbarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+		m_primarycmdlist.GetcmdList()->ResourceBarrier(1, &backbufferbarrier);
+		DXASSERT(m_primarycmdlist.GetcmdList()->Close())
+	}
+	std::vector<ID3D12CommandList*> commandliststoexecute;
+	commandliststoexecute.push_back(m_primarycmdlist.GetcmdList());
+	m_mainqueue.GetQueue()->ExecuteCommandLists(commandliststoexecute.size(), commandliststoexecute.data());
+
+	UINT64 fencevalue= m_syncunitprime.GetCurrentValue();
+	fencevalue += 1;
+	m_syncunitprime.SignalFence(m_mainqueue.GetQueue(), fencevalue);
+	DXASSERT(m_swapchain.GetSwapchain()->Present(0, 0))
+	m_syncunitprime.WaitFence();
+	m_swapchain.UpdatebackbufferIndex();
 }
 
 void DX12ApplicationManager::Initswapchain(ComPtr<IDXGIFactory2> factory, unsigned width, unsigned height, HWND hwnd)
