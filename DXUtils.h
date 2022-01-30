@@ -14,7 +14,7 @@
 #define HARDWAREVENDORID 4318
 
 using namespace Microsoft::WRL;
-
+using namespace std;
 #define DXASSERT(EXP)	{HRESULT res = EXP; assert(res == S_OK);}
 
 

@@ -41,7 +41,8 @@ void DX12Manager::Init(bool enabledebuglayer, DX12ApplicationManager* targetappm
 
 	}
 	
-	DXASSERT(D3D12CreateDevice(m_hardwareadapter.Get(), D3D_FEATURE_LEVEL_12_0,IID_PPV_ARGS(m_maindevice.GetAddressOf())))
+	DXASSERT(D3D12CreateDevice(m_hardwareadapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(m_maindevice.GetAddressOf())))
+		m_maindevice->SetName(L"MainDevice");
 	
 		//initialize app manager
 		if (targetappmanager)

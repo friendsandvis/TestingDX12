@@ -3,7 +3,7 @@
 
 struct BufferCreationProperties
 {
-	CD3DX12_RESOURCE_DESC resdesc;
+	D3D12_RESOURCE_DESC resdesc;
 	D3D12_HEAP_PROPERTIES resheapprop;
 	D3D12_HEAP_FLAGS resheapflags;
 	D3D12_RESOURCE_STATES resinitialstate;
@@ -11,7 +11,7 @@ struct BufferCreationProperties
 
 };
 
-class DX12BUFFER:public DX12Resource
+class DX12Buffer:public DX12Resource
 {
 	
 public:

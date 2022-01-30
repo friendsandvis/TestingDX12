@@ -21,6 +21,7 @@ void DX12ApplicationManager::Init(ComPtr< ID3D12Device> creationdevice)
 	InitBasicPSO();
 	m_primarycmdlist.Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
 	m_primarycmdlist.SetName(L"primarycmdlist");
+	BasicModelManager::InitPlaneModel(creationdevice, m_planemodel);
 
 	
 }

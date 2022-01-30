@@ -4,6 +4,7 @@
 #include"DX12DESCHEAP.h"
 #include"DX12CommandList.h"
 #include"DX12PSO.h"
+#include"AssetManager.h"
 
 //maybe make it an abstract class to have application based psos
 class DX12ApplicationManager
@@ -28,6 +29,7 @@ private:
 	ComPtr<ID3DBlob> m_emptyrootsignatureblob,m_rootsignatureerrors;
 	ComPtr<ID3D12RootSignature> m_emptyrootsignature;
 	SyncronizationUnit m_syncunitprime;
+	Model m_planemodel;
 };
 
 

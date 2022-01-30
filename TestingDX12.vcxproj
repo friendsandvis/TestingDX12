@@ -141,6 +141,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AssetManager.cpp" />
     <ClCompile Include="DX12ApplicationManager.cpp" />
     <ClCompile Include="DX12Buffer.cpp" />
     <ClCompile Include="DX12Commandlist.cpp" />
@@ -155,6 +156,7 @@
     <ClCompile Include="windmaker.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AssetManager.h" />
     <ClInclude Include="DX12ApplicationManager.h" />
     <ClInclude Include="DX12Buffer.h" />
     <ClInclude Include="DX12CommandList.h" />
