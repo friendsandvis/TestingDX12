@@ -28,6 +28,7 @@ Model::~Model()
 
 void Model::InitVertexBuffer(ComPtr< ID3D12Device> creationdevice,vector<Vertex>& verticies)
 {
+
 	m_verticies = verticies;
 	BufferCreationProperties vbproperties;
 	vbproperties.resheapflags = D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE;
@@ -85,14 +86,13 @@ void Model::InitIndexBuffer(ComPtr< ID3D12Device> creationdevice,vector<unsigned
 
 
 
-	m_vertexbuffer.Init(creationdevice, ibproperties, ResourceCreationMode::COMMITED);
 
 }
 
 
 void BasicModelManager::InitPlaneModel(ComPtr< ID3D12Device> creationdevice, Model& planemodel)
 {
-	;
+	
 	planemodel.InitVertexBuffer(creationdevice, planeverticies);
 	planemodel.InitIndexBuffer(creationdevice, planeindicies);
 }
