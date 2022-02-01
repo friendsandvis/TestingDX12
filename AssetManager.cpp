@@ -52,8 +52,12 @@ void Model::InitVertexBuffer(ComPtr< ID3D12Device> creationdevice,vector<Vertex>
 	
 	
 
-
+	//prepare vbview as well
 	m_vertexbuffer.Init(creationdevice, vbproperties, ResourceCreationMode::COMMITED);
+	m_vertexbuffer.SetName(L"planeVB");
+	m_vertexbufferview.BufferLocation = m_vertexbuffer.GetResource()->GetGPUVirtualAddress();
+	m_vertexbufferview.SizeInBytes = m_vertexbuffer.GetSize();
+	m_vertexbufferview.StrideInBytes=sizeof(Vertex);
 
 
 
@@ -81,13 +85,54 @@ void Model::InitIndexBuffer(ComPtr< ID3D12Device> creationdevice,vector<unsigned
 	ibproperties.resdesc.SampleDesc.Quality = 0;
 	ibproperties.resdesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 	m_indexbuffer.Init(creationdevice, ibproperties, ResourceCreationMode::COMMITED);
+	m_indexbuffer.SetName(L"planeIB");
 	
-
+	//prepare index buffer view
+	m_indexbufferview.BufferLocation = m_indexbuffer.GetResource()->GetGPUVirtualAddress();
+	m_indexbufferview.SizeInBytes = m_indexbuffer.GetSize();
+	m_indexbufferview.Format = DXGI_FORMAT_R32_UINT;
 
 
 
 
 }
+
+void Model::UploadModelDatatoBuffers()
+{
+	//upload vertexdata
+	{
+		BufferMapParams vbmapparams = {};
+	vbmapparams.subresource = 0;
+	//not reading
+	vbmapparams.range.Begin = 0;
+	vbmapparams.range.End = 0;
+
+	void* vbmapped = m_vertexbuffer.Map(vbmapparams);
+	memcpy(vbmapped, m_verticies.data(), m_vertexbuffer.GetSize());
+	//written to full range
+	vbmapparams.range.End = m_vertexbuffer.GetSize();
+	m_vertexbuffer.UnMap(vbmapparams);
+
+	}
+
+	//upload indexdata
+	{
+		BufferMapParams ibmapparams = {};
+		ibmapparams.subresource = 0;
+		//not reading
+		ibmapparams.range.Begin = 0;
+		ibmapparams.range.End = 0;
+
+		void* ibmapped = m_indexbuffer.Map(ibmapparams);
+		memcpy(ibmapped, m_indicies.data(), m_indexbuffer.GetSize());
+		//written to full range
+		ibmapparams.range.End = m_indexbuffer.GetSize();
+		m_indexbuffer.UnMap(ibmapparams);
+
+	}
+}
+
+
 
 
 void BasicModelManager::InitPlaneModel(ComPtr< ID3D12Device> creationdevice, Model& planemodel)
@@ -95,4 +140,5 @@ void BasicModelManager::InitPlaneModel(ComPtr< ID3D12Device> creationdevice, Mod
 	
 	planemodel.InitVertexBuffer(creationdevice, planeverticies);
 	planemodel.InitIndexBuffer(creationdevice, planeindicies);
+	planemodel.UploadModelDatatoBuffers();
 }

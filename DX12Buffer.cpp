@@ -1,10 +1,23 @@
 #include"DX12Buffer.h"
 
 
+void* DX12Buffer::Map(BufferMapParams readparams)
+{
+	void* mappedbuffer=nullptr;
+	DXASSERT(m_resource->Map(readparams.subresource,&readparams.range,&mappedbuffer))
+	return mappedbuffer;
+}
+
+void DX12Buffer::UnMap(BufferMapParams writeparams)
+{
+	m_resource->Unmap(writeparams.subresource, &writeparams.range);
+}
+
 void DX12Buffer::Init(const ComPtr< ID3D12Device> creationdevice, BufferCreationProperties bufferresprop, ResourceCreationMode creationmode)
 {
 	m_properties = bufferresprop;
 	m_rescreationmode = creationmode;
+	m_is_uploadtype = (bufferresprop.resheapprop.Type== D3D12_HEAP_TYPE_UPLOAD);
 	
 
 	CreateBuffer(creationdevice);

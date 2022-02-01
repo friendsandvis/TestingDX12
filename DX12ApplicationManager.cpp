@@ -163,8 +163,34 @@ void DX12ApplicationManager::Render()
 		backbufferbarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 		m_primarycmdlist.GetcmdList()->ResourceBarrier(1, &backbufferbarrier);
 		m_primarycmdlist.GetcmdList()->OMSetRenderTargets(1,&rtvhandle, FALSE, nullptr);
+		{
+			D3D12_VIEWPORT aviewport = {};
+			aviewport.TopLeftX = 0;
+			aviewport.TopLeftY = 0;
+			aviewport.Width = 1280;
+			aviewport.Height = 720;
+			aviewport.MinDepth = 0.0f;
+			aviewport.MaxDepth = 1.0f;
+
+			D3D12_RECT ascissorrect = {};
+			ascissorrect.left = 0;
+			ascissorrect.top = 0;
+			ascissorrect.right = 1280;
+			ascissorrect.bottom = 720;
+
+			m_primarycmdlist.GetcmdList()->RSSetViewports(1, &aviewport);
+			m_primarycmdlist.GetcmdList()->RSSetScissorRects(1, &ascissorrect);
+		}
 		float rtclearcolour[4] = {1.0f,1.0f,1.0f,1.0f};
 		m_primarycmdlist.GetcmdList()->ClearRenderTargetView(rtvhandle, rtclearcolour, 0, nullptr);
+
+		{
+			D3D12_VERTEX_BUFFER_VIEW vbview= m_planemodel.GetVBView();
+			D3D12_INDEX_BUFFER_VIEW Ibview = m_planemodel.GetIBView();
+			m_primarycmdlist.GetcmdList()->IASetVertexBuffers(0, 1, &vbview);
+			m_primarycmdlist.GetcmdList()->IASetIndexBuffer(&Ibview);
+			m_primarycmdlist.GetcmdList()->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
+		}
 	
 		backbufferbarrier.Transition.StateBefore =D3D12_RESOURCE_STATE_RENDER_TARGET;
 		backbufferbarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
