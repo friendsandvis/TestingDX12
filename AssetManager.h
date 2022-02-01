@@ -11,10 +11,16 @@ struct Vertex
 	float V;
 };
 
+enum ModelDataUploadMode
+{
+	NOCOPY,
+	COPY
+};
+
 class Model
 {
 public:
-	Model();
+	Model(ModelDataUploadMode uploadmode=NOCOPY);
 	~Model();
 	void InitVertexBuffer(ComPtr< ID3D12Device> creationdevice,vector<Vertex>& verticies);
 	void InitIndexBuffer(ComPtr< ID3D12Device> creationdevice,vector<unsigned>& indicies);
@@ -24,11 +30,12 @@ public:
 	inline size_t GetIndiciesCount() { return m_indicies.size(); }
 
 private:
-	DX12Buffer m_vertexbuffer, m_indexbuffer;
+	DX12Buffer m_vertexbuffer, m_indexbuffer,m_vertexuploadbuffer,m_indexuploadbuffer;
 	vector<Vertex> m_verticies;
 	vector<unsigned> m_indicies;
 	D3D12_VERTEX_BUFFER_VIEW m_vertexbufferview;
 	D3D12_INDEX_BUFFER_VIEW m_indexbufferview;
+	ModelDataUploadMode m_uploadmode;
 };
 
 class BasicModelManager

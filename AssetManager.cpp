@@ -18,7 +18,8 @@ std::vector<unsigned> planeindicies =
 //repesentation of a single mesh vertex
 
 
-Model::Model()
+Model::Model(ModelDataUploadMode uploadmode)
+	:m_uploadmode(uploadmode)
 {
 }
 
@@ -53,11 +54,22 @@ void Model::InitVertexBuffer(ComPtr< ID3D12Device> creationdevice,vector<Vertex>
 	
 
 	//prepare vbview as well
+	m_vertexuploadbuffer.Init(creationdevice, vbproperties, ResourceCreationMode::COMMITED);
+	m_vertexuploadbuffer.SetName(L"planeVBupload");
+	if (m_uploadmode == ModelDataUploadMode::COPY)
+	{
+		m_vertexbufferview.BufferLocation = m_vertexbuffer.GetResource()->GetGPUVirtualAddress();
+	}
+	else
+	{
+		m_vertexbufferview.BufferLocation = m_vertexuploadbuffer.GetResource()->GetGPUVirtualAddress();
+	}
+	m_vertexbufferview.SizeInBytes = m_vertexuploadbuffer.GetSize();
+	m_vertexbufferview.StrideInBytes=sizeof(Vertex);
+
+	vbproperties.resheapprop.Type = D3D12_HEAP_TYPE_DEFAULT;
 	m_vertexbuffer.Init(creationdevice, vbproperties, ResourceCreationMode::COMMITED);
 	m_vertexbuffer.SetName(L"planeVB");
-	m_vertexbufferview.BufferLocation = m_vertexbuffer.GetResource()->GetGPUVirtualAddress();
-	m_vertexbufferview.SizeInBytes = m_vertexbuffer.GetSize();
-	m_vertexbufferview.StrideInBytes=sizeof(Vertex);
 
 
 
@@ -84,13 +96,24 @@ void Model::InitIndexBuffer(ComPtr< ID3D12Device> creationdevice,vector<unsigned
 	ibproperties.resdesc.SampleDesc.Count = 1;
 	ibproperties.resdesc.SampleDesc.Quality = 0;
 	ibproperties.resdesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-	m_indexbuffer.Init(creationdevice, ibproperties, ResourceCreationMode::COMMITED);
-	m_indexbuffer.SetName(L"planeIB");
+	m_indexuploadbuffer.Init(creationdevice, ibproperties, ResourceCreationMode::COMMITED);
+	m_indexuploadbuffer.SetName(L"planeIBupload");
 	
 	//prepare index buffer view
-	m_indexbufferview.BufferLocation = m_indexbuffer.GetResource()->GetGPUVirtualAddress();
-	m_indexbufferview.SizeInBytes = m_indexbuffer.GetSize();
+	if (m_uploadmode == ModelDataUploadMode::COPY)
+	{
+		m_indexbufferview.BufferLocation = m_indexbuffer.GetResource()->GetGPUVirtualAddress();
+	}
+	else
+	{
+		m_indexbufferview.BufferLocation = m_indexuploadbuffer.GetResource()->GetGPUVirtualAddress();
+	}
+	m_indexbufferview.SizeInBytes = m_indexuploadbuffer.GetSize();
 	m_indexbufferview.Format = DXGI_FORMAT_R32_UINT;
+
+	ibproperties.resheapprop.Type = D3D12_HEAP_TYPE_DEFAULT;
+	m_indexbuffer.Init(creationdevice, ibproperties, ResourceCreationMode::COMMITED);
+	m_indexbuffer.SetName(L"planeIB");
 
 
 
@@ -107,11 +130,11 @@ void Model::UploadModelDatatoBuffers()
 	vbmapparams.range.Begin = 0;
 	vbmapparams.range.End = 0;
 
-	void* vbmapped = m_vertexbuffer.Map(vbmapparams);
-	memcpy(vbmapped, m_verticies.data(), m_vertexbuffer.GetSize());
+	void* vbmapped = m_vertexuploadbuffer.Map(vbmapparams);
+	memcpy(vbmapped, m_verticies.data(), m_vertexuploadbuffer.GetSize());
 	//written to full range
-	vbmapparams.range.End = m_vertexbuffer.GetSize();
-	m_vertexbuffer.UnMap(vbmapparams);
+	vbmapparams.range.End = m_vertexuploadbuffer.GetSize();
+	m_vertexuploadbuffer.UnMap(vbmapparams);
 
 	}
 
@@ -123,11 +146,11 @@ void Model::UploadModelDatatoBuffers()
 		ibmapparams.range.Begin = 0;
 		ibmapparams.range.End = 0;
 
-		void* ibmapped = m_indexbuffer.Map(ibmapparams);
-		memcpy(ibmapped, m_indicies.data(), m_indexbuffer.GetSize());
+		void* ibmapped = m_indexuploadbuffer.Map(ibmapparams);
+		memcpy(ibmapped, m_indicies.data(), m_indexuploadbuffer.GetSize());
 		//written to full range
-		ibmapparams.range.End = m_indexbuffer.GetSize();
-		m_indexbuffer.UnMap(ibmapparams);
+		ibmapparams.range.End = m_indexuploadbuffer.GetSize();
+		m_indexuploadbuffer.UnMap(ibmapparams);
 
 	}
 }
