@@ -149,6 +149,7 @@
     <ClCompile Include="DX12DESCHEAP.cpp" />
     <ClCompile Include="DX12Manager.cpp" />
     <ClCompile Include="DX12PSO.cpp" />
+    <ClCompile Include="DX12Resource.cpp" />
     <ClCompile Include="DX12Swapchain.cpp" />
     <ClCompile Include="DXUtils.cpp" />
     <ClCompile Include="main.cpp" />

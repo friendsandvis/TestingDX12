@@ -22,7 +22,7 @@ public:
 private:
 	ComPtr< ID3D12Device> m_creationdevice;
 	DX12CommandQueue m_mainqueue;
-	DX12Commandlist m_primarycmdlist;
+	DX12Commandlist m_primarycmdlist,m_uploadcommandlist;
 	DX12Swapchain m_swapchain;
 	DX12DESCHEAP m_rtvdescheap;
 	DX12PSO m_basicpso;

@@ -34,6 +34,7 @@ void DX12Buffer::CreateBuffer(ComPtr< ID3D12Device> creationdevice)
 	{
 		DXASSERT(creationdevice->CreateCommittedResource(&m_properties.resheapprop, m_properties.resheapflags, &m_properties.resdesc, m_properties.resinitialstate, nullptr, IID_PPV_ARGS(m_resource.GetAddressOf())))
 			m_resource->SetName(L"Buffer");
+		SetResState(m_properties.resinitialstate);
 		break;
 	}
 

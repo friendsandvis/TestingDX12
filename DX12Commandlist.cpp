@@ -14,9 +14,14 @@ void DX12Commandlist::SetName(LPCWSTR name)
 	DXASSERT(m_list->SetName(name))
 }
 
-void DX12Commandlist::Reset()
+void DX12Commandlist::Reset(bool closeafterreset)
 {
 	DXASSERT(m_list->Reset(m_allocator.Get(),nullptr))
+
+		if (closeafterreset)
+		{
+			DXASSERT(m_list->Close())
+	}
 }
 
 

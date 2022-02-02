@@ -13,9 +13,12 @@ struct Vertex
 
 enum ModelDataUploadMode
 {
-	NOCOPY,
-	COPY
+	NOCOPY,//using uploadbuffer directly as vb & ib
+	COPY	//using anupload buffer to copy vb & ib to a defult heap buffer
 };
+
+//forwarddeclare
+class DX12Commandlist;
 
 class Model
 {
@@ -27,7 +30,9 @@ public:
 	inline D3D12_INDEX_BUFFER_VIEW GetIBView() { return m_indexbufferview; }
 	inline D3D12_VERTEX_BUFFER_VIEW GetVBView() { return m_vertexbufferview; }
 	void UploadModelDatatoBuffers();
+	void UploadModelDatatoGPUBuffers(DX12Commandlist& copycmdlist);
 	inline size_t GetIndiciesCount() { return m_indicies.size(); }
+	inline ModelDataUploadMode GetUploadMode() { return m_uploadmode; }
 
 private:
 	DX12Buffer m_vertexbuffer, m_indexbuffer,m_vertexuploadbuffer,m_indexuploadbuffer;

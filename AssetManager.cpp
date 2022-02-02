@@ -1,4 +1,5 @@
 #include"AssetManager.h"
+#include"DX12CommandList.h"
 
 std::vector<Vertex> planeverticies =
 {
@@ -58,6 +59,9 @@ void Model::InitVertexBuffer(ComPtr< ID3D12Device> creationdevice,vector<Vertex>
 	m_vertexuploadbuffer.SetName(L"planeVBupload");
 	if (m_uploadmode == ModelDataUploadMode::COPY)
 	{
+		vbproperties.resheapprop.Type = D3D12_HEAP_TYPE_DEFAULT;
+		m_vertexbuffer.Init(creationdevice, vbproperties, ResourceCreationMode::COMMITED);
+		m_vertexbuffer.SetName(L"planeVB");
 		m_vertexbufferview.BufferLocation = m_vertexbuffer.GetResource()->GetGPUVirtualAddress();
 	}
 	else
@@ -67,9 +71,7 @@ void Model::InitVertexBuffer(ComPtr< ID3D12Device> creationdevice,vector<Vertex>
 	m_vertexbufferview.SizeInBytes = m_vertexuploadbuffer.GetSize();
 	m_vertexbufferview.StrideInBytes=sizeof(Vertex);
 
-	vbproperties.resheapprop.Type = D3D12_HEAP_TYPE_DEFAULT;
-	m_vertexbuffer.Init(creationdevice, vbproperties, ResourceCreationMode::COMMITED);
-	m_vertexbuffer.SetName(L"planeVB");
+	
 
 
 
@@ -98,10 +100,13 @@ void Model::InitIndexBuffer(ComPtr< ID3D12Device> creationdevice,vector<unsigned
 	ibproperties.resdesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 	m_indexuploadbuffer.Init(creationdevice, ibproperties, ResourceCreationMode::COMMITED);
 	m_indexuploadbuffer.SetName(L"planeIBupload");
+	ibproperties.resheapprop.Type = D3D12_HEAP_TYPE_DEFAULT;
 	
 	//prepare index buffer view
 	if (m_uploadmode == ModelDataUploadMode::COPY)
 	{
+		m_indexbuffer.Init(creationdevice, ibproperties, ResourceCreationMode::COMMITED);
+		m_indexbuffer.SetName(L"planeIB");
 		m_indexbufferview.BufferLocation = m_indexbuffer.GetResource()->GetGPUVirtualAddress();
 	}
 	else
@@ -111,14 +116,14 @@ void Model::InitIndexBuffer(ComPtr< ID3D12Device> creationdevice,vector<unsigned
 	m_indexbufferview.SizeInBytes = m_indexuploadbuffer.GetSize();
 	m_indexbufferview.Format = DXGI_FORMAT_R32_UINT;
 
-	ibproperties.resheapprop.Type = D3D12_HEAP_TYPE_DEFAULT;
-	m_indexbuffer.Init(creationdevice, ibproperties, ResourceCreationMode::COMMITED);
-	m_indexbuffer.SetName(L"planeIB");
+	
 
 
 
 
 }
+
+
 
 void Model::UploadModelDatatoBuffers()
 {
@@ -154,6 +159,32 @@ void Model::UploadModelDatatoBuffers()
 
 	}
 }
+
+void Model::UploadModelDatatoGPUBuffers(DX12Commandlist& copycmdlist)
+
+{
+	if (m_uploadmode != COPY)
+	{
+		return;
+	}
+	//copy vb
+	//trnsition state for target
+	D3D12_RESOURCE_BARRIER barrier = m_vertexbuffer.TransitionResState(D3D12_RESOURCE_STATE_COPY_DEST);
+	copycmdlist->ResourceBarrier(1, &barrier);
+	copycmdlist->CopyResource(m_vertexbuffer.GetResource().Get(), m_vertexuploadbuffer.GetResource().Get());
+	barrier = m_vertexbuffer.TransitionResState(D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+	copycmdlist->ResourceBarrier(1, &barrier);
+
+	//copy ib
+	barrier=m_indexbuffer.TransitionResState(D3D12_RESOURCE_STATE_COPY_DEST);
+	copycmdlist->ResourceBarrier(1, &barrier);
+	copycmdlist->CopyResource(m_indexbuffer.GetResource().Get(), m_indexuploadbuffer.GetResource().Get());
+	barrier = m_indexbuffer.TransitionResState(D3D12_RESOURCE_STATE_INDEX_BUFFER);
+	copycmdlist->ResourceBarrier(1, &barrier);
+
+}
+
+
 
 
 

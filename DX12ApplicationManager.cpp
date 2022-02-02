@@ -1,6 +1,7 @@
 #include"DX12ApplicationManager.h"
 
 DX12ApplicationManager::DX12ApplicationManager()
+	:m_planemodel(ModelDataUploadMode::COPY)
 {
 }
 
@@ -21,7 +22,12 @@ void DX12ApplicationManager::Init(ComPtr< ID3D12Device> creationdevice)
 	InitBasicPSO();
 	m_primarycmdlist.Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
 	m_primarycmdlist.SetName(L"primarycmdlist");
+	m_uploadcommandlist.Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
+	m_uploadcommandlist.SetName(L"uploadcmdlist");
 	BasicModelManager::InitPlaneModel(creationdevice, m_planemodel);
+	m_uploadcommandlist.Reset();
+	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
+	DXASSERT(m_uploadcommandlist->Close())
 
 	
 }
@@ -149,9 +155,9 @@ void DX12ApplicationManager::Render()
 {
 	{
 		m_primarycmdlist.Reset();
-		m_primarycmdlist.GetcmdList()->SetPipelineState(m_basicpso.GetPSO());
-		m_primarycmdlist.GetcmdList()->SetGraphicsRootSignature(m_emptyrootsignature.Get());
-		m_primarycmdlist.GetcmdList()->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		m_primarycmdlist->SetPipelineState(m_basicpso.GetPSO());
+		m_primarycmdlist->SetGraphicsRootSignature(m_emptyrootsignature.Get());
+		m_primarycmdlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
 
 		//transition backbuffer state
@@ -161,8 +167,8 @@ void DX12ApplicationManager::Render()
 		backbufferbarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 		backbufferbarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
 		backbufferbarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-		m_primarycmdlist.GetcmdList()->ResourceBarrier(1, &backbufferbarrier);
-		m_primarycmdlist.GetcmdList()->OMSetRenderTargets(1,&rtvhandle, FALSE, nullptr);
+		m_primarycmdlist->ResourceBarrier(1, &backbufferbarrier);
+		m_primarycmdlist->OMSetRenderTargets(1,&rtvhandle, FALSE, nullptr);
 		{
 			D3D12_VIEWPORT aviewport = {};
 			aviewport.TopLeftX = 0;
@@ -178,18 +184,18 @@ void DX12ApplicationManager::Render()
 			ascissorrect.right = 1280;
 			ascissorrect.bottom = 720;
 
-			m_primarycmdlist.GetcmdList()->RSSetViewports(1, &aviewport);
-			m_primarycmdlist.GetcmdList()->RSSetScissorRects(1, &ascissorrect);
+			m_primarycmdlist->RSSetViewports(1, &aviewport);
+			m_primarycmdlist->RSSetScissorRects(1, &ascissorrect);
 		}
 		float rtclearcolour[4] = {1.0f,1.0f,1.0f,1.0f};
-		m_primarycmdlist.GetcmdList()->ClearRenderTargetView(rtvhandle, rtclearcolour, 0, nullptr);
+		m_primarycmdlist->ClearRenderTargetView(rtvhandle, rtclearcolour, 0, nullptr);
 
 		{
 			D3D12_VERTEX_BUFFER_VIEW vbview= m_planemodel.GetVBView();
 			D3D12_INDEX_BUFFER_VIEW Ibview = m_planemodel.GetIBView();
-			m_primarycmdlist.GetcmdList()->IASetVertexBuffers(0, 1, &vbview);
-			m_primarycmdlist.GetcmdList()->IASetIndexBuffer(&Ibview);
-			m_primarycmdlist.GetcmdList()->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
+			m_primarycmdlist->IASetVertexBuffers(0, 1, &vbview);
+			m_primarycmdlist->IASetIndexBuffer(&Ibview);
+			m_primarycmdlist->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
 		}
 	
 		backbufferbarrier.Transition.StateBefore =D3D12_RESOURCE_STATE_RENDER_TARGET;
@@ -198,6 +204,7 @@ void DX12ApplicationManager::Render()
 		DXASSERT(m_primarycmdlist.GetcmdList()->Close())
 	}
 	std::vector<ID3D12CommandList*> commandliststoexecute;
+	commandliststoexecute.push_back(m_uploadcommandlist.GetcmdList());
 	commandliststoexecute.push_back(m_primarycmdlist.GetcmdList());
 	m_mainqueue.GetQueue()->ExecuteCommandLists(commandliststoexecute.size(), commandliststoexecute.data());
 
@@ -207,6 +214,8 @@ void DX12ApplicationManager::Render()
 	DXASSERT(m_swapchain.GetSwapchain()->Present(0, 0))
 	m_syncunitprime.WaitFence();
 	m_swapchain.UpdatebackbufferIndex();
+	//reset uploadcmdlist after use
+	m_uploadcommandlist.Reset(true);
 }
 
 void DX12ApplicationManager::Initswapchain(ComPtr<IDXGIFactory2> factory, unsigned width, unsigned height, HWND hwnd)
