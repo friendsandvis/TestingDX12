@@ -11,3 +11,8 @@ D3D12_RESOURCE_BARRIER DX12Resource::TransitionResState(D3D12_RESOURCE_STATES ta
 
 	return transitionbarrier;
 }
+
+void DX12Resource::CreateSRV(ComPtr< ID3D12Device> creationdevice,D3D12_SHADER_RESOURCE_VIEW_DESC srvdesc,D3D12_CPU_DESCRIPTOR_HANDLE srvhandle)
+{
+	creationdevice->CreateShaderResourceView(m_resource.Get(), &srvdesc, srvhandle);
+}

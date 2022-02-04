@@ -1,5 +1,6 @@
 #include"DX12ApplicationManager.h"
 
+
 DX12ApplicationManager::DX12ApplicationManager()
 	:m_planemodel(ModelDataUploadMode::COPY)
 {
@@ -11,6 +12,7 @@ DX12ApplicationManager::~DX12ApplicationManager()
 
 void DX12ApplicationManager::Init(ComPtr< ID3D12Device> creationdevice)
 {
+
 	m_creationdevice = creationdevice;
 	D3D12_COMMAND_QUEUE_DESC mainqueuedesc = {};
 	mainqueuedesc.Flags = D3D12_COMMAND_QUEUE_FLAGS::D3D12_COMMAND_QUEUE_FLAG_NONE;
@@ -20,6 +22,17 @@ void DX12ApplicationManager::Init(ComPtr< ID3D12Device> creationdevice)
 	m_mainqueue.Init(mainqueuedesc, creationdevice);
 	m_syncunitprime.Init(m_creationdevice, 0);
 	InitBasicPSO();
+
+	//init descheaps
+	{
+		D3D12_DESCRIPTOR_HEAP_DESC heapdesc = {};
+		heapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		heapdesc.NumDescriptors = MAXACCESSABLERESOURCEVIEWCOUNT;	//just creating for an srv
+		heapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+		m_resaccessviewdescheap.Init(heapdesc, m_creationdevice);
+	}
+
 	m_primarycmdlist.Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
 	m_primarycmdlist.SetName(L"primarycmdlist");
 	m_uploadcommandlist.Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
@@ -27,8 +40,25 @@ void DX12ApplicationManager::Init(ComPtr< ID3D12Device> creationdevice)
 	BasicModelManager::InitPlaneModel(creationdevice, m_planemodel);
 	m_uploadcommandlist.Reset();
 	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
-	DXASSERT(m_uploadcommandlist->Close())
+	
 
+	{
+		bool texloaded=DXTexManager::LoadTexture(L"textures/tex2.dds", m_redtexture.GetDXImageData());
+		bool initsuccess= m_redtexture.Init(m_creationdevice);
+		m_redtexture.SetName(L"REDTEX");
+		{
+			//create srv
+			D3D12_SHADER_RESOURCE_VIEW_DESC redtexsrvdesc = {};
+			redtexsrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+			redtexsrvdesc.Texture2D.MipLevels = 1;
+			redtexsrvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+
+
+			m_redtexture.CreateSRV(m_creationdevice, redtexsrvdesc, m_resaccessviewdescheap.GetCPUHandlefromstart());
+		}
+		m_redtexture.UploadTexture(m_uploadcommandlist);
+		DXASSERT(m_uploadcommandlist->Close())
+	}
 	
 }
 
@@ -157,6 +187,10 @@ void DX12ApplicationManager::Render()
 		m_primarycmdlist.Reset();
 		m_primarycmdlist->SetPipelineState(m_basicpso.GetPSO());
 		m_primarycmdlist->SetGraphicsRootSignature(m_emptyrootsignature.Get());
+		ID3D12DescriptorHeap* descheapstoset[1];
+		descheapstoset[0] = m_resaccessviewdescheap.GetDescHeap();
+		m_primarycmdlist->SetDescriptorHeaps(1, descheapstoset);
+		m_primarycmdlist->SetGraphicsRootDescriptorTable(0, m_resaccessviewdescheap.GetGPUHandlefromstart());
 		m_primarycmdlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
 

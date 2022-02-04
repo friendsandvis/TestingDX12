@@ -8,6 +8,7 @@
 #include<d3dx12.h>
 
 #define BACKBUFFERCOUNT 3
+#define MAXACCESSABLERESOURCEVIEWCOUNT 5
 
 //used for selecting hardware adaptor
 //currently set to nvidia

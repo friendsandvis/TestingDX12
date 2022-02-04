@@ -18,6 +18,15 @@ D3D12_CPU_DESCRIPTOR_HANDLE DX12DESCHEAP::GetCPUHandlefromstart()
 		return m_descheap->GetCPUDescriptorHandleForHeapStart();
 }
 
+D3D12_GPU_DESCRIPTOR_HANDLE DX12DESCHEAP::GetGPUHandlefromstart()
+{
+
+
+
+	return m_descheap->GetGPUDescriptorHandleForHeapStart();
+}
+
+
 D3D12_CPU_DESCRIPTOR_HANDLE DX12DESCHEAP::GetCPUHandleOffseted(unsigned offetcountfromstart)
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE handle=m_descheap->GetCPUDescriptorHandleForHeapStart();
@@ -35,3 +44,4 @@ void DX12DESCHEAP::Init(D3D12_DESCRIPTOR_HEAP_DESC desc, ComPtr< ID3D12Device> c
 
 	
 }
+
