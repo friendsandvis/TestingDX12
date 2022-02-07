@@ -80,8 +80,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\Developenment\TestingDX12\Includes\dxtex;D:\Developenment\TestingDX12\Includes\directx;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Developenment\TestingDX12\Libraries;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Includes;$(SolutionDir)Includes\directx;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)Libraries;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>

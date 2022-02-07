@@ -1,6 +1,6 @@
 #pragma once
 #include"DXUtils.h"
-#include<DirectXTex.h>
+#include<dxtex/DirectXTex.h>
 #include"DX12Buffer.h"
 
 using namespace DirectX;
