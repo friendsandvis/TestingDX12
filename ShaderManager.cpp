@@ -3,27 +3,17 @@
 
 
 DX12Shader::DX12Shader()
-	:m_sourcehlslfilename(L""),
-	m_outputbytecode(nullptr),
-	m_errormsgs(nullptr),
-	m_shadertype(VS)
+	:m_shadertype(VS)
 {
 }
 
 DX12Shader::~DX12Shader()
+{}
+
+void* DX12Shader::GetCompiledCode()
 {
-	if (m_errormsgs)
-	{
-		m_errormsgs->Release();
-	}
-
-	if (m_outputbytecode)
-	{
-		m_outputbytecode->Release();
-	}
-
+	return reinterpret_cast<void*>(m_compiledcode.m_data);
 }
-
 
 bool DX12Shader::Init(LPCWSTR sourcehlslfilepath, ShaderType shadertype)
 {
@@ -41,18 +31,59 @@ bool DX12Shader::Init(LPCWSTR sourcehlslfilepath, ShaderType shadertype)
 
 	}
 
+	ComPtr<ID3DBlob> errors, outputcode;
 	HRESULT res =
-		D3DCompileFromFile(m_sourcehlslfilename, nullptr, nullptr, "main", target, 0, 0, &m_outputbytecode, &m_errormsgs);
+		D3DCompileFromFile(m_sourcehlslfilename, nullptr, nullptr, "main", target, 0, 0,outputcode.GetAddressOf(),errors.GetAddressOf());
 
-	if (m_errormsgs)
+	//copy code to local blob
+	m_compiledcode.Init(outputcode->GetBufferSize(), outputcode->GetBufferPointer());
+	if (errors.Get())
 	{
-		const char* errormsg = (char*)m_errormsgs->GetBufferPointer();
-		//DebugBreak();
-		OutputDebugStringA(errormsg);
+		m_errormsgs.Init(errors->GetBufferSize(), errors->GetBufferPointer());
 	}
 
-	return ((res == S_OK) && (m_errormsgs == nullptr));
+
+
+	return ((res == S_OK) && (errors.Get()==nullptr));
 
 
 
+}
+
+DX12Customblob::DX12Customblob()
+	:m_data(nullptr),
+	m_datasize(0)
+{
+
+}
+
+DX12Customblob::DX12Customblob(size_t datasize)
+	:m_datasize(datasize)
+{
+	Init(datasize);
+}
+DX12Customblob::~DX12Customblob()
+{
+	if (m_data)
+	{
+		delete[] m_data;
+		m_data = nullptr;
+	}
+}
+
+void DX12Customblob::Init(size_t datasize)
+{
+	m_datasize = datasize;
+	m_data = new byte[datasize];
+}
+void DX12Customblob::Init(size_t datasize, void* srcdata)
+{
+	Init(datasize);
+
+	if (datasize==0)
+	{
+		return;
+	}
+
+	memcpy(m_data, srcdata, datasize);
 }

@@ -78,10 +78,10 @@ void DX12ApplicationManager::InitBasicPSO()
 	//build up graphic pso desc
 
 	//shaderdesc
-	basicpsodata.psodesc.graphicspsodesc.VS.pShaderBytecode = vs->GetByteCode()->GetBufferPointer();
-	basicpsodata.psodesc.graphicspsodesc.VS.BytecodeLength = vs->GetByteCode()->GetBufferSize();
-	basicpsodata.psodesc.graphicspsodesc.PS.pShaderBytecode = ps->GetByteCode()->GetBufferPointer();
-	basicpsodata.psodesc.graphicspsodesc.PS.BytecodeLength = ps->GetByteCode()->GetBufferSize();
+	basicpsodata.psodesc.graphicspsodesc.VS.pShaderBytecode = vs->GetCompiledCode();
+	basicpsodata.psodesc.graphicspsodesc.VS.BytecodeLength = vs->GetCompiledCodeSize();
+	basicpsodata.psodesc.graphicspsodesc.PS.pShaderBytecode = ps->GetCompiledCode();
+	basicpsodata.psodesc.graphicspsodesc.PS.BytecodeLength = ps->GetCompiledCodeSize();
 
 	//primitive setup
 	basicpsodata.psodesc.graphicspsodesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
