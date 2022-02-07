@@ -42,3 +42,18 @@ private:
 	LPCWSTR m_sourcehlslfilename;
 	ShaderType m_shadertype;
 };
+
+
+class DXCmanager
+{
+public:
+	DXCmanager();
+	~DXCmanager();
+
+private:
+	ComPtr<IDxcLibrary> m_lib;
+	ComPtr<IDxcCompiler> m_compiler;
+	static uint32_t codePage;
+	static DXCmanager s_manager;
+};
+

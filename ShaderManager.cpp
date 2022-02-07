@@ -1,5 +1,6 @@
 #include"ShaderManager.h"
 #pragma comment(lib,"D3DCompiler.lib")
+#pragma comment(lib,"dxcompiler.lib")
 
 
 DX12Shader::DX12Shader()
@@ -86,4 +87,20 @@ void DX12Customblob::Init(size_t datasize, void* srcdata)
 	}
 
 	memcpy(m_data, srcdata, datasize);
+}
+
+
+uint32_t DXCmanager::codePage=CP_UTF8;
+DXCmanager DXCmanager::s_manager;
+
+DXCmanager::DXCmanager()
+
+{
+	DXASSERT(DxcCreateInstance(CLSID_DxcLibrary,IID_PPV_ARGS(m_lib.GetAddressOf())))
+		DXASSERT(DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(m_compiler.GetAddressOf())))
+
+}
+
+DXCmanager::~DXCmanager()
+{
 }
