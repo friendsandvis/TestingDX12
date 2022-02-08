@@ -28,18 +28,26 @@ bool DX12Shader::Init(LPCWSTR sourcehlslfilepath, ShaderType shadertype)
 	m_shadertype = shadertype;
 	m_sourcehlslfilename = sourcehlslfilepath;
 
-	LPCSTR target = "";
+	DXCCOMPILEParams dxccompileparams = {};
+	dxccompileparams.sourcehlslfilepath = sourcehlslfilepath;
+	dxccompileparams.entrypoint = L"main";
+	dxccompileparams.out_compiledcodeblob = &m_compiledcode;
+	dxccompileparams.out_errorblob = &m_errormsgs;
+	m_shadertype = shadertype;
+	m_sourcehlslfilename = sourcehlslfilepath;
+
 
 	switch (m_shadertype)
 	{
 	case VS:
-		fxccompileparams.target = "vs_5_0"; break;
+		dxccompileparams.targetprofile = L"vs_6_0"; break;
 	case PS:
-		fxccompileparams.target = "ps_5_0"; break;
+		dxccompileparams.targetprofile = L"ps_6_0"; break;
 
 	}
 
-	FXCManager::s_manager.CompileShader(fxccompileparams);
+	//FXCManager::s_manager.CompileShader(fxccompileparams);
+	DXCmanager::s_manager.CompileShader(dxccompileparams);
 
 
 
