@@ -36,6 +36,7 @@ public:
 	bool Init(LPCWSTR sourcehlslfilepath, ShaderType shadertype);
 	size_t GetCompiledCodeSize() { return m_compiledcode.m_datasize; }
 	void* GetCompiledCode();
+	
 private:
 	DX12Customblob m_compiledcode;
 	DX12Customblob m_errormsgs;
@@ -43,17 +44,58 @@ private:
 	ShaderType m_shadertype;
 };
 
+//compile shhader params for dxc compile
+struct DXCCOMPILEParams
+{
+	LPCWSTR sourcehlslfilepath;
+	 LPCWSTR entrypoint; 
+	 LPCWSTR targetprofile;
+	 vector<LPCWSTR> args;
+	 DX12Customblob* out_compiledcodeblob;
+	 DX12Customblob* out_errorblob;
+};
+
+
+struct FXCCOMPILEParams
+{
+	LPCWSTR sourcehlslfilepath;
+	LPCSTR entrypoint;
+	LPCSTR target;
+	UINT flag1;
+	UINT flag2;
+	vector<LPCWSTR> args;
+	DX12Customblob* out_compiledcodeblob;
+	DX12Customblob* out_errorblob;
+};
 
 class DXCmanager
 {
 public:
 	DXCmanager();
 	~DXCmanager();
+	void CompileShader(DXCCOMPILEParams& compileparams);
+	static DXCmanager s_manager;
 
 private:
 	ComPtr<IDxcLibrary> m_lib;
 	ComPtr<IDxcCompiler> m_compiler;
 	static uint32_t codePage;
-	static DXCmanager s_manager;
+	
 };
+
+
+
+class FXCManager
+{
+public:
+	FXCManager();
+	~FXCManager();
+	void CompileShader(FXCCOMPILEParams& compileparams);
+	static FXCManager s_manager;
+
+private:
+
+};
+
+
 

@@ -104,3 +104,51 @@ DXCmanager::DXCmanager()
 DXCmanager::~DXCmanager()
 {
 }
+
+void DXCmanager::CompileShader(DXCCOMPILEParams& compileparams)
+{
+	
+	ComPtr<IDxcOperationResult> opres;
+	ComPtr<IDxcBlobEncoding> hlslsource;
+	DXASSERT(m_lib->CreateBlobFromFile(compileparams.sourcehlslfilepath, &codePage, hlslsource.GetAddressOf()))
+
+		DXASSERT(m_compiler->Compile(hlslsource.Get(), compileparams.sourcehlslfilepath, compileparams.entrypoint, compileparams.targetprofile, compileparams.args.data(), compileparams.args.size(), nullptr, 0, nullptr, opres.GetAddressOf()))
+
+		ComPtr<IDxcBlob> rescode;
+		ComPtr<IDxcBlobEncoding> errors;
+	DXASSERT(opres->GetErrorBuffer(errors.GetAddressOf()))
+	DXASSERT(opres->GetResult(rescode.GetAddressOf()))
+
+		//copy over the compiled code and errors to out blobs
+		if (rescode.Get())
+		{
+			compileparams.out_compiledcodeblob->Init(rescode->GetBufferSize(), rescode->GetBufferPointer());
+		}
+	if (errors.Get())
+	{
+		compileparams.out_errorblob->Init(errors->GetBufferSize(), errors->GetBufferPointer());
+	}
+}
+
+FXCManager FXCManager::s_manager;
+FXCManager::FXCManager()
+{}
+FXCManager::~FXCManager()
+{
+
+}
+void FXCManager::CompileShader(FXCCOMPILEParams& compileparams)
+{
+	ComPtr<ID3DBlob> errors, outputcode;
+	HRESULT res =
+		D3DCompileFromFile(compileparams.sourcehlslfilepath, nullptr, nullptr, compileparams.entrypoint, compileparams.target, compileparams.flag1, compileparams.flag2, outputcode.GetAddressOf(), errors.GetAddressOf());
+
+	//copy code to local blob
+	compileparams.out_compiledcodeblob->Init(outputcode->GetBufferSize(), outputcode->GetBufferPointer());
+	if (errors.Get())
+	{
+		compileparams.out_errorblob->Init(errors->GetBufferSize(), errors->GetBufferPointer());
+	}
+
+
+}
