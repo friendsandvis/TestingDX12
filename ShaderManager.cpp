@@ -18,6 +18,13 @@ void* DX12Shader::GetCompiledCode()
 
 bool DX12Shader::Init(LPCWSTR sourcehlslfilepath, ShaderType shadertype)
 {
+	FXCCOMPILEParams fxccompileparams = {};
+	fxccompileparams.sourcehlslfilepath = sourcehlslfilepath;
+	fxccompileparams.entrypoint = "main";
+	fxccompileparams.flag1 = 0;
+	fxccompileparams.flag2 = 0;
+	fxccompileparams.out_compiledcodeblob = &m_compiledcode;
+	fxccompileparams.out_errorblob = &m_errormsgs;
 	m_shadertype = shadertype;
 	m_sourcehlslfilename = sourcehlslfilepath;
 
@@ -26,26 +33,17 @@ bool DX12Shader::Init(LPCWSTR sourcehlslfilepath, ShaderType shadertype)
 	switch (m_shadertype)
 	{
 	case VS:
-		target = "vs_5_0"; break;
+		fxccompileparams.target = "vs_5_0"; break;
 	case PS:
-		target = "ps_5_0"; break;
+		fxccompileparams.target = "ps_5_0"; break;
 
 	}
 
-	ComPtr<ID3DBlob> errors, outputcode;
-	HRESULT res =
-		D3DCompileFromFile(m_sourcehlslfilename, nullptr, nullptr, "main", target, 0, 0,outputcode.GetAddressOf(),errors.GetAddressOf());
-
-	//copy code to local blob
-	m_compiledcode.Init(outputcode->GetBufferSize(), outputcode->GetBufferPointer());
-	if (errors.Get())
-	{
-		m_errormsgs.Init(errors->GetBufferSize(), errors->GetBufferPointer());
-	}
+	FXCManager::s_manager.CompileShader(fxccompileparams);
 
 
 
-	return ((res == S_OK) && (errors.Get()==nullptr));
+	return (m_errormsgs.m_datasize == 0);
 
 
 

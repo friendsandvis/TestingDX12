@@ -63,7 +63,6 @@ struct FXCCOMPILEParams
 	LPCSTR target;
 	UINT flag1;
 	UINT flag2;
-	vector<LPCWSTR> args;
 	DX12Customblob* out_compiledcodeblob;
 	DX12Customblob* out_errorblob;
 };
