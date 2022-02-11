@@ -43,14 +43,14 @@ void DX12ApplicationManager::Init(ComPtr< ID3D12Device> creationdevice)
 	
 
 	{
-		bool texloaded=DXTexManager::LoadTexture(L"textures/tex2.dds", m_redtexture.GetDXImageData());
+		bool texloaded=DXTexManager::LoadTexture(L"textures/tex3_miped.dds", m_redtexture.GetDXImageData());
 		bool initsuccess= m_redtexture.Init(m_creationdevice);
 		m_redtexture.SetName(L"REDTEX");
 		{
 			//create srv
 			D3D12_SHADER_RESOURCE_VIEW_DESC redtexsrvdesc = {};
 			redtexsrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-			redtexsrvdesc.Texture2D.MipLevels = 1;
+			redtexsrvdesc.Texture2D.MipLevels = (UINT)m_redtexture.GetTotalMipCount();
 			redtexsrvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 
 

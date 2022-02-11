@@ -5,6 +5,8 @@
 #include<Windows.h>
 #include<DXC/dxcapi.h>
 
+#define USEDXC
+
 
 struct DX12Customblob
 {

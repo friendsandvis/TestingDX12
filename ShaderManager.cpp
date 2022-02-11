@@ -18,23 +18,18 @@ void* DX12Shader::GetCompiledCode()
 
 bool DX12Shader::Init(LPCWSTR sourcehlslfilepath, ShaderType shadertype)
 {
-	FXCCOMPILEParams fxccompileparams = {};
-	fxccompileparams.sourcehlslfilepath = sourcehlslfilepath;
-	fxccompileparams.entrypoint = "main";
-	fxccompileparams.flag1 = 0;
-	fxccompileparams.flag2 = 0;
-	fxccompileparams.out_compiledcodeblob = &m_compiledcode;
-	fxccompileparams.out_errorblob = &m_errormsgs;
 	m_shadertype = shadertype;
 	m_sourcehlslfilename = sourcehlslfilepath;
-
-	DXCCOMPILEParams dxccompileparams = {};
+#ifdef USEDXC
+	
+		DXCCOMPILEParams dxccompileparams = {};
 	dxccompileparams.sourcehlslfilepath = sourcehlslfilepath;
 	dxccompileparams.entrypoint = L"main";
 	dxccompileparams.out_compiledcodeblob = &m_compiledcode;
 	dxccompileparams.out_errorblob = &m_errormsgs;
-	m_shadertype = shadertype;
-	m_sourcehlslfilename = sourcehlslfilepath;
+	
+	
+	
 
 
 	switch (m_shadertype)
@@ -45,9 +40,35 @@ bool DX12Shader::Init(LPCWSTR sourcehlslfilepath, ShaderType shadertype)
 		dxccompileparams.targetprofile = L"ps_6_0"; break;
 
 	}
+	DXCmanager::s_manager.CompileShader(dxccompileparams);
+
+#endif // USEDXC
+
+#ifndef USEDXC
+	FXCCOMPILEParams fxccompileparams = {};
+	fxccompileparams.sourcehlslfilepath = sourcehlslfilepath;
+	fxccompileparams.entrypoint = "main";
+	fxccompileparams.flag1 = 0;
+	fxccompileparams.flag2 = 0;
+	fxccompileparams.out_compiledcodeblob = &m_compiledcode;
+	fxccompileparams.out_errorblob = &m_errormsgs;
+	switch (m_shadertype)
+	{
+	case VS:
+		fxccompileparams.target ="vs_5_0"; break;
+	case PS:
+		fxccompileparams.target = "ps_5_0"; break;
+
+	}
+	FXCManager::s_manager.CompileShader(fxccompileparams);
+#endif // !USEDXC
+
+	
+
+	
 
 	//FXCManager::s_manager.CompileShader(fxccompileparams);
-	DXCmanager::s_manager.CompileShader(dxccompileparams);
+	
 
 
 
@@ -126,14 +147,19 @@ void DXCmanager::CompileShader(DXCCOMPILEParams& compileparams)
 	DXASSERT(opres->GetResult(rescode.GetAddressOf()))
 
 		//copy over the compiled code and errors to out blobs
+		if (errors.Get())
+		{
+			compileparams.out_errorblob->Init(errors->GetBufferSize(), errors->GetBufferPointer());
+			if (errors->GetBufferSize())
+			{
+				DebugBreak();
+			}
+		}
 		if (rescode.Get())
 		{
 			compileparams.out_compiledcodeblob->Init(rescode->GetBufferSize(), rescode->GetBufferPointer());
 		}
-	if (errors.Get())
-	{
-		compileparams.out_errorblob->Init(errors->GetBufferSize(), errors->GetBufferPointer());
-	}
+	
 }
 
 FXCManager FXCManager::s_manager;
@@ -150,11 +176,14 @@ void FXCManager::CompileShader(FXCCOMPILEParams& compileparams)
 		D3DCompileFromFile(compileparams.sourcehlslfilepath, nullptr, nullptr, compileparams.entrypoint, compileparams.target, compileparams.flag1, compileparams.flag2, outputcode.GetAddressOf(), errors.GetAddressOf());
 
 	//copy code to local blob
-	compileparams.out_compiledcodeblob->Init(outputcode->GetBufferSize(), outputcode->GetBufferPointer());
 	if (errors.Get())
 	{
+
 		compileparams.out_errorblob->Init(errors->GetBufferSize(), errors->GetBufferPointer());
+		DebugBreak();
 	}
+	compileparams.out_compiledcodeblob->Init(outputcode->GetBufferSize(), outputcode->GetBufferPointer());
+	
 
 
 }

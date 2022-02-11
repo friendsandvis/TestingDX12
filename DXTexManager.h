@@ -22,6 +22,8 @@ class DXTexture:public DX12Resource
 
 public:
 	DXImageData& GetDXImageData() { return m_texdata; }
+	size_t GetTotalMipCount() { return m_texdata.m_imagemetadata.mipLevels; }
+
 	bool Init(ComPtr< ID3D12Device> creationdevice);
 	void UploadTexture(DX12Commandlist& copycmdlist);
 };
