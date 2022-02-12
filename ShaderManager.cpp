@@ -1,6 +1,7 @@
 #include"ShaderManager.h"
 #pragma comment(lib,"D3DCompiler.lib")
 #pragma comment(lib,"dxcompiler.lib")
+#define DEBUGSHADER
 
 
 DX12Shader::DX12Shader()
@@ -27,6 +28,12 @@ bool DX12Shader::Init(LPCWSTR sourcehlslfilepath, ShaderType shadertype)
 	dxccompileparams.entrypoint = L"main";
 	dxccompileparams.out_compiledcodeblob = &m_compiledcode;
 	dxccompileparams.out_errorblob = &m_errormsgs;
+#ifdef DEBUGSHADER
+	dxccompileparams.args.push_back(L"-Zi");
+	dxccompileparams.args.push_back(L"-Qembed_debug");
+#endif // DEBUGSHADER
+
+	
 	
 	
 	
@@ -48,7 +55,11 @@ bool DX12Shader::Init(LPCWSTR sourcehlslfilepath, ShaderType shadertype)
 	FXCCOMPILEParams fxccompileparams = {};
 	fxccompileparams.sourcehlslfilepath = sourcehlslfilepath;
 	fxccompileparams.entrypoint = "main";
-	fxccompileparams.flag1 = 0;
+#ifdef DEBUGSHADER
+	fxccompileparams.flag1 = D3DCOMPILE_DEBUG;
+#endif // DEBUGSHADER
+
+	
 	fxccompileparams.flag2 = 0;
 	fxccompileparams.out_compiledcodeblob = &m_compiledcode;
 	fxccompileparams.out_errorblob = &m_errormsgs;
