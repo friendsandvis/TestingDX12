@@ -1,0 +1,40 @@
+#pragma once
+#include"DXUtils.h"
+#include"DX12Swapchain.h"
+#include"DX12CommandList.h"
+#include"DX12DESCHEAP.h"
+#include"DX12CommandQueue.h"
+
+//Base class for all dx12 applicationmanagers.Could help in creaing a speciialized dx12 applications
+class DX12ApplicationManagerBase
+{
+public:
+	void Init(ComPtr< ID3D12Device> creationdevice);
+	void Initswapchain(ComPtr<IDXGIFactory2> factory, unsigned width, unsigned height, HWND hwnd);
+	void Render() {}
+
+	//execute commandlists in a fixed order(upload the primary) & present
+	//if the application does not wish to modify the application's default execution model then use this else write a custom render function with presentation.
+	//Warning: updates swapchain backbuffer index
+	void BasicRender();
+	DX12ApplicationManagerBase();
+	~DX12ApplicationManagerBase();
+
+protected:
+	//called inside init function san be overriden by child class to init other app specific members at app init time
+	void InitExtras(){}
+
+private:
+	ComPtr< ID3D12Device> m_creationdevice;
+	DX12CommandQueue m_mainqueue;
+
+	// base app has 2 commandlists(1 for general render other for upload before render
+	DX12Commandlist m_primarycmdlist, m_uploadcommandlist;
+
+	SyncronizationUnit m_syncunitprime;
+	DX12Swapchain m_swapchain;
+
+	//this one is just for swapchain buffers
+	DX12DESCHEAP m_rtvdescheap;
+};
+
