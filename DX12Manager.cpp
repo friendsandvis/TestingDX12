@@ -3,6 +3,14 @@
 #pragma comment(lib,"dxgi.lib")
 
 
+//exports to use agility sdk...
+
+//version of agility sdk nuget used(update if using another version.
+extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 600; }
+
+extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = u8".\\D3D12\\"; }
+
+
 
 DX12Manager::DX12Manager()
 {

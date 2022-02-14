@@ -2,6 +2,7 @@
 #include"DX12Manager.h"
 #define ENABLEDEBUGLAYER true
 
+
 int main()
 {
 	DX12ApplicationManager drawrectappmanager;
