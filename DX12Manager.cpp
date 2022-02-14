@@ -18,7 +18,7 @@ DX12Manager::DX12Manager()
 
 		//retrive all adapters
 
-		size_t adapterindex = 0;
+		UINT adapterindex = 0;
 	ComPtr<IDXGIAdapter> anadapter;
 		while (m_dxgifactory->EnumAdapters(adapterindex, anadapter.GetAddressOf()) == S_OK)
 		{
