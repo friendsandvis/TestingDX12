@@ -26,6 +26,14 @@ void DX12ApplicationManagerBase::Initswapchain(ComPtr<IDXGIFactory2> factory, un
 
 void DX12ApplicationManagerBase::Init(ComPtr< ID3D12Device> creationdevice)
 {
+	//basic initialization
+	InitBase(creationdevice);
+	//extra init maybe specialized by specialized classes
+	InitExtras();
+}
+
+void DX12ApplicationManagerBase::InitBase(ComPtr< ID3D12Device> creationdevice)
+{
 
 	m_creationdevice = creationdevice;
 	D3D12_COMMAND_QUEUE_DESC mainqueuedesc = {};
@@ -33,7 +41,7 @@ void DX12ApplicationManagerBase::Init(ComPtr< ID3D12Device> creationdevice)
 	mainqueuedesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 	mainqueuedesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
 
-	m_mainqueue.Init(mainqueuedesc, creationdevice);
+	m_mainqueue.Init(mainqueuedesc, m_creationdevice);
 	m_syncunitprime.Init(m_creationdevice, 0);
 
 	//commandlist init
@@ -61,5 +69,6 @@ void DX12ApplicationManagerBase::BasicRender()
 	DXASSERT(m_swapchain.GetSwapchain()->Present(0, 0))
 		m_syncunitprime.WaitFence();
 	m_swapchain.UpdatebackbufferIndex();
+	m_uploadcommandlist.Reset(true);
 }
 	

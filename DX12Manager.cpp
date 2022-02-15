@@ -33,24 +33,27 @@ DX12Manager::~DX12Manager()
 {
 }
 
-void DX12Manager::Init(bool enabledebuglayer, DX12ApplicationManager* targetappmanager)
+void DX12Manager::Init(bool enabledebuglayer, DX12ApplicationManagerBase* targetappmanager)
 {
-	//create device
+	m_appmanager = targetappmanager;
+	
 
 	//debug layer if requested
 	if (enabledebuglayer)
 	{
-		ComPtr<ID3D12Debug> debuginterterface;
+		ComPtr<ID3D12Debug5> debuginterterface;
 		DXASSERT(D3D12GetDebugInterface(__uuidof(ID3D12Debug), (void**)debuginterterface.GetAddressOf()))
 			debuginterterface->EnableDebugLayer();
+		//debuginterterface->SetEnableAutoName(true);
 
-		m_appmanager = targetappmanager;
+		
 		
 
 	}
-	
+	//create device
 	DXASSERT(D3D12CreateDevice(m_hardwareadapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(m_maindevice.GetAddressOf())))
 		m_maindevice->SetName(L"MainDevice");
+	
 	
 		//initialize app manager
 		if (targetappmanager)

@@ -5,13 +5,17 @@
 #include"DX12DESCHEAP.h"
 #include"DX12CommandQueue.h"
 
-//Base class for all dx12 applicationmanagers.Could help in creaing a speciialized dx12 applications
+// interface for all dx12 applicationmanagers.Could help in creaing  speciialized dx12 applications
 class DX12ApplicationManagerBase
 {
 public:
 	void Init(ComPtr< ID3D12Device> creationdevice);
+	//basic necessary initialization of 
+	void InitBase(ComPtr< ID3D12Device> creationdevice);
 	void Initswapchain(ComPtr<IDXGIFactory2> factory, unsigned width, unsigned height, HWND hwnd);
-	void Render() {}
+	virtual void Render() = 0;
+	//called inside init function san be overriden by child class to init other app specific members at app init time
+	
 
 	//execute commandlists in a fixed order(upload then primary) & present
 	//if the application does not wish to modify the application's default execution model then use this else write a custom render function with presentation.
@@ -21,8 +25,8 @@ public:
 	~DX12ApplicationManagerBase();
 
 protected:
-	//called inside init function san be overriden by child class to init other app specific members at app init time
-	void InitExtras(){}
+	 virtual void InitExtras() {}
+	
 
 	ComPtr< ID3D12Device> m_creationdevice;
 	DX12CommandQueue m_mainqueue;

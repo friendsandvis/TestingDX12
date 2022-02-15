@@ -155,6 +155,7 @@
     <ClCompile Include="DX12Manager.cpp" />
     <ClCompile Include="DX12PSO.cpp" />
     <ClCompile Include="DX12Resource.cpp" />
+    <ClCompile Include="DX12SimpleTexturedQuadApplication.cpp" />
     <ClCompile Include="DX12Swapchain.cpp" />
     <ClCompile Include="DXTexManager.cpp" />
     <ClCompile Include="DXUtils.cpp" />
@@ -174,6 +175,7 @@
     <ClInclude Include="DX12Manager.h" />
     <ClInclude Include="DX12PSO.h" />
     <ClInclude Include="DX12Resource.h" />
+    <ClInclude Include="DX12SimpleTexturedQuadApplication.h" />
     <ClInclude Include="DX12Swapchain.h" />
     <ClInclude Include="DXTexManager.h" />
     <ClInclude Include="DXUtils.h" />
