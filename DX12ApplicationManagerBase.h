@@ -13,7 +13,7 @@ public:
 	void Initswapchain(ComPtr<IDXGIFactory2> factory, unsigned width, unsigned height, HWND hwnd);
 	void Render() {}
 
-	//execute commandlists in a fixed order(upload the primary) & present
+	//execute commandlists in a fixed order(upload then primary) & present
 	//if the application does not wish to modify the application's default execution model then use this else write a custom render function with presentation.
 	//Warning: updates swapchain backbuffer index
 	void BasicRender();
@@ -24,7 +24,6 @@ protected:
 	//called inside init function san be overriden by child class to init other app specific members at app init time
 	void InitExtras(){}
 
-private:
 	ComPtr< ID3D12Device> m_creationdevice;
 	DX12CommandQueue m_mainqueue;
 
