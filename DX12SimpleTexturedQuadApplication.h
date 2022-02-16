@@ -22,6 +22,7 @@ private:
 	ComPtr<ID3D12RootSignature> m_emptyrootsignature;
 	Model m_planemodel;
 	DXTexture m_redtexture;
+	DX12DESCHEAP m_resaccessviewdescheap;//CBV/SRV/UAV
 
 	void InitBasicPSO();
 

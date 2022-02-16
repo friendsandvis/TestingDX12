@@ -3,6 +3,7 @@
 
 
 TexturedQuadApplication::TexturedQuadApplication()
+	:m_planemodel(ModelDataUploadMode::COPY)
 {
 }
 
@@ -15,11 +16,35 @@ void TexturedQuadApplication::InitExtras()
 	//init pso
 	InitBasicPSO();
 
+	//init desc heaps
+	D3D12_DESCRIPTOR_HEAP_DESC heapdesc = {};
+	heapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	heapdesc.NumDescriptors = 1;	//just creating for an srv
+	heapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+	m_resaccessviewdescheap.Init(heapdesc, m_creationdevice);
+
+
 	//init assets
 	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
 	DXTexManager::LoadTexture(L"textures/tex3_miped.dds", m_redtexture.GetDXImageData());
 	bool initsuccess = m_redtexture.Init(m_creationdevice);
-	m_redtexture.SetName(L"REDTEX");
+	m_redtexture.SetName(L"GREENTEX");
+	{
+		D3D12_SHADER_RESOURCE_VIEW_DESC redtexsrvdesc = {};
+		redtexsrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		redtexsrvdesc.Texture2D.MipLevels = (UINT)m_redtexture.GetTotalMipCount();
+		redtexsrvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+
+
+		m_redtexture.CreateSRV(m_creationdevice, redtexsrvdesc, m_resaccessviewdescheap.GetCPUHandlefromstart());
+	}
+
+	//upload asset data
+	m_uploadcommandlist.Reset();
+	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
+	m_redtexture.UploadTexture(m_uploadcommandlist);
+	DXASSERT(m_uploadcommandlist->Close())
 
 }
 
@@ -149,6 +174,38 @@ void TexturedQuadApplication::Render()
 	m_primarycmdlist.Reset();
 	m_primarycmdlist->SetPipelineState(m_basicpso.GetPSO());
 	m_primarycmdlist->SetGraphicsRootSignature(m_emptyrootsignature.Get());
+	ID3D12DescriptorHeap* descheapstoset[1];
+	descheapstoset[0] = m_resaccessviewdescheap.GetDescHeap();
+	m_primarycmdlist->SetDescriptorHeaps(1, descheapstoset);
+	m_primarycmdlist->SetGraphicsRootDescriptorTable(0, m_resaccessviewdescheap.GetGPUHandlefromstart());
+
+	{
+		D3D12_VIEWPORT aviewport = {};
+		aviewport.TopLeftX = 0;
+		aviewport.TopLeftY = 0;
+		aviewport.Width = m_swapchain.GetSwapchainWidth();
+		aviewport.Height = m_swapchain.GetSwapchainHeight();
+		aviewport.MinDepth = 0.0f;
+		aviewport.MaxDepth = 1.0f;
+
+		D3D12_RECT ascissorrect = {};
+		ascissorrect.left = 0;
+		ascissorrect.top = 0;
+		ascissorrect.right = aviewport.Width;
+		ascissorrect.bottom = aviewport.Height;
+
+		m_primarycmdlist->RSSetViewports(1, &aviewport);
+		m_primarycmdlist->RSSetScissorRects(1, &ascissorrect);
+	}
+
+	m_primarycmdlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	{
+		D3D12_VERTEX_BUFFER_VIEW vbview = m_planemodel.GetVBView();
+		D3D12_INDEX_BUFFER_VIEW Ibview = m_planemodel.GetIBView();
+		m_primarycmdlist->IASetVertexBuffers(0, 1, &vbview);
+		m_primarycmdlist->IASetIndexBuffer(&Ibview);
+	}
+	
 
 	//set rtv
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
@@ -163,9 +220,11 @@ void TexturedQuadApplication::Render()
 	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, nullptr);
 	float rtclearcolour[4] = { 1.0f,1.0f,1.0f,1.0f };
 	m_primarycmdlist->ClearRenderTargetView(rtvhandle, rtclearcolour, 0, nullptr);
+	m_primarycmdlist->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
 	backbufferbarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	backbufferbarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	m_primarycmdlist->ResourceBarrier(1, &backbufferbarrier);
+	
 	DXASSERT(m_primarycmdlist->Close())
 	
 
