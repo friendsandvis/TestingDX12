@@ -31,7 +31,7 @@ public:
 	DX12FeedBackUnit();
 	~DX12FeedBackUnit();
 
-private:
+
 	
 	SamplerFeedbackTexture m_feedbacktex;
 };
