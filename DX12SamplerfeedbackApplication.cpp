@@ -16,7 +16,7 @@ void DX12SamplerfeedbackApplication::InitExtras()
 	//check sampler feedback support
 	D3D12_FEATURE_DATA_D3D12_OPTIONS7 option7features = {};
 	DXASSERT(m_creationdevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &option7features, sizeof(option7features)))
-		assert(option7features.SamplerFeedbackTier != D3D12_SAMPLER_FEEDBACK_TIER_NOT_SUPPORTED);
+		//assert(option7features.SamplerFeedbackTier != D3D12_SAMPLER_FEEDBACK_TIER_NOT_SUPPORTED);
 
 	//init pso
 	InitBasicPSO();
@@ -29,6 +29,11 @@ void DX12SamplerfeedbackApplication::InitExtras()
 
 	m_resaccessviewdescheap.Init(heapdesc, m_creationdevice);
 
+	D3D12_DESCRIPTOR_HEAP_DESC heapdescsrc = {};
+	heapdescsrc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	heapdescsrc.NumDescriptors = 1;	//just creating for a uav staging
+	heapdescsrc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	m_resaccessviewdescheapsrc.Init(heapdescsrc, m_creationdevice);
 
 	//init assets
 	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
@@ -61,8 +66,12 @@ void DX12SamplerfeedbackApplication::InitExtras()
 		ComPtr<ID3D12Device8> device8;
 		DXASSERT(m_creationdevice.As(&device8))
 
-		m_redtexfeedbackunit.m_feedbacktex.Init(device8, sftexinitdata);
-		m_redtexfeedbackunit.m_feedbacktex.Pair(device8,&m_redtexture, m_resaccessviewdescheap.GetCPUHandleOffseted(1));
+			if (option7features.SamplerFeedbackTier != D3D12_SAMPLER_FEEDBACK_TIER_NOT_SUPPORTED)
+			{
+				m_redtexfeedbackunit.m_feedbacktex.Init(device8, sftexinitdata);
+				m_redtexfeedbackunit.m_feedbacktex.Pair(device8, &m_redtexture, m_resaccessviewdescheapsrc.GetCPUHandleOffseted(0));
+				m_creationdevice->CopyDescriptorsSimple(1, m_resaccessviewdescheap.GetCPUHandleOffseted(1), m_resaccessviewdescheapsrc.GetCPUHandleOffseted(0), D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+			}
 	}
 
 	{
@@ -271,8 +280,9 @@ void DX12SamplerfeedbackApplication::Render()
 	backbufferbarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	m_primarycmdlist->ResourceBarrier(1, &backbufferbarrier);
 
-	DXASSERT(m_primarycmdlist->Close())
+	
 
+	DXASSERT(m_primarycmdlist->Close())
 
 		BasicRender();
 }
