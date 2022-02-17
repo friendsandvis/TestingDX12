@@ -3,6 +3,14 @@
 #pragma comment(lib,"dxgi.lib")
 
 
+//exports to use agility sdk...
+
+//version of agility sdk nuget used(update if using another version.
+extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 600; }
+
+extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = u8".\\D3D12\\"; }
+
+
 
 DX12Manager::DX12Manager()
 {
@@ -10,7 +18,7 @@ DX12Manager::DX12Manager()
 
 		//retrive all adapters
 
-		size_t adapterindex = 0;
+		UINT adapterindex = 0;
 	ComPtr<IDXGIAdapter> anadapter;
 		while (m_dxgifactory->EnumAdapters(adapterindex, anadapter.GetAddressOf()) == S_OK)
 		{
@@ -25,24 +33,27 @@ DX12Manager::~DX12Manager()
 {
 }
 
-void DX12Manager::Init(bool enabledebuglayer, DX12ApplicationManager* targetappmanager)
+void DX12Manager::Init(bool enabledebuglayer, DX12ApplicationManagerBase* targetappmanager)
 {
-	//create device
+	m_appmanager = targetappmanager;
+	
 
 	//debug layer if requested
 	if (enabledebuglayer)
 	{
-		ComPtr<ID3D12Debug> debuginterterface;
+		ComPtr<ID3D12Debug5> debuginterterface;
 		DXASSERT(D3D12GetDebugInterface(__uuidof(ID3D12Debug), (void**)debuginterterface.GetAddressOf()))
 			debuginterterface->EnableDebugLayer();
+		//debuginterterface->SetEnableAutoName(true);
 
-		m_appmanager = targetappmanager;
+		
 		
 
 	}
-	
+	//create device
 	DXASSERT(D3D12CreateDevice(m_hardwareadapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(m_maindevice.GetAddressOf())))
 		m_maindevice->SetName(L"MainDevice");
+	
 	
 		//initialize app manager
 		if (targetappmanager)

@@ -16,6 +16,9 @@
     <Filter Include="dxComponents">
       <UniqueIdentifier>{82644992-a2e3-4d29-861b-cc7db31054cc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Applications">
+      <UniqueIdentifier>{cd5c2f4f-0ea8-4aa7-9628-bb48fee4ba7b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -62,6 +65,18 @@
     </ClCompile>
     <ClCompile Include="DXTexManager.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SamplerFeedbackManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DX12ApplicationManagerBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DX12SimpleTexturedQuadApplication.cpp">
+      <Filter>Applications</Filter>
+    </ClCompile>
+    <ClCompile Include="DX12SamplerfeedbackApplication.cpp">
+      <Filter>Applications</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -110,5 +125,20 @@
     <ClInclude Include="DXTexManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SamplerFeedbackManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12ApplicationManagerBase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12SimpleTexturedQuadApplication.h">
+      <Filter>Applications</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12SamplerfeedbackApplication.h">
+      <Filter>Applications</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

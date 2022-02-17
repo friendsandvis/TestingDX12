@@ -40,7 +40,8 @@ void DX12Swapchain::InitBackBufferRTV(ComPtr< ID3D12Device> creationdevice, DX12
 
 void DX12Swapchain::Init(ComPtr<IDXGIFactory2> factory, unsigned width, unsigned height, HWND hwnd, ComPtr<ID3D12CommandQueue> creationqueue)
 {
-	
+	m_width = width;
+	m_height = height;
 	DXGI_SWAP_CHAIN_DESC1 swapchaindesc = {};
 	swapchaindesc.BufferCount = BACKBUFFERCOUNT;
 	swapchaindesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;

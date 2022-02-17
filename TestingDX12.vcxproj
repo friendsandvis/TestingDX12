@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="packages\Microsoft.Direct3D.D3D12.1.600.10\build\native\Microsoft.Direct3D.D3D12.props" Condition="Exists('packages\Microsoft.Direct3D.D3D12.1.600.10\build\native\Microsoft.Direct3D.D3D12.props')" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -149,6 +150,7 @@
   <ItemGroup>
     <ClCompile Include="AssetManager.cpp" />
     <ClCompile Include="DX12ApplicationManager.cpp" />
+    <ClCompile Include="DX12ApplicationManagerBase.cpp" />
     <ClCompile Include="DX12Buffer.cpp" />
     <ClCompile Include="DX12Commandlist.cpp" />
     <ClCompile Include="DX12CommandQueue.cpp" />
@@ -156,16 +158,20 @@
     <ClCompile Include="DX12Manager.cpp" />
     <ClCompile Include="DX12PSO.cpp" />
     <ClCompile Include="DX12Resource.cpp" />
+    <ClCompile Include="DX12SamplerfeedbackApplication.cpp" />
+    <ClCompile Include="DX12SimpleTexturedQuadApplication.cpp" />
     <ClCompile Include="DX12Swapchain.cpp" />
     <ClCompile Include="DXTexManager.cpp" />
     <ClCompile Include="DXUtils.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="SamplerFeedbackManager.cpp" />
     <ClCompile Include="ShaderManager.cpp" />
     <ClCompile Include="windmaker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AssetManager.h" />
     <ClInclude Include="DX12ApplicationManager.h" />
+    <ClInclude Include="DX12ApplicationManagerBase.h" />
     <ClInclude Include="DX12Buffer.h" />
     <ClInclude Include="DX12CommandList.h" />
     <ClInclude Include="DX12CommandQueue.h" />
@@ -173,14 +179,28 @@
     <ClInclude Include="DX12Manager.h" />
     <ClInclude Include="DX12PSO.h" />
     <ClInclude Include="DX12Resource.h" />
+    <ClInclude Include="DX12SamplerfeedbackApplication.h" />
+    <ClInclude Include="DX12SimpleTexturedQuadApplication.h" />
     <ClInclude Include="DX12Swapchain.h" />
     <ClInclude Include="DXTexManager.h" />
     <ClInclude Include="DXUtils.h" />
     <ClInclude Include="Renderable.h" />
+    <ClInclude Include="SamplerFeedbackManager.h" />
     <ClInclude Include="ShaderManager.h" />
     <ClInclude Include="windmaker.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="packages\Microsoft.Direct3D.D3D12.1.600.10\build\native\Microsoft.Direct3D.D3D12.targets" Condition="Exists('packages\Microsoft.Direct3D.D3D12.1.600.10\build\native\Microsoft.Direct3D.D3D12.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\Microsoft.Direct3D.D3D12.1.600.10\build\native\Microsoft.Direct3D.D3D12.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.Direct3D.D3D12.1.600.10\build\native\Microsoft.Direct3D.D3D12.props'))" />
+    <Error Condition="!Exists('packages\Microsoft.Direct3D.D3D12.1.600.10\build\native\Microsoft.Direct3D.D3D12.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.Direct3D.D3D12.1.600.10\build\native\Microsoft.Direct3D.D3D12.targets'))" />
+  </Target>
 </Project>

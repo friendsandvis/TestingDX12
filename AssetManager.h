@@ -14,7 +14,7 @@ struct Vertex
 enum ModelDataUploadMode
 {
 	NOCOPY,//using uploadbuffer directly as vb & ib
-	COPY	//using anupload buffer to copy vb & ib to a defult heap buffer
+	COPY	//using an upload buffer to copy vb & ib to a default heap buffer
 };
 
 //forwarddeclare
