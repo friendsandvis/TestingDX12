@@ -16,7 +16,7 @@ void DX12SamplerfeedbackApplication::InitExtras()
 	//check sampler feedback support
 	D3D12_FEATURE_DATA_D3D12_OPTIONS7 option7features = {};
 	DXASSERT(m_creationdevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &option7features, sizeof(option7features)))
-		//assert(option7features.SamplerFeedbackTier != D3D12_SAMPLER_FEEDBACK_TIER_NOT_SUPPORTED);
+		assert(option7features.SamplerFeedbackTier != D3D12_SAMPLER_FEEDBACK_TIER_NOT_SUPPORTED);
 
 	//init pso
 	InitBasicPSO();
@@ -61,8 +61,8 @@ void DX12SamplerfeedbackApplication::InitExtras()
 		ComPtr<ID3D12Device8> device8;
 		DXASSERT(m_creationdevice.As(&device8))
 
-		//m_redtexfeedbackunit.m_feedbacktex.Init(device8, sftexinitdata);
-		//m_redtexfeedbackunit.m_feedbacktex.Pair(device8,&m_redtexture, m_resaccessviewdescheap.GetCPUHandleOffseted(1));
+		m_redtexfeedbackunit.m_feedbacktex.Init(device8, sftexinitdata);
+		m_redtexfeedbackunit.m_feedbacktex.Pair(device8,&m_redtexture, m_resaccessviewdescheap.GetCPUHandleOffseted(1));
 	}
 
 	{
@@ -146,16 +146,27 @@ void DX12SamplerfeedbackApplication::InitBasicPSO()
 
 	D3D12_ROOT_PARAMETER psimgrootparam = {};
 
-	D3D12_DESCRIPTOR_RANGE texsrvrange = {};
-	texsrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	texsrvrange.NumDescriptors = 1;
-	texsrvrange.BaseShaderRegister = 0;
-	texsrvrange.RegisterSpace = 0;
-	texsrvrange.OffsetInDescriptorsFromTableStart = 0;
+	D3D12_DESCRIPTOR_RANGE descranges[2];
+	{
+		D3D12_DESCRIPTOR_RANGE& texsrvrange = descranges[0];
+		texsrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		texsrvrange.NumDescriptors = 1;
+		texsrvrange.BaseShaderRegister = 0;
+		texsrvrange.RegisterSpace = 0;
+		texsrvrange.OffsetInDescriptorsFromTableStart = 0;
+	}
+	{
+		D3D12_DESCRIPTOR_RANGE& feedbackuavrange = descranges[1];
+		feedbackuavrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+		feedbackuavrange.NumDescriptors = 1;
+		feedbackuavrange.BaseShaderRegister = 0;
+		feedbackuavrange.RegisterSpace = 0;
+		feedbackuavrange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	}
 
 	psimgrootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	psimgrootparam.DescriptorTable.NumDescriptorRanges = 1;
-	psimgrootparam.DescriptorTable.pDescriptorRanges = &texsrvrange;
+	psimgrootparam.DescriptorTable.NumDescriptorRanges = 2;
+	psimgrootparam.DescriptorTable.pDescriptorRanges = descranges;
 
 	CD3DX12_ROOT_SIGNATURE_DESC emptyrootsignaturedesc = {};
 	emptyrootsignaturedesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
