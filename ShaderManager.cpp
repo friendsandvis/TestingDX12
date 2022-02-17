@@ -42,9 +42,9 @@ bool DX12Shader::Init(LPCWSTR sourcehlslfilepath, ShaderType shadertype)
 	switch (m_shadertype)
 	{
 	case VS:
-		dxccompileparams.targetprofile = L"vs_6_0"; break;
+		dxccompileparams.targetprofile = L"vs_6_5"; break;
 	case PS:
-		dxccompileparams.targetprofile = L"ps_6_0"; break;
+		dxccompileparams.targetprofile = L"ps_6_5"; break;
 
 	}
 	DXCmanager::s_manager.CompileShader(dxccompileparams);

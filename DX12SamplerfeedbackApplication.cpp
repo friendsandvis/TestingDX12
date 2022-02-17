@@ -16,7 +16,7 @@ void DX12SamplerfeedbackApplication::InitExtras()
 	//check sampler feedback support
 	D3D12_FEATURE_DATA_D3D12_OPTIONS7 option7features = {};
 	DXASSERT(m_creationdevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &option7features, sizeof(option7features)))
-		assert(option7features.SamplerFeedbackTier != D3D12_SAMPLER_FEEDBACK_TIER_NOT_SUPPORTED);
+		//assert(option7features.SamplerFeedbackTier != D3D12_SAMPLER_FEEDBACK_TIER_NOT_SUPPORTED);
 
 	//init pso
 	InitBasicPSO();
@@ -61,8 +61,8 @@ void DX12SamplerfeedbackApplication::InitExtras()
 		ComPtr<ID3D12Device8> device8;
 		DXASSERT(m_creationdevice.As(&device8))
 
-		m_redtexfeedbackunit.m_feedbacktex.Init(device8, sftexinitdata);
-		m_redtexfeedbackunit.m_feedbacktex.Pair(device8,&m_redtexture, m_resaccessviewdescheap.GetCPUHandleOffseted(1));
+		//m_redtexfeedbackunit.m_feedbacktex.Init(device8, sftexinitdata);
+		//m_redtexfeedbackunit.m_feedbacktex.Pair(device8,&m_redtexture, m_resaccessviewdescheap.GetCPUHandleOffseted(1));
 	}
 
 	{
@@ -92,7 +92,7 @@ void DX12SamplerfeedbackApplication::InitBasicPSO()
 	DX12Shader* vs = new DX12Shader();
 	DX12Shader* ps = new DX12Shader();
 	vs->Init(L"shaders/BasicVertexShader_1.hlsl", DX12Shader::ShaderType::VS);
-	ps->Init(L"shaders/BasicPixelShader_1.hlsl", DX12Shader::ShaderType::PS);
+	ps->Init(L"shaders/PixelShader_SF.hlsl", DX12Shader::ShaderType::PS);
 	basicpsodata.m_shaderstouse.push_back(vs);
 	basicpsodata.m_shaderstouse.push_back(ps);
 
