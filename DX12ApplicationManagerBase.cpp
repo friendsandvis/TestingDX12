@@ -50,8 +50,6 @@ void DX12ApplicationManagerBase::InitBase(ComPtr< ID3D12Device> creationdevice)
 	m_uploadcommandlist.Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
 	m_uploadcommandlist.SetName(L"uploadcmdlist");
 
-	InitExtras();
-
 
 
 }
