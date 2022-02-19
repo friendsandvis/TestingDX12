@@ -151,6 +151,7 @@
     <ClCompile Include="DX12Buffer.cpp" />
     <ClCompile Include="DX12Commandlist.cpp" />
     <ClCompile Include="DX12CommandQueue.cpp" />
+    <ClCompile Include="DX12ComputeApplication.cpp" />
     <ClCompile Include="DX12DESCHEAP.cpp" />
     <ClCompile Include="DX12Manager.cpp" />
     <ClCompile Include="DX12PSO.cpp" />
@@ -172,6 +173,7 @@
     <ClInclude Include="DX12Buffer.h" />
     <ClInclude Include="DX12CommandList.h" />
     <ClInclude Include="DX12CommandQueue.h" />
+    <ClInclude Include="DX12ComputeApplication.h" />
     <ClInclude Include="DX12DESCHEAP.h" />
     <ClInclude Include="DX12Manager.h" />
     <ClInclude Include="DX12PSO.h" />
