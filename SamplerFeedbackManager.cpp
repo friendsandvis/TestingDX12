@@ -22,7 +22,7 @@ void SamplerFeedbackTexture::Init(ComPtr<ID3D12Device8> creationdevice, samplerF
 
 }
 
-void SamplerFeedbackTexture::Pair(ComPtr<ID3D12Device8> creationdevice, DX12Resource* restopairwith, D3D12_CPU_DESCRIPTOR_HANDLE uavhandle)
+void SamplerFeedbackTexture::Pair(ComPtr<ID3D12Device8> creationdevice, DX12ResourceBase* restopairwith, D3D12_CPU_DESCRIPTOR_HANDLE uavhandle)
 {
 	//1 paired res only
 	assert(m_pairedres == nullptr);

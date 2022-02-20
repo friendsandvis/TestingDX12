@@ -33,7 +33,7 @@ bool DXTexture::Init(ComPtr< ID3D12Device> creationdevice)
 	{
 		UINT64 uploadbuffersize = GetRequiredIntermediateSize(m_resource.Get(), 0, static_cast<UINT>(m_uploadsubresdata.size()));
 
-		BufferCreationProperties uploadbuffproperties;
+		DX12ResourceCreationProperties uploadbuffproperties;
 		uploadbuffproperties.resheapflags = D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE;
 		uploadbuffproperties.resinitialstate = D3D12_RESOURCE_STATE_GENERIC_READ;
 		uploadbuffproperties.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
@@ -65,5 +65,11 @@ void DXTexture::UploadTexture(DX12Commandlist& copycmdlist)
 	D3D12_RESOURCE_BARRIER barrier=TransitionResState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	copycmdlist->ResourceBarrier(1, &barrier);
 }
+
+void DXTexture::CreateSRV(ComPtr< ID3D12Device> creationdevice, D3D12_SHADER_RESOURCE_VIEW_DESC srvdesc, D3D12_CPU_DESCRIPTOR_HANDLE srvhandle)
+{
+	creationdevice->CreateShaderResourceView(m_resource.Get(), &srvdesc, srvhandle);
+}
+
 
 

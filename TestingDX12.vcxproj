@@ -159,6 +159,7 @@
     <ClCompile Include="DX12SamplerfeedbackApplication.cpp" />
     <ClCompile Include="DX12SimpleTexturedQuadApplication.cpp" />
     <ClCompile Include="DX12Swapchain.cpp" />
+    <ClCompile Include="DX12Texture.cpp" />
     <ClCompile Include="DXTexManager.cpp" />
     <ClCompile Include="DXUtils.cpp" />
     <ClCompile Include="main.cpp" />
@@ -181,6 +182,7 @@
     <ClInclude Include="DX12SamplerfeedbackApplication.h" />
     <ClInclude Include="DX12SimpleTexturedQuadApplication.h" />
     <ClInclude Include="DX12Swapchain.h" />
+    <ClInclude Include="DX12Texture.h" />
     <ClInclude Include="DXTexManager.h" />
     <ClInclude Include="DXUtils.h" />
     <ClInclude Include="Renderable.h" />
