@@ -31,7 +31,8 @@ public:
 	enum ShaderType
 	{
 		VS,
-		PS
+		PS,
+		CS
 	};
 
 

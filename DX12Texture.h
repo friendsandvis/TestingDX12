@@ -14,6 +14,7 @@ struct TextureCreationProperties
 class DX12TextureSimple:public DX12Resource
 {
 public:
+	
 	DX12TextureSimple();
 	~DX12TextureSimple();
 

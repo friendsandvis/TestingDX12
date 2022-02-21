@@ -124,6 +124,43 @@ void DX12ComputeApplication::InitGfxPSO()
 	m_gfxpso.Init(m_creationdevice, psodata);
 }
 
+void DX12ComputeApplication::InitComputePSO()
+{
+	D3D12_DESCRIPTOR_RANGE computeuavrange = {};
+	computeuavrange.NumDescriptors = 1;
+	computeuavrange.OffsetInDescriptorsFromTableStart = 0;
+	computeuavrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+
+	D3D12_ROOT_PARAMETER computerootparam = {};
+	computerootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	computerootparam.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	computerootparam.DescriptorTable.NumDescriptorRanges = 1;
+	computerootparam.DescriptorTable.pDescriptorRanges = &computeuavrange;
+
+
+	D3D12_ROOT_SIGNATURE_DESC computerootsigdesc = {};
+	computerootsigdesc.Flags = D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_NONE;
+	computerootsigdesc.NumParameters = 1;
+	computerootsigdesc.pParameters = &computerootparam;
+	DXASSERT(D3D12SerializeRootSignature(&computerootsigdesc, D3D_ROOT_SIGNATURE_VERSION_1, m_computerootsignatureblob.GetAddressOf(), m_computerootsignatureerrors.GetAddressOf()))
+	DXASSERT(m_creationdevice->CreateRootSignature(0,m_computerootsignatureblob->GetBufferPointer(),m_computerootsignatureblob->GetBufferSize(),IID_PPV_ARGS(m_computerootsignature.GetAddressOf())))
+
+	PSOInitData computepsodata;
+
+	computepsodata.type = PSOType::COMPUTE;
+	DX12Shader* cs = new DX12Shader();
+	cs->Init(L"shaders/TextureComputeShader.hlsl", DX12Shader::ShaderType::CS);
+	computepsodata.psodesc.computepsodesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	computepsodata.psodesc.computepsodesc.CachedPSO = {};
+	computepsodata.psodesc.computepsodesc.CS.BytecodeLength = cs->GetCompiledCodeSize();
+	computepsodata.psodesc.computepsodesc.CS.pShaderBytecode = cs->GetCompiledCode();
+	computepsodata.m_shaderstouse.push_back(cs);
+	computepsodata.psodesc.computepsodesc.NodeMask = 0;
+	computepsodata.psodesc.computepsodesc.pRootSignature=m_computerootsignature.Get();
+
+		m_computepso.Init(m_creationdevice, computepsodata);
+}
+
 void DX12ComputeApplication::InitExtras()
 {
 	//init desc heaps
@@ -133,9 +170,12 @@ void DX12ComputeApplication::InitExtras()
 	heapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
 	m_resaccessviewdescheap.Init(heapdesc, m_creationdevice);
+	//compute one is identical to the non compute one
+	m_resaccessviewdescheap_compute.Init(heapdesc, m_creationdevice);
 
 	//init psos
 	InitGfxPSO();
+	InitComputePSO();
 
 	//init assets
 	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
@@ -143,13 +183,37 @@ void DX12ComputeApplication::InitExtras()
 	bool initsuccess = m_redtexture.Init(m_creationdevice);
 	m_redtexture.SetName(L"GREENTEX");
 	{
-		D3D12_SHADER_RESOURCE_VIEW_DESC redtexsrvdesc = {};
-		redtexsrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		redtexsrvdesc.Texture2D.MipLevels = (UINT)m_redtexture.GetTotalMipCount();
-		redtexsrvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		
 
 
-		m_redtexture.CreateSRV(m_creationdevice, redtexsrvdesc, m_resaccessviewdescheap.GetCPUHandleOffseted(0));
+		
+	}
+	{
+		//blank texture
+		DX12ResourceCreationProperties rescreationprops;
+		 DX12Resource::InitResourceCreationProperties(rescreationprops);
+		rescreationprops.resdesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+		rescreationprops.resdesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+		rescreationprops.resdesc.DepthOrArraySize=1;
+		rescreationprops.resdesc.MipLevels = 1;
+		rescreationprops.resdesc.Height=128;
+		rescreationprops.resdesc.Width = 128;
+		rescreationprops.resdesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+		D3D12_SHADER_RESOURCE_VIEW_DESC customtexsrvdesc = {};
+		customtexsrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		customtexsrvdesc.Texture2D.MipLevels = (UINT)rescreationprops.resdesc.MipLevels;
+		customtexsrvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		m_customtexture.Init(m_creationdevice,rescreationprops , ResourceCreationMode::COMMITED);
+		m_customtexture.SetName(L"CUSTOMTEX");
+		m_customtexture.CreateSRV(m_creationdevice, customtexsrvdesc, m_resaccessviewdescheap.GetCPUHandleOffseted(0));
+		{
+			D3D12_UNORDERED_ACCESS_VIEW_DESC uavdesc = {};
+			uavdesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+			uavdesc.Texture2D.MipSlice = 0;
+			uavdesc.Texture2D.PlaneSlice = 0;
+			m_customtexture.CreateUAV(m_creationdevice,uavdesc,m_resaccessviewdescheap_compute.GetCPUHandleOffseted(0) );
+		}
 	}
 
 	//uploadassets
@@ -164,6 +228,26 @@ void DX12ComputeApplication::Render()
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
 	m_primarycmdlist.Reset();
+	{
+		//first the compute task then gfx task
+		m_primarycmdlist->SetPipelineState(m_computepso.GetPSO());
+		m_primarycmdlist->SetComputeRootSignature(m_computerootsignature.Get());
+		ID3D12DescriptorHeap* descheapstoset[1];
+		descheapstoset[0] = m_resaccessviewdescheap_compute.GetDescHeap();
+		m_primarycmdlist->SetDescriptorHeaps(1, descheapstoset);
+		m_primarycmdlist->SetComputeRootDescriptorTable(0, m_resaccessviewdescheap_compute.GetGPUHandleOffseted(0));
+
+		//transition custom tex to uav for compute access
+		D3D12_RESOURCE_BARRIER customtexbarrier=m_customtexture.TransitionResState(D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		m_primarycmdlist->ResourceBarrier(1, &customtexbarrier);
+
+		m_primarycmdlist->Dispatch(128, 128, 1);
+		customtexbarrier = m_customtexture.TransitionResState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		m_primarycmdlist->ResourceBarrier(1, &customtexbarrier);
+
+		
+
+	}
 	m_primarycmdlist->SetPipelineState(m_gfxpso.GetPSO());
 	m_primarycmdlist->SetGraphicsRootSignature(m_emptyrootsignature.Get());
 	{

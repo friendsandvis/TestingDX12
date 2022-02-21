@@ -45,6 +45,8 @@ bool DX12Shader::Init(LPCWSTR sourcehlslfilepath, ShaderType shadertype)
 		dxccompileparams.targetprofile = L"vs_6_5"; break;
 	case PS:
 		dxccompileparams.targetprofile = L"ps_6_5"; break;
+	case CS:
+		dxccompileparams.targetprofile = L"cs_6_5"; break;
 
 	}
 	DXCmanager::s_manager.CompileShader(dxccompileparams);
@@ -69,6 +71,9 @@ bool DX12Shader::Init(LPCWSTR sourcehlslfilepath, ShaderType shadertype)
 		fxccompileparams.target ="vs_5_0"; break;
 	case PS:
 		fxccompileparams.target = "ps_5_0"; break;
+
+	case CS:
+		fxccompileparams.target = "cs_5_0"; break;
 
 	}
 	FXCManager::s_manager.CompileShader(fxccompileparams);

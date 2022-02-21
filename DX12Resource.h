@@ -42,6 +42,9 @@ class DX12Resource:public DX12ResourceBase
 public:
 	void Init(ComPtr< ID3D12Device> creationdevice, DX12ResourceCreationProperties resprops, ResourceCreationMode creationmode);
 	void CreateSRV(ComPtr< ID3D12Device> creationdevice, D3D12_SHADER_RESOURCE_VIEW_DESC srvdesc, D3D12_CPU_DESCRIPTOR_HANDLE srvhandle);
+	void CreateUAV(ComPtr< ID3D12Device> creationdevice,D3D12_UNORDERED_ACCESS_VIEW_DESC uavdesc, D3D12_CPU_DESCRIPTOR_HANDLE uavhandle);
+	//initialize the resource creation properties with defaults to prevent missing any params while manual init
+	static void InitResourceCreationProperties(DX12ResourceCreationProperties& rescreationprops);
 
 protected:
 	DX12ResourceCreationProperties m_creationproperties;

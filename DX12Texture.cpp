@@ -9,3 +9,5 @@ DX12TextureSimple::~DX12TextureSimple()
 {
 
 }
+
+
