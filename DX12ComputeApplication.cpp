@@ -172,6 +172,11 @@ void DX12ComputeApplication::InitExtras()
 	m_resaccessviewdescheap.Init(heapdesc, m_creationdevice);
 	//compute one is identical to the non compute one
 	m_resaccessviewdescheap_compute.Init(heapdesc, m_creationdevice);
+	{
+		D3D12_DESCRIPTOR_HEAP_DESC heapdescupload = heapdesc;
+		heapdescupload.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		m_resaccessviewdescheap_computeupload.Init(heapdescupload, m_creationdevice);
+	}
 
 	//init psos
 	InitGfxPSO();
@@ -212,7 +217,9 @@ void DX12ComputeApplication::InitExtras()
 			uavdesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
 			uavdesc.Texture2D.MipSlice = 0;
 			uavdesc.Texture2D.PlaneSlice = 0;
-			m_customtexture.CreateUAV(m_creationdevice,uavdesc,m_resaccessviewdescheap_compute.GetCPUHandleOffseted(0) );
+			//m_customtexture.CreateUAV(m_creationdevice,uavdesc,m_resaccessviewdescheap_compute.GetCPUHandleOffseted(0) );
+			m_customtexture.CreateUAV(m_creationdevice, uavdesc, m_resaccessviewdescheap_computeupload.GetCPUHandleOffseted(0));
+			m_creationdevice->CopyDescriptorsSimple(1, m_resaccessviewdescheap_compute.GetCPUHandleOffseted(0), m_resaccessviewdescheap_computeupload.GetCPUHandleOffseted(0), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		}
 	}
 
@@ -228,7 +235,7 @@ void DX12ComputeApplication::Render()
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
 	m_primarycmdlist.Reset();
-	{
+	  {
 		//first the compute task then gfx task
 		m_primarycmdlist->SetPipelineState(m_computepso.GetPSO());
 		m_primarycmdlist->SetComputeRootSignature(m_computerootsignature.Get());
@@ -248,6 +255,7 @@ void DX12ComputeApplication::Render()
 		
 
 	}
+	  
 	m_primarycmdlist->SetPipelineState(m_gfxpso.GetPSO());
 	m_primarycmdlist->SetGraphicsRootSignature(m_emptyrootsignature.Get());
 	{

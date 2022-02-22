@@ -26,6 +26,7 @@ private:
 	
 	DX12DESCHEAP m_resaccessviewdescheap;//CBV/SRV/UAV
 	DX12DESCHEAP m_resaccessviewdescheap_compute;//CBV/SRV/UAV
+	DX12DESCHEAP m_resaccessviewdescheap_computeupload;//CBV/SRV/UAV
 
 	void InitGfxPSO();
 	void InitComputePSO();

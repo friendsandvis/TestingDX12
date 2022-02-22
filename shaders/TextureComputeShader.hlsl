@@ -6,5 +6,7 @@ uint3 dispatchThreadId: SV_DispatchThreadID
 )
 {
 	
-	tex[dispatchThreadId.xy]=float4(1.0f,1.0f,1.0f,1.0f);
+	float2 uv=(dispatchThreadId.xy/float2(128.0f,128.0f));
+	float delta=distance(uv,float2(0.5f,0.5f));
+	tex[dispatchThreadId.xy]=float4(delta,0.0f,0.0f,1.0f);
 }
