@@ -10,6 +10,7 @@ public:
 	void Init(D3D12_COMMAND_LIST_TYPE type,ComPtr< ID3D12Device> creationdevice);
 	void Reset(bool closeafterreset=false);
 	inline ID3D12GraphicsCommandList* GetcmdList() { return m_list.Get(); }
+	ComPtr<ID3D12GraphicsCommandList> GetcmdListComPtr() { return m_list; }
 	ID3D12GraphicsCommandList* operator->() { return m_list.Get(); }
 
 private:

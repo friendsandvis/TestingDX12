@@ -3,7 +3,8 @@
 
 
 DX12SamplerfeedbackApplication::DX12SamplerfeedbackApplication()
-	:m_planemodel(ModelDataUploadMode::COPY)
+	:m_planemodel(ModelDataUploadMode::COPY),
+	m_sfsupported(false)
 {
 }
 
@@ -16,7 +17,7 @@ void DX12SamplerfeedbackApplication::InitExtras()
 	//check sampler feedback support
 	D3D12_FEATURE_DATA_D3D12_OPTIONS7 option7features = {};
 	DXASSERT(m_creationdevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &option7features, sizeof(option7features)))
-		//assert(option7features.SamplerFeedbackTier != D3D12_SAMPLER_FEEDBACK_TIER_NOT_SUPPORTED);
+		m_sfsupported=(option7features.SamplerFeedbackTier != D3D12_SAMPLER_FEEDBACK_TIER_NOT_SUPPORTED);
 
 	//init pso
 	InitBasicPSO();
@@ -66,10 +67,11 @@ void DX12SamplerfeedbackApplication::InitExtras()
 		ComPtr<ID3D12Device8> device8;
 		DXASSERT(m_creationdevice.As(&device8))
 
-			if (option7features.SamplerFeedbackTier != D3D12_SAMPLER_FEEDBACK_TIER_NOT_SUPPORTED)
+			if (m_sfsupported)
 			{
 				m_redtexfeedbackunit.m_feedbacktex.Init(device8, sftexinitdata);
 				m_redtexfeedbackunit.m_feedbacktex.Pair(device8, &m_redtexture, m_resaccessviewdescheapsrc.GetCPUHandleOffseted(0));
+				m_redtexfeedbackunit.InitReedbackBuffer();
 				m_creationdevice->CopyDescriptorsSimple(1, m_resaccessviewdescheap.GetCPUHandleOffseted(1), m_resaccessviewdescheapsrc.GetCPUHandleOffseted(0), D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 			}
 	}
@@ -279,12 +281,43 @@ void DX12SamplerfeedbackApplication::Render()
 	backbufferbarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	backbufferbarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	m_primarycmdlist->ResourceBarrier(1, &backbufferbarrier);
+	
+	if(m_sfsupported)
+	{
+		D3D12_GPU_DESCRIPTOR_HANDLE gpuhandle=m_resaccessviewdescheap.GetGPUHandleOffseted(1);
+		D3D12_CPU_DESCRIPTOR_HANDLE cpuhandle = m_resaccessviewdescheapsrc.GetCPUHandleOffseted(0);
+		UINT clearvalue[4] = {5u,5u,5u,5u};
+		m_primarycmdlist->ClearUnorderedAccessViewUint(gpuhandle, cpuhandle, m_redtexfeedbackunit.m_feedbacktex.GetResource().Get(), clearvalue, 0, nullptr);
+		ComPtr<ID3D12GraphicsCommandList1> primarycmdlist1;
+		DXASSERT(m_primarycmdlist.GetcmdListComPtr().As(&primarycmdlist1))
+			m_redtexfeedbackunit.m_feedbacktex.Readback(primarycmdlist1, &m_redtexfeedbackunit.m_feedbackreadbackbuffer);
+	}
 
 	
 
 	DXASSERT(m_primarycmdlist->Close())
 
 		BasicRender();
+	if(m_sfsupported)
+	{
+		UINT64 readbacksize = m_redtexfeedbackunit.m_feedbacktex.GetRequiredBufferSizeForTranscodeing();
+		unsigned char* readbackdata = new unsigned char[readbacksize];
+
+		BufferMapParams readparams = {};
+		readparams.subresource = 0;
+		readparams.range.Begin = 0;
+		readparams.range.End = readbacksize;
+		void* mappedata = m_redtexfeedbackunit.m_feedbackreadbackbuffer.Map(readparams);
+		memcpy(readbackdata, mappedata, readbacksize);
+		BufferMapParams writeparams = {};
+		m_redtexfeedbackunit.m_feedbackreadbackbuffer.UnMap(writeparams);
+
+
+
+
+		delete[] readbackdata;
+
+	}
 }
 
 

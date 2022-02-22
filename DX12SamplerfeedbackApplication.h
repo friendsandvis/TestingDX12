@@ -26,6 +26,7 @@ private:
 	DX12DESCHEAP m_resaccessviewdescheap;//CBV/SRV/UAV
 	DX12DESCHEAP m_resaccessviewdescheapsrc;//CBV/SRV/UAV(staging)
 	DX12FeedBackUnit m_redtexfeedbackunit;
+	bool m_sfsupported;
 	
 	
 
