@@ -78,6 +78,12 @@
     <ClCompile Include="DX12SamplerfeedbackApplication.cpp">
       <Filter>Applications</Filter>
     </ClCompile>
+    <ClCompile Include="DX12ComputeApplication.cpp">
+      <Filter>Applications</Filter>
+    </ClCompile>
+    <ClCompile Include="DX12Texture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="windmaker.h">
@@ -136,6 +142,12 @@
     </ClInclude>
     <ClInclude Include="DX12SamplerfeedbackApplication.h">
       <Filter>Applications</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12ComputeApplication.h">
+      <Filter>Applications</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12Texture.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

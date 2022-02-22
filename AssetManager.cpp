@@ -32,7 +32,7 @@ void Model::InitVertexBuffer(ComPtr< ID3D12Device> creationdevice,vector<Vertex>
 {
 
 	m_verticies = verticies;
-	BufferCreationProperties vbproperties;
+	DX12ResourceCreationProperties vbproperties;
 	vbproperties.resheapflags = D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE;
 	vbproperties.resinitialstate = D3D12_RESOURCE_STATE_GENERIC_READ;
 	vbproperties.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
@@ -79,7 +79,7 @@ void Model::InitVertexBuffer(ComPtr< ID3D12Device> creationdevice,vector<Vertex>
 void Model::InitIndexBuffer(ComPtr< ID3D12Device> creationdevice,vector<unsigned>& indicies)
 {
 	m_indicies = indicies;
-	BufferCreationProperties ibproperties;
+	DX12ResourceCreationProperties ibproperties;
 	ibproperties.resheapflags = D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE;
 	ibproperties.resinitialstate = D3D12_RESOURCE_STATE_GENERIC_READ;
 	ibproperties.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;

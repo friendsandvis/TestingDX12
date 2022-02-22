@@ -9,6 +9,28 @@ DX12ApplicationManagerBase::~DX12ApplicationManagerBase()
 {
 }
 
+D3D12_VIEWPORT DX12ApplicationManagerBase::GetViewport()
+{
+	D3D12_VIEWPORT aviewport = {};
+	aviewport.TopLeftX = 0;
+	aviewport.TopLeftY = 0;
+	aviewport.Width = m_swapchain.GetSwapchainWidth();
+	aviewport.Height = m_swapchain.GetSwapchainHeight();
+	aviewport.MinDepth = 0.0f;
+	aviewport.MaxDepth = 1.0f;
+	return aviewport;
+}
+D3D12_RECT DX12ApplicationManagerBase::GetScissorRect()
+{
+	D3D12_RECT ascissorrect = {};
+	ascissorrect.left = 0;
+	ascissorrect.top = 0;
+	ascissorrect.right = m_swapchain.GetSwapchainWidth();
+	ascissorrect.bottom = m_swapchain.GetSwapchainHeight();
+	return ascissorrect;
+}
+
+
 void DX12ApplicationManagerBase::Initswapchain(ComPtr<IDXGIFactory2> factory, unsigned width, unsigned height, HWND hwnd)
 {
 	m_swapchain.Init(factory, width, height, hwnd, m_mainqueue.GetQueue());
@@ -49,8 +71,6 @@ void DX12ApplicationManagerBase::InitBase(ComPtr< ID3D12Device> creationdevice)
 	m_primarycmdlist.SetName(L"primarycmdlist");
 	m_uploadcommandlist.Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
 	m_uploadcommandlist.SetName(L"uploadcmdlist");
-
-	InitExtras();
 
 
 

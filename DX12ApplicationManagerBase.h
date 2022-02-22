@@ -37,6 +37,11 @@ protected:
 	SyncronizationUnit m_syncunitprime;
 	DX12Swapchain m_swapchain;
 
+	//returns the default viewport based on the current swapchain properties
+	D3D12_VIEWPORT GetViewport();
+	//returns the default scissor rect based on the current swapchain properties
+	D3D12_RECT GetScissorRect();
+
 	//this one is just for swapchain buffers
 	DX12DESCHEAP m_rtvdescheap;
 };
