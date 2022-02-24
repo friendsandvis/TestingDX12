@@ -49,3 +49,37 @@ public:
 protected:
 	DX12ResourceCreationProperties m_creationproperties;
 };
+
+class DX12ReservedResource :public DX12ResourceBase
+{
+public:
+	void Init(ComPtr< ID3D12Device> creationdevice, DX12ResourceCreationProperties resprops);
+	void CreateSRV(ComPtr< ID3D12Device> creationdevice, D3D12_SHADER_RESOURCE_VIEW_DESC srvdesc, D3D12_CPU_DESCRIPTOR_HANDLE srvhandle);
+	void CreateUAV(ComPtr< ID3D12Device> creationdevice, D3D12_UNORDERED_ACCESS_VIEW_DESC uavdesc, D3D12_CPU_DESCRIPTOR_HANDLE uavhandle);
+	DX12ReservedResource();
+	~DX12ReservedResource();
+	// initialize the resource creation properties with defaults to prevent missing any params while manual init
+		static void InitResourceCreationProperties(DX12ResourceCreationProperties & rescreationprops);
+
+protected:
+	DX12ResourceCreationProperties m_creationproperties;
+	D3D12_PACKED_MIP_INFO m_packedmipinfo;
+	vector<D3D12_SUBRESOURCE_TILING> m_subresourcetiling;
+};
+
+class DX12ReservedresourcePhysicalMemoryManager
+{
+public:
+	//initialize reservedresourcememory manager(prepare everything needed for mapping physical memory to reserved resource)
+	void Init(ComPtr< ID3D12Device> creationdevice, DX12ReservedResource* resourcetomanage);
+	DX12ReservedresourcePhysicalMemoryManager();
+
+	~DX12ReservedresourcePhysicalMemoryManager();
+private:
+	DX12ReservedResource* m_reservedres;
+	vector<ComPtr<ID3D12Heap>>m_heaps;
+};
+
+
+
+

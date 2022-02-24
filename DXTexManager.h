@@ -13,7 +13,7 @@ struct DXImageData
 };
 class DX12Commandlist;
 
-//does not represents a generic dx12 texture but just a dx12 texture resource representing a directxtex loaded textre
+//does not represents a generic dx12 texture but just a dx12 texture resource representing a directxtex loaded textre(the init creates commited resource as it calls DXTex createtexture fuction)
 class DXTexture:public DX12ResourceBase
 {
 	DXImageData m_texdata;

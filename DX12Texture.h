@@ -19,3 +19,4 @@ public:
 	~DX12TextureSimple();
 
 };
+
