@@ -117,7 +117,115 @@ void DX12ReservedResource::InitResourceCreationProperties(DX12ResourceCreationPr
 
 
 DX12ReservedresourcePhysicalMemoryManager::DX12ReservedresourcePhysicalMemoryManager()
+	:m_reservedres(nullptr)
 {}
 
 DX12ReservedresourcePhysicalMemoryManager::~DX12ReservedresourcePhysicalMemoryManager()
 {}
+
+void DX12ReservedresourcePhysicalMemoryManager::Init(ComPtr< ID3D12Device> creationdevice, DX12ReservedResource* resourcetomanage)
+{
+	m_reservedres = resourcetomanage;
+
+	const D3D12_PACKED_MIP_INFO& resmipinfo=m_reservedres->GetPackedMipInfo();
+	UINT heapsrequiredforres = resmipinfo.NumStandardMips;
+
+	if (resmipinfo.NumPackedMips > 0)
+	{
+		//1 heap for all packedmips(technique taken from microsoft example)
+		heapsrequiredforres++;
+	}
+
+		//prepare subres info needed for upload
+		const vector<D3D12_SUBRESOURCE_TILING> subrestilinginfo=m_reservedres->GetSubResourceTilingInfo();
+		m_subresourceinfo.resize(subrestilinginfo.size());
+		//heaps required must be greater than or equal to num sub resources(given tha we are using 1 heap per subres)
+		assert(heapsrequiredforres >= subrestilinginfo.size());
+		m_heaps.resize(heapsrequiredforres);
+
+		m_subresourceinfo.resize(subrestilinginfo.size());
+		for (size_t i = 0; i < subrestilinginfo.size(); i++)
+			
+		{
+			const D3D12_SUBRESOURCE_TILING& subrestiling = subrestilinginfo[i];
+			if (i < resmipinfo.NumPackedMips)
+			{
+				
+				//init as unpacked mip
+				m_subresourceinfo[i].heapindex = i;
+				m_subresourceinfo[i].coordinates.Subresource = i;
+				m_subresourceinfo[i].coordinates.X = 0;
+				m_subresourceinfo[i].coordinates.Y = 0;
+				m_subresourceinfo[i].coordinates.Z = 0;
+				m_subresourceinfo[i].tileregionsize.Width = subrestiling.WidthInTiles;
+				m_subresourceinfo[i].tileregionsize.Height = subrestiling.HeightInTiles;
+				m_subresourceinfo[i].tileregionsize.Depth = subrestiling.DepthInTiles;
+				m_subresourceinfo[i].tileregionsize.NumTiles = subrestiling.HeightInTiles* subrestiling.WidthInTiles* subrestiling.DepthInTiles;
+				m_subresourceinfo[i].tileregionsize.UseBox = TRUE;
+				//init respectiveheap
+				InitHeap(i, creationdevice, m_subresourceinfo[i].tileregionsize.NumTiles * D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
+
+
+				
+			}
+			else
+			{
+				//init as packed mip
+				m_subresourceinfo[i].heapindex = heapsrequiredforres-1;//last heap for all packed mips
+				m_subresourceinfo[i].coordinates.Subresource = i;
+				m_subresourceinfo[i].coordinates.X = 0;
+				m_subresourceinfo[i].coordinates.Y = 0;
+				m_subresourceinfo[i].coordinates.Z = 0;
+				
+				m_subresourceinfo[i].tileregionsize.NumTiles = resmipinfo.NumTilesForPackedMips;
+				m_subresourceinfo[i].tileregionsize.UseBox = FALSE;
+
+				//init respectiveheap
+				InitHeap(heapsrequiredforres - 1, creationdevice, m_subresourceinfo[i].tileregionsize.NumTiles * D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
+			}
+		
+		}
+
+		
+}
+
+void DX12ReservedresourcePhysicalMemoryManager::InitHeap(size_t indexinheapvector, ComPtr< ID3D12Device> creationdevice, UINT64 heapsize)
+{
+	D3D12_HEAP_DESC heapdesc = {};
+	heapdesc.Alignment = 0;
+	heapdesc.Flags = D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE;
+	heapdesc.SizeInBytes = heapsize;
+	heapdesc.Properties.VisibleNodeMask = 0;
+	heapdesc.Properties.CreationNodeMask = 0;
+	heapdesc.Properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_NOT_AVAILABLE;
+	heapdesc.Properties.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+	DXASSERT(creationdevice->CreateHeap(&heapdesc, IID_PPV_ARGS(m_heaps[indexinheapvector].GetAddressOf())))
+}
+
+void DX12ReservedresourcePhysicalMemoryManager::UpdateReservedresourcePhysicalMemoryMappings(ComPtr<ID3D12CommandQueue> commandqueue)
+{
+	vector<D3D12_TILE_RANGE_FLAGS> rangemappingflags;
+	vector<D3D12_TILED_RESOURCE_COORDINATE> regioncoordinatestomap;
+	vector<D3D12_TILE_REGION_SIZE> regionsizetomap;
+	vector<UINT> rangestartoffset,rangetilecount;
+	vector<ID3D12Heap*> heapstomap;
+	UINT resourceregionstomap = 0;
+	for (size_t i = 0; i < m_subresourceinfo.size(); i++)
+	{
+		
+		rangestartoffset.push_back(0);
+		rangemappingflags.push_back(D3D12_TILE_RANGE_FLAG_NONE);
+		const SubResouceInfo& subresinfo = m_subresourceinfo[i];
+		ComPtr<ID3D12Heap> heap = m_heaps[subresinfo.heapindex];
+		heapstomap.push_back(heap.Get());
+		rangetilecount.push_back(subresinfo.tileregionsize.NumTiles);
+		regionsizetomap.push_back(subresinfo.tileregionsize);
+		regioncoordinatestomap.push_back(subresinfo.coordinates);
+		resourceregionstomap++;
+	}
+	{
+		
+		commandqueue->UpdateTileMappings(m_reservedres->GetResource().Get(), resourceregionstomap, regioncoordinatestomap.data(), regionsizetomap.data(), heapstomap[0], resourceregionstomap,rangemappingflags.data(),rangestartoffset.data(),rangetilecount.data(),D3D12_TILE_MAPPING_FLAG_NONE );
+	}
+}
