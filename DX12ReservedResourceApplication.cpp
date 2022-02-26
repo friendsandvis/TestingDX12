@@ -35,7 +35,22 @@ void DX12ReservedResourceApplication::InitExtras()
 		redtexsrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 		redtexsrvdesc.Texture2D.MipLevels = (UINT)m_redtexture.GetTotalMipCount();
 		redtexsrvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-
+		{
+			//reservedresource init
+			DXImageData imagedata;
+			DXTexManager::LoadTexture(L"textures/tex3_miped.dds", imagedata);
+			DX12ResourceCreationProperties reservedresprops;
+			DX12ReservedResource::InitResourceCreationProperties(reservedresprops);
+			reservedresprops.resinitialstate = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+			reservedresprops.resdesc.Width = imagedata.m_imagemetadata.width;
+			reservedresprops.resdesc.Height = imagedata.m_imagemetadata.height;
+			reservedresprops.resdesc.MipLevels = imagedata.m_imagemetadata.mipLevels;
+			reservedresprops.resdesc.Format = imagedata.m_imagemetadata.format;
+			
+			m_greentex_reservedres.Init(m_creationdevice, reservedresprops);
+			m_greentex_reservedres.SetName(L"GREENTTEX_RESERVEDRES");
+			m_greentex_reservedresmemorymanager.Init(m_creationdevice, &m_greentex_reservedres);
+		}
 
 		m_redtexture.CreateSRV(m_creationdevice, redtexsrvdesc, m_resaccessviewdescheap.GetCPUHandlefromstart());
 	}

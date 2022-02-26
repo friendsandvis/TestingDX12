@@ -139,8 +139,6 @@ void DX12ReservedresourcePhysicalMemoryManager::Init(ComPtr< ID3D12Device> creat
 		//prepare subres info needed for upload
 		const vector<D3D12_SUBRESOURCE_TILING> subrestilinginfo=m_reservedres->GetSubResourceTilingInfo();
 		m_subresourceinfo.resize(subrestilinginfo.size());
-		//heaps required must be greater than or equal to num sub resources(given tha we are using 1 heap per subres)
-		assert(heapsrequiredforres >= subrestilinginfo.size());
 		m_heaps.resize(heapsrequiredforres);
 
 		m_subresourceinfo.resize(subrestilinginfo.size());
@@ -148,7 +146,7 @@ void DX12ReservedresourcePhysicalMemoryManager::Init(ComPtr< ID3D12Device> creat
 			
 		{
 			const D3D12_SUBRESOURCE_TILING& subrestiling = subrestilinginfo[i];
-			if (i < resmipinfo.NumPackedMips)
+			if (i < resmipinfo.NumStandardMips)
 			{
 				
 				//init as unpacked mip
@@ -191,16 +189,22 @@ void DX12ReservedresourcePhysicalMemoryManager::Init(ComPtr< ID3D12Device> creat
 
 void DX12ReservedresourcePhysicalMemoryManager::InitHeap(size_t indexinheapvector, ComPtr< ID3D12Device> creationdevice, UINT64 heapsize)
 {
+	if (m_heaps[indexinheapvector].Get())
+	{
+		//heap is already created do not recreate.
+		return;
+	}
 	D3D12_HEAP_DESC heapdesc = {};
 	heapdesc.Alignment = 0;
-	heapdesc.Flags = D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE;
+	heapdesc.Flags = D3D12_HEAP_FLAG_DENY_BUFFERS | D3D12_HEAP_FLAG_DENY_RT_DS_TEXTURES;
 	heapdesc.SizeInBytes = heapsize;
 	heapdesc.Properties.VisibleNodeMask = 0;
 	heapdesc.Properties.CreationNodeMask = 0;
-	heapdesc.Properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_NOT_AVAILABLE;
+	heapdesc.Properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
 	heapdesc.Properties.Type = D3D12_HEAP_TYPE_DEFAULT;
 
 	DXASSERT(creationdevice->CreateHeap(&heapdesc, IID_PPV_ARGS(m_heaps[indexinheapvector].GetAddressOf())))
+		DXASSERT(m_heaps[indexinheapvector]->SetName(L"ReservedResourceheap"))
 }
 
 void DX12ReservedresourcePhysicalMemoryManager::UpdateReservedresourcePhysicalMemoryMappings(ComPtr<ID3D12CommandQueue> commandqueue)

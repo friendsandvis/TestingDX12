@@ -22,6 +22,8 @@ private:
 	ComPtr<ID3D12RootSignature> m_emptyrootsignature;
 	Model m_planemodel;
 	DXTexture m_redtexture;
+	DX12ReservedResource m_greentex_reservedres;
+	DX12ReservedresourcePhysicalMemoryManager  m_greentex_reservedresmemorymanager;
 	DX12DESCHEAP m_resaccessviewdescheap;//CBV/SRV/UAV
 
 	void InitBasicPSO();
