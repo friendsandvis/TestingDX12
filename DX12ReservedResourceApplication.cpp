@@ -26,6 +26,8 @@ void DX12ReservedResourceApplication::InitExtras()
 
 
 	//init assets
+	//upload asset data
+	
 	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
 	DXTexManager::LoadTexture(L"textures/tex3_miped.dds", m_redtexture.GetDXImageData());
 	bool initsuccess = m_redtexture.Init(m_creationdevice);
@@ -37,28 +39,84 @@ void DX12ReservedResourceApplication::InitExtras()
 		redtexsrvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 		{
 			//reservedresource init
-			DXImageData imagedata;
+			
 			DXTexManager::LoadTexture(L"textures/tex3_miped.dds", imagedata);
+			
+			
+			imagedata.GetSubresData(m_creationdevice, subresdata);
+			
 			DX12ResourceCreationProperties reservedresprops;
 			DX12ReservedResource::InitResourceCreationProperties(reservedresprops);
-			reservedresprops.resinitialstate = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+			reservedresprops.resinitialstate = D3D12_RESOURCE_STATE_COPY_DEST;
 			reservedresprops.resdesc.Width = imagedata.m_imagemetadata.width;
 			reservedresprops.resdesc.Height = imagedata.m_imagemetadata.height;
 			reservedresprops.resdesc.MipLevels = imagedata.m_imagemetadata.mipLevels;
 			reservedresprops.resdesc.Format = imagedata.m_imagemetadata.format;
+			reservedresprops.resdesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 			
 			m_greentex_reservedres.Init(m_creationdevice, reservedresprops);
 			m_greentex_reservedres.SetName(L"GREENTTEX_RESERVEDRES");
-			m_greentex_reservedresmemorymanager.Init(m_creationdevice, &m_greentex_reservedres);
-		}
+			m_greentexuploadhelper.PrepareUpload(m_creationdevice, &m_greentex_reservedres);
+			m_greentexuploadhelper.SetUploadTextureData(imagedata);
+			
+			
+			 
+			 DX12ResourceCreationProperties intermidiatebufferprop;
+			 intermidiatebufferprop.useclearvalue = false;
+			 intermidiatebufferprop.resheapflags = D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE;
+			 intermidiatebufferprop.resinitialstate = D3D12_RESOURCE_STATE_COPY_SOURCE;
+			 intermidiatebufferprop.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
+			 intermidiatebufferprop.resheapprop.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+			 intermidiatebufferprop.resheapprop.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+			 intermidiatebufferprop.resheapprop.VisibleNodeMask = 0;
+			 intermidiatebufferprop.resheapprop.CreationNodeMask=0;
+			 intermidiatebufferprop.resdesc.Format = DXGI_FORMAT_UNKNOWN;
+			 intermidiatebufferprop.resdesc.Alignment = 0;
+			 intermidiatebufferprop.resdesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+			 intermidiatebufferprop.resdesc.Height=1;
+			 intermidiatebufferprop.resdesc.MipLevels = 1;
+			 intermidiatebufferprop.resdesc.SampleDesc.Count = 1;
+			 intermidiatebufferprop.resdesc.SampleDesc.Quality = 0;
 
-		m_redtexture.CreateSRV(m_creationdevice, redtexsrvdesc, m_resaccessviewdescheap.GetCPUHandlefromstart());
+			 intermidiatebufferprop.resdesc.DepthOrArraySize = 1;
+			 intermidiatebufferprop.resdesc.Flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_NONE;
+			 intermidiatebufferprop.resdesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+			 intermidiatebufferprop.resdesc.Width = GetRequiredIntermediateSize(m_greentex_reservedres.GetResource().Get(),0, static_cast<UINT>(subresdata.size()));
+			 
+
+			 intermidiateuploadbuffer.Init(m_creationdevice, intermidiatebufferprop, ResourceCreationMode::COMMITED);
+			 intermidiateuploadbuffer.SetName(L"uploadbuffer");
+			 m_greentex_reservedresmemorymanager.Init(m_creationdevice, &m_greentex_reservedres);
+			 m_greentex_reservedresmemorymanager.UpdateReservedresourcePhysicalMemoryMappings(m_mainqueue.GetQueue());
+			
+
+			 m_uploadcommandlist.Reset();
+			//UpdateSubresources(m_uploadcommandlist.GetcmdList(), m_greentex_reservedres.GetResource().Get(), intermidiateuploadbuffer.GetResource().Get(), 0,0,static_cast<UINT>(subresdata.size()), subresdata.data());
+			//D3D12_RESOURCE_BARRIER barrier=m_greentex_reservedres.TransitionResState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+			//m_uploadcommandlist->ResourceBarrier(1, &barrier);
+			 //m_greentexuploadhelper.Upload(m_uploadcommandlist);
+			 if (!m_greentex_reservedres.IsResourceState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE))
+			 {
+				 D3D12_RESOURCE_BARRIER barrier = m_greentex_reservedres.TransitionResState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+				 m_uploadcommandlist->ResourceBarrier(1, &barrier);
+			 }
+		}
+		{
+			D3D12_SHADER_RESOURCE_VIEW_DESC greentexsrvdesc = {};
+			greentexsrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+			greentexsrvdesc.Texture2D.MipLevels = m_greentex_reservedres.GetTotalMipCount();
+			greentexsrvdesc.Texture2D.MostDetailedMip = 0;
+			greentexsrvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+			m_greentex_reservedres.CreateSRV(m_creationdevice, greentexsrvdesc, m_resaccessviewdescheap.GetCPUHandlefromstart());
+		}
+		//m_redtexture.CreateSRV(m_creationdevice, redtexsrvdesc, m_resaccessviewdescheap.GetCPUHandlefromstart());
 	}
 
-	//upload asset data
-	m_uploadcommandlist.Reset();
+	
 	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
-	m_redtexture.UploadTexture(m_uploadcommandlist);
+	//m_redtexture.UploadTexture(m_uploadcommandlist);
+	//m_greentexuploadhelper.Upload(m_uploadcommandlist);
+	m_greentex_reservedresmemorymanager.ClearReservedResource(m_uploadcommandlist);
 	DXASSERT(m_uploadcommandlist->Close())
 
 }

@@ -1,9 +1,9 @@
 #include"DX12Resource.h"
 
+
 D3D12_RESOURCE_BARRIER DX12ResourceBase::TransitionResState(D3D12_RESOURCE_STATES targetstate)
 {
 	D3D12_RESOURCE_BARRIER transitionbarrier = {};
-
 	//return a default barrier struct if target state is same as current state
 	if (targetstate != m_currentresstate)
 	{
@@ -70,7 +70,10 @@ void DX12Resource::InitResourceCreationProperties(DX12ResourceCreationProperties
 	rescreationprops.resheapprop.VisibleNodeMask = 0;
 }
 
+void DX12ReservedResource::UploadTextureData(ComPtr< ID3D12Device> creationdevice, DX12Commandlist& copycmdlist)
+{
 
+}
 
 void DX12ReservedResource::Init(ComPtr< ID3D12Device> creationdevice, DX12ResourceCreationProperties resprops)
 {
@@ -169,8 +172,9 @@ void DX12ReservedresourcePhysicalMemoryManager::Init(ComPtr< ID3D12Device> creat
 			else
 			{
 				//init as packed mip
+				m_subresourceinfo[i].ispacked = true;
 				m_subresourceinfo[i].heapindex = heapsrequiredforres-1;//last heap for all packed mips
-				m_subresourceinfo[i].coordinates.Subresource = i;
+				m_subresourceinfo[i].coordinates.Subresource = heapsrequiredforres - 1;//all packed regions must specify the last packed mip subresindex
 				m_subresourceinfo[i].coordinates.X = 0;
 				m_subresourceinfo[i].coordinates.Y = 0;
 				m_subresourceinfo[i].coordinates.Z = 0;
@@ -183,6 +187,32 @@ void DX12ReservedresourcePhysicalMemoryManager::Init(ComPtr< ID3D12Device> creat
 			}
 		
 		}
+
+		//init uav heaps
+		D3D12_DESCRIPTOR_HEAP_DESC uavheapdesc = {};
+		uavheapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		uavheapdesc.NodeMask = 0;
+		uavheapdesc.NumDescriptors = m_reservedres->GetTotalMipCount();
+		uavheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+
+		m_reservedresheap_upload.Init(uavheapdesc, creationdevice);
+		uavheapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		m_reservedresheap.Init(uavheapdesc, creationdevice);
+
+		//1 uav for each mip
+		for(size_t i=0;i<m_reservedres->GetTotalMipCount();i++)
+		
+		{
+			D3D12_CPU_DESCRIPTOR_HANDLE uavhandle = m_reservedresheap_upload.GetCPUHandleOffseted(i);
+			D3D12_UNORDERED_ACCESS_VIEW_DESC reservedresuavdesc = {};
+			reservedresuavdesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+			reservedresuavdesc.Texture2D.MipSlice = i;
+			m_reservedres->CreateUAV(creationdevice, reservedresuavdesc, uavhandle);
+		}
+		creationdevice->CopyDescriptorsSimple(m_reservedres->GetTotalMipCount(), m_reservedresheap.GetCPUHandlefromstart(), m_reservedresheap_upload.GetCPUHandlefromstart(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		
+		
+		
 
 		
 }
@@ -207,29 +237,55 @@ void DX12ReservedresourcePhysicalMemoryManager::InitHeap(size_t indexinheapvecto
 		DXASSERT(m_heaps[indexinheapvector]->SetName(L"ReservedResourceheap"))
 }
 
+void DX12ReservedresourcePhysicalMemoryManager::ClearReservedResource(DX12Commandlist& cmdlist)
+{
+	D3D12_GPU_DESCRIPTOR_HANDLE uavhandle_gpu[9];
+	D3D12_CPU_DESCRIPTOR_HANDLE uavhandle_cpu[9];
+	FLOAT clearvalue_white[4] = { 1.0f,1.0f,1.0f,1.0f };
+	FLOAT clearvalue_green[4] = { 0.0f,1.0f,0.0f,1.0f };
+	FLOAT clearvalue_red[4] = { 1.0f,0.0f,0.0f,1.0f };
+	FLOAT clearvalue_blue[4] = { 0.0f,0.0f,1.0f,1.0f };
+	for (size_t i = 0; i < 9; i++)
+	{
+		uavhandle_gpu[i] = m_reservedresheap.GetGPUHandleOffseted(i);
+		uavhandle_cpu[i] = m_reservedresheap_upload.GetCPUHandleOffseted(i);
+	}
+	 
+	ID3D12DescriptorHeap* heapstoset[1] =
+	{
+		m_reservedresheap.GetDescHeap()
+	};
+	cmdlist->SetDescriptorHeaps(1, heapstoset);
+		cmdlist->ClearUnorderedAccessViewFloat(uavhandle_gpu[0],uavhandle_cpu[0],m_reservedres->GetResource().Get(),clearvalue_white,0,nullptr);
+		cmdlist->ClearUnorderedAccessViewFloat(uavhandle_gpu[1], uavhandle_cpu[1], m_reservedres->GetResource().Get(), clearvalue_green, 0, nullptr);
+		cmdlist->ClearUnorderedAccessViewFloat(uavhandle_gpu[2], uavhandle_cpu[2], m_reservedres->GetResource().Get(), clearvalue_red, 0, nullptr);
+		cmdlist->ClearUnorderedAccessViewFloat(uavhandle_gpu[8], uavhandle_cpu[8], m_reservedres->GetResource().Get(), clearvalue_blue, 0, nullptr);
+}
+
 void DX12ReservedresourcePhysicalMemoryManager::UpdateReservedresourcePhysicalMemoryMappings(ComPtr<ID3D12CommandQueue> commandqueue)
 {
-	vector<D3D12_TILE_RANGE_FLAGS> rangemappingflags;
-	vector<D3D12_TILED_RESOURCE_COORDINATE> regioncoordinatestomap;
-	vector<D3D12_TILE_REGION_SIZE> regionsizetomap;
-	vector<UINT> rangestartoffset,rangetilecount;
-	vector<ID3D12Heap*> heapstomap;
-	UINT resourceregionstomap = 0;
+	D3D12_TILE_RANGE_FLAGS rangemappingflags;
+	D3D12_TILED_RESOURCE_COORDINATE regioncoordinatestomap;
+	D3D12_TILE_REGION_SIZE regionsizetomap;
+	UINT rangestartoffset,rangetilecount;
+	ID3D12Heap* heapstomap;
+	UINT resourceregionstomap = 1;
 	for (size_t i = 0; i < m_subresourceinfo.size(); i++)
 	{
 		
-		rangestartoffset.push_back(0);
-		rangemappingflags.push_back(D3D12_TILE_RANGE_FLAG_NONE);
+		rangestartoffset = 0;
+		rangemappingflags=D3D12_TILE_RANGE_FLAGS::D3D12_TILE_RANGE_FLAG_NONE;
 		const SubResouceInfo& subresinfo = m_subresourceinfo[i];
+		//if (subresinfo.ispacked) { continue; }
 		ComPtr<ID3D12Heap> heap = m_heaps[subresinfo.heapindex];
-		heapstomap.push_back(heap.Get());
-		rangetilecount.push_back(subresinfo.tileregionsize.NumTiles);
-		regionsizetomap.push_back(subresinfo.tileregionsize);
-		regioncoordinatestomap.push_back(subresinfo.coordinates);
-		resourceregionstomap++;
+		heapstomap=heap.Get();
+		rangetilecount=subresinfo.tileregionsize.NumTiles;
+		regionsizetomap=(subresinfo.tileregionsize);
+		regioncoordinatestomap=subresinfo.coordinates;
+		commandqueue->UpdateTileMappings(m_reservedres->GetResource().Get(), resourceregionstomap, &regioncoordinatestomap, &regionsizetomap, heapstomap, resourceregionstomap, &rangemappingflags, &rangestartoffset, &rangetilecount, D3D12_TILE_MAPPING_FLAG_NONE);
 	}
 	{
 		
-		commandqueue->UpdateTileMappings(m_reservedres->GetResource().Get(), resourceregionstomap, regioncoordinatestomap.data(), regionsizetomap.data(), heapstomap[0], resourceregionstomap,rangemappingflags.data(),rangestartoffset.data(),rangetilecount.data(),D3D12_TILE_MAPPING_FLAG_NONE );
+		
 	}
 }

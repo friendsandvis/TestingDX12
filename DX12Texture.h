@@ -1,6 +1,9 @@
 #pragma once
 #include"DX12Resource.h"
+#include"DX12Buffer.h"
 
+//forward declare dximagedata
+struct DXImageData;
 struct TextureCreationProperties
 {
 	D3D12_RESOURCE_DESC texdesc;
@@ -17,6 +20,30 @@ public:
 	
 	DX12TextureSimple();
 	~DX12TextureSimple();
+
+};
+
+class DX12TextureUploadeHelper
+{
+public:
+	DX12TextureUploadeHelper();
+	~DX12TextureUploadeHelper();
+	//prepares the texture for full upload 
+	void PrepareUpload(ComPtr< ID3D12Device> creationdevice,DX12ResourceBase* targettexture);
+
+	//upload the actual texture data to the upload buffers
+	void SetUploadTextureData(const DXImageData& imagedata);
+	
+	//numsubres -1 is all subresources
+	void Upload(DX12Commandlist& copycmdlist,UINT numsubres=-1,UINT firstsubres=0);
+
+private:
+	DX12ResourceBase* m_targettexture;
+	UINT* m_subresrowcount;
+	UINT64* m_subresrowsize;
+	DX12Buffer m_uploadbuffer;
+	UINT m_subresoucecount;
+	D3D12_PLACED_SUBRESOURCE_FOOTPRINT* m_subresplacedfootprints;
 
 };
 

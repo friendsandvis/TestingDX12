@@ -2,6 +2,10 @@
 #include"DX12CommandList.h"
 #pragma comment(lib,"DirectXTex.lib")
 
+void DXImageData::GetSubresData(ComPtr< ID3D12Device> creationdevice, vector< D3D12_SUBRESOURCE_DATA>& out_subresdata)
+{
+	DXASSERT(PrepareUpload(creationdevice.Get(), m_image.GetImages(), m_image.GetImageCount(), m_imagemetadata, out_subresdata))
+}
 
 DXTexManager::DXTexManager()
 {
@@ -28,7 +32,8 @@ bool DXTexture::Init(ComPtr< ID3D12Device> creationdevice)
 	HRESULT res = CreateTexture(creationdevice.Get(), m_texdata.m_imagemetadata, m_resource.GetAddressOf());
 
 	//create the intermidiateuploadbuffer & upload subresources too
-	DXASSERT(PrepareUpload(creationdevice.Get(), m_texdata.m_image.GetImages(), m_texdata.m_image.GetImageCount(), m_texdata.m_imagemetadata, m_uploadsubresdata))
+	m_texdata.GetSubresData(creationdevice, m_uploadsubresdata);
+	//DXASSERT(PrepareUpload(creationdevice.Get(), m_texdata.m_image.GetImages(), m_texdata.m_image.GetImageCount(), m_texdata.m_imagemetadata, m_uploadsubresdata))
 
 	{
 		UINT64 uploadbuffersize = GetRequiredIntermediateSize(m_resource.Get(), 0, static_cast<UINT>(m_uploadsubresdata.size()));

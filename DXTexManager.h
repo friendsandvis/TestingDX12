@@ -10,6 +10,8 @@ struct DXImageData
 	ScratchImage m_image;
 	TexMetadata m_imagemetadata;
 
+	void GetSubresData(ComPtr< ID3D12Device> creationdevice, vector< D3D12_SUBRESOURCE_DATA>& out_subresdata);
+
 };
 class DX12Commandlist;
 
