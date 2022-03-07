@@ -31,6 +31,8 @@ private:
 	DXImageData imagedata;
 	DX12ReservedresourcePhysicalMemoryManager  m_greentex_reservedresmemorymanager;
 	DX12DESCHEAP m_resaccessviewdescheap;//CBV/SRV/UAV
+	DX12TextureSimple m_minlodmap;
+	DX12TextureUploadHelperSimple m_minloduploader;
 
 	void InitBasicPSO();
 

@@ -47,3 +47,23 @@ private:
 
 };
 
+class DX12TextureUploadHelperSimple
+{
+public:
+	DX12TextureUploadHelperSimple();
+	~DX12TextureUploadHelperSimple();
+	void PrepareUpload(ComPtr< ID3D12Device> creationdevice, DX12ResourceBase* targettexture,UINT firstsubres=0,UINT subrescount=1);
+	void SetTextureData();
+	void SetUploadData();
+	vector<uint8_t>& GetSubResourceDataforUpdate (UINT subresIndex=0);
+	void Upload(DX12Commandlist cmdlist);
+private:
+	DX12ResourceBase* m_targettexture;
+	UINT* m_subresrowcount;
+	UINT64* m_subresrowsize;
+	DX12Buffer m_uploadbuffer;
+	UINT m_subresoucecount;
+	vector<uint8_t>* m_subresdata;
+	D3D12_PLACED_SUBRESOURCE_FOOTPRINT* m_subresplacedfootprints;
+};
+

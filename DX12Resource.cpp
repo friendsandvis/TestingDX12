@@ -63,8 +63,8 @@ void DX12Resource::InitResourceCreationProperties(DX12ResourceCreationProperties
 	rescreationprops.resdesc.MipLevels = 1;
 	rescreationprops.resdesc.SampleDesc.Count = 1;
 	rescreationprops.resdesc.SampleDesc.Quality = 0;
-	rescreationprops.resdesc.Height = 128;
-	rescreationprops.resdesc.Width = 128;
+	rescreationprops.resdesc.Height = 1;
+	rescreationprops.resdesc.Width = 1;
 	rescreationprops.resdesc.Format = DXGI_FORMAT_UNKNOWN;
 	rescreationprops.resheapprop.CreationNodeMask = 0;
 	rescreationprops.resheapprop.VisibleNodeMask = 0;

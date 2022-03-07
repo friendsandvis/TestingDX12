@@ -13,6 +13,24 @@ DX12ReservedResourceApplication::~DX12ReservedResourceApplication()
 
 void DX12ReservedResourceApplication::InitExtras()
 {
+	{
+		
+		//init minlod map
+		DX12ResourceCreationProperties minlodmapprops;
+		DX12Resource::InitResourceCreationProperties(minlodmapprops);
+		
+		minlodmapprops.resdesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+		minlodmapprops.resdesc.Format = DXGI_FORMAT_R8_UINT;
+		minlodmapprops.resdesc.Width = 64;
+		minlodmapprops.resdesc.Height = 64;
+
+		m_minlodmap.Init(m_creationdevice, minlodmapprops, ResourceCreationMode::COMMITED);
+		m_minlodmap.SetName(L"MinLODMap");
+		m_minloduploader.PrepareUpload(m_creationdevice, &m_minlodmap);
+		
+		m_minloduploader.SetUploadData();
+		m_minloduploader.SetTextureData();
+	}
 	//init pso
 	InitBasicPSO();
 
@@ -114,6 +132,7 @@ void DX12ReservedResourceApplication::InitExtras()
 
 	
 	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
+	m_minloduploader.Upload(m_uploadcommandlist);
 	//m_redtexture.UploadTexture(m_uploadcommandlist);
 	//m_greentexuploadhelper.Upload(m_uploadcommandlist);
 	m_greentex_reservedresmemorymanager.ClearReservedResource(m_uploadcommandlist);

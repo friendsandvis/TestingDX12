@@ -145,3 +145,136 @@ void DX12TextureUploadeHelper::SetUploadTextureData(const DXImageData& imagedata
 	buffermapparams.range.End = m_uploadbuffer.GetSize();
 	m_uploadbuffer.UnMap(buffermapparams);
 }
+
+
+DX12TextureUploadHelperSimple::DX12TextureUploadHelperSimple()
+	:m_targettexture(nullptr),
+	m_subresoucecount(0),
+	m_subresplacedfootprints(nullptr),
+	m_subresrowsize(nullptr),
+	m_subresrowcount(nullptr),
+	m_subresdata(nullptr)
+{}
+DX12TextureUploadHelperSimple::~DX12TextureUploadHelperSimple()
+{
+	if (m_subresdata)
+	{
+		delete[]m_subresdata;
+	}
+	if (m_subresplacedfootprints)
+	{
+		delete[]m_subresplacedfootprints;
+	}
+	if (m_subresrowsize)
+	{
+		delete[]m_subresrowsize;
+	}
+	if (m_subresrowcount)
+	{
+		delete[]m_subresrowcount;
+	}
+}
+void DX12TextureUploadHelperSimple::PrepareUpload(ComPtr< ID3D12Device> creationdevice, DX12ResourceBase* targettexture, UINT firstsubres, UINT subrescount)
+{
+	UINT64 uploadbuffersize=0;
+	m_targettexture = targettexture;
+	D3D12_RESOURCE_DESC resdesc=m_targettexture->GetResource()->GetDesc();
+	m_subresoucecount = subrescount;
+	UINT totaltargetsubrescount = resdesc.MipLevels * resdesc.DepthOrArraySize;
+	assert(m_subresoucecount <= totaltargetsubrescount && firstsubres<totaltargetsubrescount);
+	m_subresplacedfootprints = new D3D12_PLACED_SUBRESOURCE_FOOTPRINT[m_subresoucecount];
+	m_subresrowcount = new UINT[m_subresoucecount];
+	m_subresrowsize = new UINT64[m_subresoucecount];
+	m_subresdata = new vector<uint8_t>[m_subresoucecount];
+	creationdevice->GetCopyableFootprints(&resdesc, firstsubres, subrescount, 0, m_subresplacedfootprints, m_subresrowcount, m_subresrowsize, &uploadbuffersize);
+
+	DX12ResourceCreationProperties uploadbufferproperties;
+	DX12Buffer::InitResourceCreationProperties(uploadbufferproperties);
+	uploadbufferproperties.resdesc.Width = uploadbuffersize;
+	uploadbufferproperties.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
+	m_uploadbuffer.Init(creationdevice, uploadbufferproperties, ResourceCreationMode::COMMITED);
+	m_uploadbuffer.SetName(L"uploadhelpersimpleuploadbuffer");
+
+	//init subresource data size
+	for (size_t i = 0; i < m_subresoucecount; i++)
+	{
+		UINT64& subresrowsize = m_subresrowsize[i];
+		UINT& subresrowcount = m_subresrowcount[i];
+		//resize to expected data size
+		m_subresdata[i].resize(subresrowsize * subresrowcount);
+	}
+}
+
+vector<uint8_t>& DX12TextureUploadHelperSimple::GetSubResourceDataforUpdate(UINT subresIndex)
+{
+	return m_subresdata[subresIndex];
+}
+
+void DX12TextureUploadHelperSimple::SetUploadData()
+{
+	for (size_t i = 0; i < m_subresoucecount; i++)
+	{
+		vector<uint8_t>& subresdata = m_subresdata[i];
+		for (size_t i1 = 0; i1 < subresdata.size(); i1++)
+		{
+			subresdata[i1] = 55;
+		}
+	}
+}
+
+void DX12TextureUploadHelperSimple::SetTextureData()
+{
+	BufferMapParams mapparams = {};
+	uint8_t* mappedbuffer = reinterpret_cast<uint8_t*>(m_uploadbuffer.Map(mapparams));
+	for (size_t i = 0; i < m_subresoucecount; i++)
+	{
+		D3D12_PLACED_SUBRESOURCE_FOOTPRINT& subresfootprint = m_subresplacedfootprints[i];
+		UINT64& subresrowsize = m_subresrowsize[i];
+		UINT& subresrowcount = m_subresrowcount[i];
+		vector<uint8_t> subresdata = m_subresdata[i];
+		uint8_t* dst = mappedbuffer+subresfootprint.Offset;
+		uint8_t* src = subresdata.data();
+		for (size_t i1 = 0; i1 < subresrowcount; i1++)
+		{
+			memcpy(dst, src, subresrowsize);
+			src += subresrowsize;
+			dst += subresfootprint.Footprint.RowPitch;
+		}
+	}
+	mapparams.range.End = m_uploadbuffer.GetSize();
+	m_uploadbuffer.UnMap(mapparams);
+}
+
+
+void DX12TextureUploadHelperSimple::Upload(DX12Commandlist cmdlist)
+{
+	D3D12_RESOURCE_BARRIER barrier = {};
+	if (!m_uploadbuffer.IsResourceState(D3D12_RESOURCE_STATE_COPY_SOURCE))
+	{
+		barrier=m_uploadbuffer.TransitionResState(D3D12_RESOURCE_STATE_COPY_SOURCE);
+		cmdlist->ResourceBarrier(1, &barrier);
+	}
+	if (!m_targettexture->IsResourceState(D3D12_RESOURCE_STATE_COPY_DEST))
+	{
+		barrier = m_targettexture->TransitionResState(D3D12_RESOURCE_STATE_COPY_DEST);
+		cmdlist->ResourceBarrier(1, &barrier);
+	}
+
+	for (size_t i = 0; i < m_subresoucecount; i++)
+	{
+		D3D12_TEXTURE_COPY_LOCATION dst = {};
+		dst.SubresourceIndex = i;
+		dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+		dst.pResource = m_targettexture->GetResource().Get();
+
+		D3D12_TEXTURE_COPY_LOCATION src = {};
+		src.PlacedFootprint = m_subresplacedfootprints[i];
+		src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+		src.pResource = m_uploadbuffer.GetResource().Get();
+
+		cmdlist->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
+	}
+
+	barrier = m_targettexture->TransitionResState(D3D12_RESOURCE_STATE_COMMON);
+	cmdlist->ResourceBarrier(1, &barrier);
+}
