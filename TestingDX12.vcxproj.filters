@@ -84,6 +84,12 @@
     <ClCompile Include="DX12Texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DX12ReservedResourceApplication.cpp">
+      <Filter>Applications</Filter>
+    </ClCompile>
+    <ClCompile Include="DX12ReservedResourceMemoryManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="windmaker.h">
@@ -147,6 +153,15 @@
       <Filter>Applications</Filter>
     </ClInclude>
     <ClInclude Include="DX12Texture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12ReservedResourceApplication.h">
+      <Filter>Applications</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12ReservedResourceMemoryManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonDataStructures.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

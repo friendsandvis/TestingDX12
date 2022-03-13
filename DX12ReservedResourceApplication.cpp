@@ -1,100 +1,146 @@
-#include"DX12SamplerfeedbackApplication.h"
+#include"DX12ReservedResourceApplication.h"
 #include"DXUtils.h"
 
 
-DX12SamplerfeedbackApplication::DX12SamplerfeedbackApplication()
-	:m_planemodel(ModelDataUploadMode::COPY),
-	m_sfsupported(false)
+DX12ReservedResourceApplication::DX12ReservedResourceApplication()
+	:m_planemodel(ModelDataUploadMode::COPY)
 {
 }
 
-DX12SamplerfeedbackApplication::~DX12SamplerfeedbackApplication()
+DX12ReservedResourceApplication::~DX12ReservedResourceApplication()
 {
 }
 
-void DX12SamplerfeedbackApplication::InitExtras()
+void DX12ReservedResourceApplication::InitExtras()
 {
-	//init sampler feedback reserved resorce
 	{
-		DXTexManager::LoadTexture(L"textures/tex3_miped.dds",m_imagedataforreservedrestex);
-		DX12ResourceCreationProperties reservedrestexprops;
-		DX12ReservedResource::InitResourceCreationProperties(reservedrestexprops);
-		reservedrestexprops.resdesc.Width = m_imagedataforreservedrestex.m_imagemetadata.width;
-		reservedrestexprops.resdesc.Height = m_imagedataforreservedrestex.m_imagemetadata.height;
-		reservedrestexprops.resdesc.MipLevels = m_imagedataforreservedrestex.m_imagemetadata.mipLevels;
-		reservedrestexprops.resdesc.Format = m_imagedataforreservedrestex.m_imagemetadata.format;
-		reservedrestexprops.resdesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-		m_sfsreservedresourcetex.Init(m_creationdevice, reservedrestexprops);
-		m_sfsreservedresourcetex.SetName(L"Greentexreservedresourcesfstest");
-	}
-	//check sampler feedback support
-	D3D12_FEATURE_DATA_D3D12_OPTIONS7 option7features = {};
-	DXASSERT(m_creationdevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &option7features, sizeof(option7features)))
-		m_sfsupported=(option7features.SamplerFeedbackTier != D3D12_SAMPLER_FEEDBACK_TIER_NOT_SUPPORTED);
+		
+		//init minlod map
+		DX12ResourceCreationProperties minlodmapprops;
+		DX12Resource::InitResourceCreationProperties(minlodmapprops);
+		
+		minlodmapprops.resdesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+		minlodmapprops.resdesc.Format = DXGI_FORMAT_R8_UINT;
+		minlodmapprops.resdesc.Width = 64;
+		minlodmapprops.resdesc.Height = 64;
 
+		m_minlodmap.Init(m_creationdevice, minlodmapprops, ResourceCreationMode::COMMITED);
+		m_minlodmap.SetName(L"MinLODMap");
+		m_minloduploader.PrepareUpload(m_creationdevice, &m_minlodmap);
+		
+		m_minloduploader.SetUploadData();
+		m_minloduploader.SetTextureData();
+	}
 	//init pso
 	InitBasicPSO();
 
 	//init desc heaps
 	D3D12_DESCRIPTOR_HEAP_DESC heapdesc = {};
 	heapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	heapdesc.NumDescriptors = 2;	//just creating for a srv and then a uav
+	heapdesc.NumDescriptors = 1;	//just creating for an srv
 	heapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
 	m_resaccessviewdescheap.Init(heapdesc, m_creationdevice);
 
-	D3D12_DESCRIPTOR_HEAP_DESC heapdescsrc = {};
-	heapdescsrc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	heapdescsrc.NumDescriptors = 1;	//just creating for a uav staging
-	heapdescsrc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	m_resaccessviewdescheapsrc.Init(heapdescsrc, m_creationdevice);
 
 	//init assets
+	//upload asset data
+	
 	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
 	DXTexManager::LoadTexture(L"textures/tex3_miped.dds", m_redtexture.GetDXImageData());
 	bool initsuccess = m_redtexture.Init(m_creationdevice);
 	m_redtexture.SetName(L"GREENTEX");
-
-	{
-		
-		samplerFeedbackUnitInitData sfunitinitdata = {};
-		sfunitinitdata.feedbackmipregion.Depth = 1;
-		sfunitinitdata.feedbackmipregion.Width = 4;
-		sfunitinitdata.feedbackmipregion.Height = 4;
-		sfunitinitdata.isMinMipMap = true;
-		sfunitinitdata.feedbacktexrestopairwith=&m_sfsreservedresourcetex;
-		sfunitinitdata.feedbacktexuavhandle = m_resaccessviewdescheapsrc.GetCPUHandleOffseted(0);
-
-		ComPtr<ID3D12Device8> device8;
-		DXASSERT(m_creationdevice.As(&device8))
-
-			if (m_sfsupported)
-			{
-				m_redtexfeedbackunit.Init(device8, sfunitinitdata);
-				m_creationdevice->CopyDescriptorsSimple(1, m_resaccessviewdescheap.GetCPUHandleOffseted(1), m_resaccessviewdescheapsrc.GetCPUHandleOffseted(0), D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-			}
-	}
-
 	{
 		D3D12_SHADER_RESOURCE_VIEW_DESC redtexsrvdesc = {};
 		redtexsrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 		redtexsrvdesc.Texture2D.MipLevels = (UINT)m_redtexture.GetTotalMipCount();
 		redtexsrvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		{
+			//reservedresource init
+			
+			DXTexManager::LoadTexture(L"textures/tex3_miped.dds", imagedata);
+			
+			
+			imagedata.GetSubresData(m_creationdevice, subresdata);
+			
+			DX12ResourceCreationProperties reservedresprops;
+			DX12ReservedResource::InitResourceCreationProperties(reservedresprops);
+			reservedresprops.resinitialstate = D3D12_RESOURCE_STATE_COPY_DEST;
+			reservedresprops.resdesc.Width = imagedata.m_imagemetadata.width;
+			reservedresprops.resdesc.Height = imagedata.m_imagemetadata.height;
+			reservedresprops.resdesc.MipLevels = imagedata.m_imagemetadata.mipLevels;
+			reservedresprops.resdesc.Format = imagedata.m_imagemetadata.format;
+			reservedresprops.resdesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+			
+			m_greentex_reservedres.Init(m_creationdevice, reservedresprops);
+			m_greentex_reservedres.SetName(L"GREENTTEX_RESERVEDRES");
+			m_greentexuploadhelper.PrepareUpload(m_creationdevice, &m_greentex_reservedres);
+			m_greentexuploadhelper.SetUploadTextureData(imagedata);
+			
+			
+			 
+			 DX12ResourceCreationProperties intermidiatebufferprop;
+			 intermidiatebufferprop.useclearvalue = false;
+			 intermidiatebufferprop.resheapflags = D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE;
+			 intermidiatebufferprop.resinitialstate = D3D12_RESOURCE_STATE_COPY_SOURCE;
+			 intermidiatebufferprop.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
+			 intermidiatebufferprop.resheapprop.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+			 intermidiatebufferprop.resheapprop.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+			 intermidiatebufferprop.resheapprop.VisibleNodeMask = 0;
+			 intermidiatebufferprop.resheapprop.CreationNodeMask=0;
+			 intermidiatebufferprop.resdesc.Format = DXGI_FORMAT_UNKNOWN;
+			 intermidiatebufferprop.resdesc.Alignment = 0;
+			 intermidiatebufferprop.resdesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+			 intermidiatebufferprop.resdesc.Height=1;
+			 intermidiatebufferprop.resdesc.MipLevels = 1;
+			 intermidiatebufferprop.resdesc.SampleDesc.Count = 1;
+			 intermidiatebufferprop.resdesc.SampleDesc.Quality = 0;
 
+			 intermidiatebufferprop.resdesc.DepthOrArraySize = 1;
+			 intermidiatebufferprop.resdesc.Flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_NONE;
+			 intermidiatebufferprop.resdesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+			 intermidiatebufferprop.resdesc.Width = GetRequiredIntermediateSize(m_greentex_reservedres.GetResource().Get(),0, static_cast<UINT>(subresdata.size()));
+			 
 
-		//m_redtexture.CreateSRV(m_creationdevice, redtexsrvdesc, m_resaccessviewdescheap.GetCPUHandleOffseted(0));
-		m_sfsreservedresourcetex.CreateSRV(m_creationdevice, redtexsrvdesc, m_resaccessviewdescheap.GetCPUHandleOffseted(0));
+			 intermidiateuploadbuffer.Init(m_creationdevice, intermidiatebufferprop, ResourceCreationMode::COMMITED);
+			 intermidiateuploadbuffer.SetName(L"uploadbuffer");
+			 m_greentex_reservedresmemorymanager.Init(m_creationdevice, &m_greentex_reservedres);
+			 m_greentex_reservedresmemorymanager.UpdateReservedresourcePhysicalMemoryMappings(m_mainqueue.GetQueue());
+			
+
+			 m_uploadcommandlist.Reset();
+			//UpdateSubresources(m_uploadcommandlist.GetcmdList(), m_greentex_reservedres.GetResource().Get(), intermidiateuploadbuffer.GetResource().Get(), 0,0,static_cast<UINT>(subresdata.size()), subresdata.data());
+			//D3D12_RESOURCE_BARRIER barrier=m_greentex_reservedres.TransitionResState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+			//m_uploadcommandlist->ResourceBarrier(1, &barrier);
+			 //m_greentexuploadhelper.Upload(m_uploadcommandlist);
+			 if (!m_greentex_reservedres.IsResourceState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE))
+			 {
+				 D3D12_RESOURCE_BARRIER barrier = m_greentex_reservedres.TransitionResState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+				 m_uploadcommandlist->ResourceBarrier(1, &barrier);
+			 }
+		}
+		{
+			D3D12_SHADER_RESOURCE_VIEW_DESC greentexsrvdesc = {};
+			greentexsrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+			greentexsrvdesc.Texture2D.MipLevels = m_greentex_reservedres.GetTotalMipCount();
+			greentexsrvdesc.Texture2D.MostDetailedMip = 0;
+			greentexsrvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+			m_greentex_reservedres.CreateSRV(m_creationdevice, greentexsrvdesc, m_resaccessviewdescheap.GetCPUHandlefromstart());
+		}
+		//m_redtexture.CreateSRV(m_creationdevice, redtexsrvdesc, m_resaccessviewdescheap.GetCPUHandlefromstart());
 	}
 
-	//upload asset data
-	m_uploadcommandlist.Reset();
+	
 	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
-	m_redtexture.UploadTexture(m_uploadcommandlist);
+	m_minloduploader.Upload(m_uploadcommandlist);
+	//m_redtexture.UploadTexture(m_uploadcommandlist);
+	//m_greentexuploadhelper.Upload(m_uploadcommandlist);
+	m_greentex_reservedresmemorymanager.ClearReservedResource(m_uploadcommandlist);
 	DXASSERT(m_uploadcommandlist->Close())
 
 }
 
-void DX12SamplerfeedbackApplication::InitBasicPSO()
+void DX12ReservedResourceApplication::InitBasicPSO()
 {
 	PSOInitData basicpsodata = {};
 	basicpsodata.type = GRAPHICS;
@@ -103,7 +149,7 @@ void DX12SamplerfeedbackApplication::InitBasicPSO()
 	DX12Shader* vs = new DX12Shader();
 	DX12Shader* ps = new DX12Shader();
 	vs->Init(L"shaders/BasicVertexShader_1.hlsl", DX12Shader::ShaderType::VS);
-	ps->Init(L"shaders/PixelShader_SF.hlsl", DX12Shader::ShaderType::PS);
+	ps->Init(L"shaders/BasicPixelShader_1.hlsl", DX12Shader::ShaderType::PS);
 	basicpsodata.m_shaderstouse.push_back(vs);
 	basicpsodata.m_shaderstouse.push_back(ps);
 
@@ -157,27 +203,16 @@ void DX12SamplerfeedbackApplication::InitBasicPSO()
 
 	D3D12_ROOT_PARAMETER psimgrootparam = {};
 
-	D3D12_DESCRIPTOR_RANGE descranges[2];
-	{
-		D3D12_DESCRIPTOR_RANGE& texsrvrange = descranges[0];
-		texsrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		texsrvrange.NumDescriptors = 1;
-		texsrvrange.BaseShaderRegister = 0;
-		texsrvrange.RegisterSpace = 0;
-		texsrvrange.OffsetInDescriptorsFromTableStart = 0;
-	}
-	{
-		D3D12_DESCRIPTOR_RANGE& feedbackuavrange = descranges[1];
-		feedbackuavrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
-		feedbackuavrange.NumDescriptors = 1;
-		feedbackuavrange.BaseShaderRegister = 0;
-		feedbackuavrange.RegisterSpace = 0;
-		feedbackuavrange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-	}
+	D3D12_DESCRIPTOR_RANGE texsrvrange = {};
+	texsrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	texsrvrange.NumDescriptors = 1;
+	texsrvrange.BaseShaderRegister = 0;
+	texsrvrange.RegisterSpace = 0;
+	texsrvrange.OffsetInDescriptorsFromTableStart = 0;
 
 	psimgrootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	psimgrootparam.DescriptorTable.NumDescriptorRanges = 2;
-	psimgrootparam.DescriptorTable.pDescriptorRanges = descranges;
+	psimgrootparam.DescriptorTable.NumDescriptorRanges = 1;
+	psimgrootparam.DescriptorTable.pDescriptorRanges = &texsrvrange;
 
 	CD3DX12_ROOT_SIGNATURE_DESC emptyrootsignaturedesc = {};
 	emptyrootsignaturedesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
@@ -226,7 +261,7 @@ void DX12SamplerfeedbackApplication::InitBasicPSO()
 }
 
 
-void DX12SamplerfeedbackApplication::Render()
+void DX12ReservedResourceApplication::Render()
 {
 	m_primarycmdlist.Reset();
 	m_primarycmdlist->SetPipelineState(m_basicpso.GetPSO());
@@ -281,15 +316,11 @@ void DX12SamplerfeedbackApplication::Render()
 	backbufferbarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	backbufferbarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	m_primarycmdlist->ResourceBarrier(1, &backbufferbarrier);
-	
-	
-
-	
 
 	DXASSERT(m_primarycmdlist->Close())
 
+
 		BasicRender();
-	
 }
 
 

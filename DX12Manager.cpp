@@ -44,6 +44,7 @@ void DX12Manager::Init(bool enabledebuglayer, DX12ApplicationManagerBase* target
 		ComPtr<ID3D12Debug5> debuginterterface;
 		DXASSERT(D3D12GetDebugInterface(__uuidof(ID3D12Debug), (void**)debuginterterface.GetAddressOf()))
 			debuginterterface->EnableDebugLayer();
+		//debuginterterface->SetEnableGPUBasedValidation(true);
 		//debuginterterface->SetEnableAutoName(true);
 
 		
