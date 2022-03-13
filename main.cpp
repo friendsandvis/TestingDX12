@@ -2,7 +2,7 @@
 #include"DX12Manager.h"
 //#include"DX12SimpleTexturedQuadApplication.h"
 #include"DX12SamplerfeedbackApplication.h"
-#include"DX12ReservedResourceApplication.h"
+//#include"DX12ReservedResourceApplication.h"
 //#include"DX12ComputeApplication.h"
 #define ENABLEDEBUGLAYER true
 
@@ -11,9 +11,9 @@ typedef HRESULT(__stdcall* fPtr)(const IID&, void**);
 //there are some live objects reporting at the termination of app,try to fix.
 int main()
 {
-	DX12ReservedResourceApplication appmanager;
+	//DX12ReservedResourceApplication appmanager;
 	//DX12ComputeApplication appmanager;
-	//DX12SamplerfeedbackApplication appmanager;
+	DX12SamplerfeedbackApplication appmanager;
 	//TexturedQuadApplication appmanager;
 	WindMaker winmaker;
 	DX12Manager dxmanager;

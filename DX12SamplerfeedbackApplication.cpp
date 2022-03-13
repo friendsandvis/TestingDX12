@@ -14,6 +14,19 @@ DX12SamplerfeedbackApplication::~DX12SamplerfeedbackApplication()
 
 void DX12SamplerfeedbackApplication::InitExtras()
 {
+	//init sampler feedback reserved resorce
+	{
+		DXTexManager::LoadTexture(L"textures/tex3_miped.dds",m_imagedataforreservedrestex);
+		DX12ResourceCreationProperties reservedrestexprops;
+		DX12ReservedResource::InitResourceCreationProperties(reservedrestexprops);
+		reservedrestexprops.resdesc.Width = m_imagedataforreservedrestex.m_imagemetadata.width;
+		reservedrestexprops.resdesc.Height = m_imagedataforreservedrestex.m_imagemetadata.height;
+		reservedrestexprops.resdesc.MipLevels = m_imagedataforreservedrestex.m_imagemetadata.mipLevels;
+		reservedrestexprops.resdesc.Format = m_imagedataforreservedrestex.m_imagemetadata.format;
+		reservedrestexprops.resdesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+		m_sfsreservedresourcetex.Init(m_creationdevice, reservedrestexprops);
+		m_sfsreservedresourcetex.SetName(L"Greentexreservedresourcesfstest");
+	}
 	//check sampler feedback support
 	D3D12_FEATURE_DATA_D3D12_OPTIONS7 option7features = {};
 	DXASSERT(m_creationdevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &option7features, sizeof(option7features)))
@@ -43,35 +56,21 @@ void DX12SamplerfeedbackApplication::InitExtras()
 	m_redtexture.SetName(L"GREENTEX");
 
 	{
-		DXImageData& redteximgdata = m_redtexture.GetDXImageData();
-		samplerFeedbackTexInitData sftexinitdata = {};
-		sftexinitdata.heapprops.Type = D3D12_HEAP_TYPE_DEFAULT;
-		sftexinitdata.heapprops.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-		sftexinitdata.heapprops.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-		sftexinitdata.heapflags = D3D12_HEAP_FLAG_NONE;
-		sftexinitdata.resdesc.Alignment = 0;
-		sftexinitdata.resdesc.DepthOrArraySize = redteximgdata.m_imagemetadata.depth;
-		sftexinitdata.resdesc.Width = redteximgdata.m_imagemetadata.width;
-		sftexinitdata.resdesc.Height = redteximgdata.m_imagemetadata.height;
-		sftexinitdata.resdesc.MipLevels = 1;
-		sftexinitdata.resdesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-		sftexinitdata.resdesc.Format = DXGI_FORMAT_SAMPLER_FEEDBACK_MIN_MIP_OPAQUE;
-		sftexinitdata.resdesc.SampleDesc.Count = 1;
-		sftexinitdata.resdesc.SampleDesc.Quality = 0;
-		sftexinitdata.resdesc.SamplerFeedbackMipRegion.Depth = 1;
-		sftexinitdata.resdesc.SamplerFeedbackMipRegion.Width = 4;
-		sftexinitdata.resdesc.SamplerFeedbackMipRegion.Height = 4;
-		sftexinitdata.resdesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-		sftexinitdata.resdesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+		
+		samplerFeedbackUnitInitData sfunitinitdata = {};
+		sfunitinitdata.feedbackmipregion.Depth = 1;
+		sfunitinitdata.feedbackmipregion.Width = 4;
+		sfunitinitdata.feedbackmipregion.Height = 4;
+		sfunitinitdata.isMinMipMap = true;
+		sfunitinitdata.feedbacktexrestopairwith=&m_sfsreservedresourcetex;
+		sfunitinitdata.feedbacktexuavhandle = m_resaccessviewdescheapsrc.GetCPUHandleOffseted(0);
 
 		ComPtr<ID3D12Device8> device8;
 		DXASSERT(m_creationdevice.As(&device8))
 
 			if (m_sfsupported)
 			{
-				m_redtexfeedbackunit.m_feedbacktex.Init(device8, sftexinitdata);
-				m_redtexfeedbackunit.m_feedbacktex.Pair(device8, &m_redtexture, m_resaccessviewdescheapsrc.GetCPUHandleOffseted(0));
-				m_redtexfeedbackunit.InitReedbackBuffer();
+				m_redtexfeedbackunit.Init(device8, sfunitinitdata);
 				m_creationdevice->CopyDescriptorsSimple(1, m_resaccessviewdescheap.GetCPUHandleOffseted(1), m_resaccessviewdescheapsrc.GetCPUHandleOffseted(0), D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 			}
 	}
@@ -83,7 +82,8 @@ void DX12SamplerfeedbackApplication::InitExtras()
 		redtexsrvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 
 
-		m_redtexture.CreateSRV(m_creationdevice, redtexsrvdesc, m_resaccessviewdescheap.GetCPUHandleOffseted(0));
+		//m_redtexture.CreateSRV(m_creationdevice, redtexsrvdesc, m_resaccessviewdescheap.GetCPUHandleOffseted(0));
+		m_sfsreservedresourcetex.CreateSRV(m_creationdevice, redtexsrvdesc, m_resaccessviewdescheap.GetCPUHandleOffseted(0));
 	}
 
 	//upload asset data
@@ -282,42 +282,14 @@ void DX12SamplerfeedbackApplication::Render()
 	backbufferbarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	m_primarycmdlist->ResourceBarrier(1, &backbufferbarrier);
 	
-	if(m_sfsupported)
-	{
-		D3D12_GPU_DESCRIPTOR_HANDLE gpuhandle=m_resaccessviewdescheap.GetGPUHandleOffseted(1);
-		D3D12_CPU_DESCRIPTOR_HANDLE cpuhandle = m_resaccessviewdescheapsrc.GetCPUHandleOffseted(0);
-		UINT clearvalue[4] = {5u,5u,5u,5u};
-		m_primarycmdlist->ClearUnorderedAccessViewUint(gpuhandle, cpuhandle, m_redtexfeedbackunit.m_feedbacktex.GetResource().Get(), clearvalue, 0, nullptr);
-		ComPtr<ID3D12GraphicsCommandList1> primarycmdlist1;
-		DXASSERT(m_primarycmdlist.GetcmdListComPtr().As(&primarycmdlist1))
-			m_redtexfeedbackunit.m_feedbacktex.Readback(primarycmdlist1, &m_redtexfeedbackunit.m_feedbackreadbackbuffer);
-	}
+	
 
 	
 
 	DXASSERT(m_primarycmdlist->Close())
 
 		BasicRender();
-	if(m_sfsupported)
-	{
-		UINT64 readbacksize = m_redtexfeedbackunit.m_feedbacktex.GetRequiredBufferSizeForTranscodeing();
-		unsigned char* readbackdata = new unsigned char[readbacksize];
-
-		BufferMapParams readparams = {};
-		readparams.subresource = 0;
-		readparams.range.Begin = 0;
-		readparams.range.End = readbacksize;
-		void* mappedata = m_redtexfeedbackunit.m_feedbackreadbackbuffer.Map(readparams);
-		memcpy(readbackdata, mappedata, readbacksize);
-		BufferMapParams writeparams = {};
-		m_redtexfeedbackunit.m_feedbackreadbackbuffer.UnMap(writeparams);
-
-
-
-
-		delete[] readbackdata;
-
-	}
+	
 }
 
 

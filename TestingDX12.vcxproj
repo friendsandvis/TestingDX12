@@ -157,6 +157,7 @@
     <ClCompile Include="DX12Manager.cpp" />
     <ClCompile Include="DX12PSO.cpp" />
     <ClCompile Include="DX12ReservedResourceApplication.cpp" />
+    <ClCompile Include="DX12ReservedResourceMemoryManager.cpp" />
     <ClCompile Include="DX12Resource.cpp" />
     <ClCompile Include="DX12SamplerfeedbackApplication.cpp" />
     <ClCompile Include="DX12SimpleTexturedQuadApplication.cpp" />
@@ -171,6 +172,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AssetManager.h" />
+    <ClInclude Include="CommonDataStructures.h" />
     <ClInclude Include="DX12ApplicationManager.h" />
     <ClInclude Include="DX12ApplicationManagerBase.h" />
     <ClInclude Include="DX12Buffer.h" />
@@ -181,6 +183,7 @@
     <ClInclude Include="DX12Manager.h" />
     <ClInclude Include="DX12PSO.h" />
     <ClInclude Include="DX12ReservedResourceApplication.h" />
+    <ClInclude Include="DX12ReservedResourceMemoryManager.h" />
     <ClInclude Include="DX12Resource.h" />
     <ClInclude Include="DX12SamplerfeedbackApplication.h" />
     <ClInclude Include="DX12SimpleTexturedQuadApplication.h" />
