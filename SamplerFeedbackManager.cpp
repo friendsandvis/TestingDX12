@@ -78,9 +78,9 @@ void DX12FeedBackUnit::Init(ComPtr<ID3D12Device8> creationdevice, samplerFeedbac
 		uavheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		//1 uav per mip
 		uavheapdesc.NumDescriptors = initdata.feedbacktexrestopairwith->GetTotalMipCount();
-		m_uavheapupload.Init(uavheapdesc, creationdevice);
-		uavheapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 		m_uavheap.Init(uavheapdesc, creationdevice);
+		uavheapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		m_uavheapupload.Init(uavheapdesc, creationdevice);
 		for (unsigned i = 0; i < uavheapdesc.NumDescriptors; i++)
 		{
 			D3D12_CPU_DESCRIPTOR_HANDLE uavhandle=m_uavheapupload.GetCPUHandleOffseted(i);
