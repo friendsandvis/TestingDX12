@@ -68,6 +68,30 @@ void DX12FeedBackUnit::Init(ComPtr<ID3D12Device8> creationdevice, samplerFeedbac
 	//init physical memory manager
 	
 	m_reservedresmemorymanager.Init(initdata.feedbacktexrestopairwith);
+
+	//init the uav heaps if needed
+	if(initdata.allowreservedresourceuavclear)
+	{
+		D3D12_DESCRIPTOR_HEAP_DESC uavheapdesc = {};
+		uavheapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		uavheapdesc.NodeMask = 0;
+		uavheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		//1 uav per mip
+		uavheapdesc.NumDescriptors = initdata.feedbacktexrestopairwith->GetTotalMipCount();
+		m_uavheapupload.Init(uavheapdesc, creationdevice);
+		uavheapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		m_uavheap.Init(uavheapdesc, creationdevice);
+		for (unsigned i = 0; i < uavheapdesc.NumDescriptors; i++)
+		{
+			D3D12_CPU_DESCRIPTOR_HANDLE uavhandle=m_uavheapupload.GetCPUHandleOffseted(i);
+			D3D12_UNORDERED_ACCESS_VIEW_DESC uavdesc = {};
+			uavdesc.Texture2D.MipSlice = i;
+			uavdesc.Texture2D.PlaneSlice = 0;
+			uavdesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+			initdata.feedbacktexrestopairwith->CreateUAV(creationdevice, uavdesc, uavhandle);
+		}
+		creationdevice->CopyDescriptorsSimple(uavheapdesc.NumDescriptors, m_uavheap.GetCPUHandlefromstart(), m_uavheapupload.GetCPUHandlefromstart(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	}
 	
 }
 
@@ -130,6 +154,30 @@ void DX12FeedBackUnit::ProcessReadbackdata()
 	//writing nothing
 	mapparams.range.End = 0;
 	m_feedbackreadbackbuffer.UnMap(mapparams);
+}
+void DX12FeedBackUnit::ClearReservedResourceMip(DX12Commandlist& cmdlist, uint8_t mipindextoclear, float* clearcolour)
+{
+	DX12ReservedResource* reservedrestex = m_reservedresmemorymanager.GetReservedresource();
+	assert(mipindextoclear<reservedrestex->GetTotalMipCount());
+	D3D12_CPU_DESCRIPTOR_HANDLE cpuhandle = m_uavheapupload.GetCPUHandleOffseted(mipindextoclear);
+	D3D12_GPU_DESCRIPTOR_HANDLE gpuhandle = m_uavheap.GetGPUHandleOffseted(mipindextoclear);
+	ID3D12DescriptorHeap* heapstoset[1] = {m_uavheap.GetDescHeap()};
+	cmdlist->SetDescriptorHeaps(1, heapstoset);
+	cmdlist->ClearUnorderedAccessViewFloat(gpuhandle,cpuhandle , reservedrestex->GetResource().Get(), clearcolour, 0, nullptr);
+}
+
+void DX12FeedBackUnit::BindMipLevel(uint8_t mipleveltobind)
+{
+	bool valfound;
+	m_currentlymappedmips.Find(mipleveltobind,valfound);
+	if (valfound)
+	{
+		//already maped
+		return;
+	}
+	assert(!m_reservedresmemorymanager.IsMemoryBound(mipleveltobind));
+	m_reservedresmemorymanager.BindMemory(mipleveltobind);
+	m_currentlymappedmips.PushUnique(mipleveltobind);
 }
 
 void DX12FeedBackUnit::InitReedbackBuffer()

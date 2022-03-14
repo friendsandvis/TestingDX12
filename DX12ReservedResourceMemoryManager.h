@@ -1,6 +1,7 @@
 #pragma once
 #include"DX12Resource.h"
 
+
 struct SubResouceInfo
 {
 	//1 heap per subresource so offset always 0
@@ -28,6 +29,7 @@ public:
 	void UnbindMemory(UINT subresourceindex);
 	//returns whether memory for the subresoource is bound or not
 	bool IsMemoryBound(UINT subresourceindex);
+	DX12ReservedResource* GetReservedresource() { return m_restomanage; }
 private:
 	DX12ReservedResource* m_restomanage;
 	//information about all the subresources in the reserved resource in the form needed for memory management
@@ -36,6 +38,7 @@ private:
 	vector<ComPtr<ID3D12Heap>>m_heaps;
 	//used to mark the subresources that need to be are dirty(binded/unbined).
 	vector<UINT> m_dirtysubres;
+	
 
 	//utility function to initialize default heaps
 	void InitHeap(size_t indexinheapvector, ComPtr< ID3D12Device> creationdevice, UINT64 heapsize);

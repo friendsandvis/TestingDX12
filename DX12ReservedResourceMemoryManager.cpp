@@ -62,6 +62,10 @@ void DX12ReservedResourceMemoryManager::Init(DX12ReservedResource* reservedresou
 		}
 
 	}
+	//initiialize uav heaps for
+	{
+
+	}
 }
 
 void DX12ReservedResourceMemoryManager::Update(ComPtr<ID3D12CommandQueue>commandqueue, ComPtr< ID3D12Device> creationdevice)

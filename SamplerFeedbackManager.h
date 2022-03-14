@@ -5,6 +5,7 @@
 #include"DX12Texture.h"
 #include"DX12ReservedResourceMemoryManager.h"
 #include"CommonDataStructures.h"
+#include"DX12DESCHEAP.h"
 
 
 
@@ -13,6 +14,7 @@
 
 struct samplerFeedbackUnitInitData
 {
+	bool allowreservedresourceuavclear = false;
 	bool isMinMipMap = true;
 	DX12ReservedResource* feedbacktexrestopairwith;
 	D3D12_CPU_DESCRIPTOR_HANDLE feedbacktexuavhandle;
@@ -52,11 +54,15 @@ public:
 	DX12FeedBackUnit();
 	~DX12FeedBackUnit();
 	void InitReedbackBuffer();
+	
 	void Init(ComPtr<ID3D12Device8> creationdevice, samplerFeedbackUnitInitData initdata);
 	//issue a command on the commandlist to resolve the feedbacktexture into the readable buffer.
 	void Readback(ComPtr<ID3D12GraphicsCommandList1> commandlist);
 	//NOTE::to be called only after the commandlist with resolve command has completed execution.This function processes the feedback data to perform desiered action on the target texture.
 	void ProcessReadbackdata();
+	//if any mip level is needed to be bound out of the normal streaming cycle
+	void BindMipLevel(uint8_t mipleveltobind);
+	void ClearReservedResourceMip(DX12Commandlist& cmdlist, uint8_t mipindextoclear, float* clearcolour);
 
 private:
 	SamplerFeedbackTexture m_feedbacktex;
@@ -65,6 +71,8 @@ private:
 	DX12ReservedResourceMemoryManager m_reservedresmemorymanager;
 	//used to map unmap mips by comparing readback data
 	Set<uint8_t> m_currentlymappedmips;
+	//heaps needed for being able to clear the resource colour if needed
+	DX12DESCHEAP m_uavheapupload, m_uavheap;
 	
 	
 	
