@@ -278,7 +278,21 @@ void DX12SamplerfeedbackApplication::Render()
 	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, nullptr);
 	float rtclearcolour[4] = { 1.0f,1.0f,1.0f,1.0f };
 	m_primarycmdlist->ClearRenderTargetView(rtvhandle, rtclearcolour, 0, nullptr);
+	{
+		//clear feedback map first
+		D3D12_CPU_DESCRIPTOR_HANDLE feedbackcpuhandle = m_resaccessviewdescheapsrc.GetCPUHandleOffseted(0);
+		D3D12_GPU_DESCRIPTOR_HANDLE feedbackgpuhandle = m_resaccessviewdescheap.GetGPUHandleOffseted(1);
+		UINT clearcolour[4] = { 0xFF,0xFF,0xFF,0xFF };
+		SamplerFeedbackTexture& feedbacktex=m_redtexfeedbackunit.GetFeedbackTexture();
+		m_primarycmdlist->ClearUnorderedAccessViewUint(feedbackgpuhandle, feedbackcpuhandle,feedbacktex.GetResource().Get() ,clearcolour , 0, nullptr);
+	}
 	m_primarycmdlist->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
+	{
+		//issue the feedbackunit readback(i.e. after the draw command that actually writes the feeedback)
+		ComPtr<ID3D12GraphicsCommandList1> primerycommandlist1;
+		DXASSERT(m_primarycmdlist.GetcmdListComPtr().As(&primerycommandlist1))
+			m_redtexfeedbackunit.Readback(primerycommandlist1);
+	}
 	backbufferbarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	backbufferbarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	m_primarycmdlist->ResourceBarrier(1, &backbufferbarrier);

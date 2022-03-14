@@ -63,7 +63,7 @@ public:
 	//if any mip level is needed to be bound out of the normal streaming cycle
 	void BindMipLevel(uint8_t mipleveltobind);
 	void ClearReservedResourceMip(DX12Commandlist& cmdlist, uint8_t mipindextoclear, float* clearcolour);
-
+	SamplerFeedbackTexture& GetFeedbackTexture() { return m_feedbacktex; }
 private:
 	SamplerFeedbackTexture m_feedbacktex;
 	DX12Buffer m_feedbackreadbackbuffer;

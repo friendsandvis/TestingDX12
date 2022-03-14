@@ -155,6 +155,8 @@ void DX12FeedBackUnit::ProcessReadbackdata()
 	mapparams.range.End = 0;
 	m_feedbackreadbackbuffer.UnMap(mapparams);
 }
+
+
 void DX12FeedBackUnit::ClearReservedResourceMip(DX12Commandlist& cmdlist, uint8_t mipindextoclear, float* clearcolour)
 {
 	DX12ReservedResource* reservedrestex = m_reservedresmemorymanager.GetReservedresource();
