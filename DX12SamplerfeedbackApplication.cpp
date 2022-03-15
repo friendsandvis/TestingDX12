@@ -38,7 +38,7 @@ void DX12SamplerfeedbackApplication::InitExtras()
 	//init desc heaps
 	D3D12_DESCRIPTOR_HEAP_DESC heapdesc = {};
 	heapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	heapdesc.NumDescriptors = 2;	//just creating for a srv and then a uav
+	heapdesc.NumDescriptors = 3;	//just creating for 2 srv and  a uav
 	heapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
 	m_resaccessviewdescheap.Init(heapdesc, m_creationdevice);
@@ -65,6 +65,7 @@ void DX12SamplerfeedbackApplication::InitExtras()
 		sfunitinitdata.allowreservedresourceuavclear = true;
 		sfunitinitdata.feedbacktexrestopairwith=&m_sfsreservedresourcetex;
 		sfunitinitdata.feedbacktexuavhandle = m_resaccessviewdescheapsrc.GetCPUHandleOffseted(0);
+		sfunitinitdata.minlodtexsrvhandle = m_resaccessviewdescheap.GetCPUHandleOffseted(2);
 
 		ComPtr<ID3D12Device8> device8;
 		DXASSERT(m_creationdevice.As(&device8))
@@ -158,7 +159,7 @@ void DX12SamplerfeedbackApplication::InitBasicPSO()
 
 	D3D12_ROOT_PARAMETER psimgrootparam = {};
 
-	D3D12_DESCRIPTOR_RANGE descranges[2];
+	D3D12_DESCRIPTOR_RANGE descranges[3];
 	{
 		D3D12_DESCRIPTOR_RANGE& texsrvrange = descranges[0];
 		texsrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
@@ -175,9 +176,17 @@ void DX12SamplerfeedbackApplication::InitBasicPSO()
 		feedbackuavrange.RegisterSpace = 0;
 		feedbackuavrange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 	}
+	{
+		D3D12_DESCRIPTOR_RANGE& texsrvrange = descranges[2];
+		texsrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		texsrvrange.NumDescriptors = 1;
+		texsrvrange.BaseShaderRegister = 1;
+		texsrvrange.RegisterSpace = 0;
+		texsrvrange.OffsetInDescriptorsFromTableStart = 0;
+	}
 
 	psimgrootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	psimgrootparam.DescriptorTable.NumDescriptorRanges = 2;
+	psimgrootparam.DescriptorTable.NumDescriptorRanges = 3;
 	psimgrootparam.DescriptorTable.pDescriptorRanges = descranges;
 
 	CD3DX12_ROOT_SIGNATURE_DESC emptyrootsignaturedesc = {};

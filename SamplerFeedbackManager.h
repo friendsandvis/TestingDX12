@@ -18,6 +18,7 @@ struct samplerFeedbackUnitInitData
 	bool isMinMipMap = true;
 	DX12ReservedResource* feedbacktexrestopairwith;
 	D3D12_CPU_DESCRIPTOR_HANDLE feedbacktexuavhandle;
+	D3D12_CPU_DESCRIPTOR_HANDLE minlodtexsrvhandle;
 	D3D12_MIP_REGION feedbackmipregion;
 
 

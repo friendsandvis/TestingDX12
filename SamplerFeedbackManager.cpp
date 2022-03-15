@@ -57,6 +57,14 @@ void DX12FeedBackUnit::Init(ComPtr<ID3D12Device8> creationdevice, samplerFeedbac
 	minlodtexprops.resdesc.Height = (UINT64)ceil(minlodmapheight);
 	//init minlod map texture next
 	m_minlod.Init(creationdevice1, minlodtexprops, ResourceCreationMode::COMMITED);
+	m_minlod.SetName(L"SamplerFeedbackMinLodMap");
+	D3D12_SHADER_RESOURCE_VIEW_DESC minlodsrvdesc = {};
+	minlodsrvdesc.Texture2D.MipLevels = minlodtexprops.resdesc.MipLevels;
+	minlodsrvdesc.Texture2D.MostDetailedMip = 0;
+	minlodsrvdesc.Texture2D.ResourceMinLODClamp = 0;
+	minlodsrvdesc.Texture2D.PlaneSlice = 0;
+	
+	m_minlod.CreateSRV(creationdevice, minlodsrvdesc, initdata.minlodtexsrvhandle);
 
 	//init readbackbuffer
 	DX12ResourceCreationProperties readbackbufferproperties;

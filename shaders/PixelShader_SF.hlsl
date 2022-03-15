@@ -1,5 +1,6 @@
 
 Texture2D<float4> image:register(t0);
+Texture2D<float4> minlodmap:register(t1);
 SamplerState simplesampler:register(s0);
 FeedbackTexture2D<SAMPLER_FEEDBACK_MIN_MIP> imagefeedback:register(u0);
 
