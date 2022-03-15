@@ -63,6 +63,7 @@ void DX12FeedBackUnit::Init(ComPtr<ID3D12Device8> creationdevice, samplerFeedbac
 	minlodsrvdesc.Texture2D.MostDetailedMip = 0;
 	minlodsrvdesc.Texture2D.ResourceMinLODClamp = 0;
 	minlodsrvdesc.Texture2D.PlaneSlice = 0;
+	m_minloduploadhelper.PrepareUpload(creationdevice, &m_minlod);
 	
 	m_minlod.CreateSRV(creationdevice, minlodsrvdesc, initdata.minlodtexsrvhandle);
 

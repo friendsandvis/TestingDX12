@@ -69,6 +69,7 @@ private:
 	SamplerFeedbackTexture m_feedbacktex;
 	DX12Buffer m_feedbackreadbackbuffer;
 	DX12TextureSimple m_minlod;
+	DX12TextureUploadHelperSimple m_minloduploadhelper;
 	DX12ReservedResourceMemoryManager m_reservedresmemorymanager;
 	//used to map unmap mips by comparing readback data
 	Set<uint8_t> m_currentlymappedmips;
