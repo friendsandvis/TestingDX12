@@ -211,11 +211,18 @@ UINT64 SamplerFeedbackTexture::GetRequiredBufferSizeForTranscodeing()
 
 void SamplerFeedbackTexture::Readback(ComPtr<ID3D12GraphicsCommandList1> commandlist, DX12ResourceBase* dstres)
 {
+	uint8_t barriersused = 0;
 	D3D12_RESOURCE_BARRIER barriers[2];
 	ComPtr<ID3D12Resource> dstresource = dstres->GetResource();
-	barriers[0]=dstres->TransitionResState(D3D12_RESOURCE_STATE_RESOLVE_DEST);
-	barriers[1] = TransitionResState(D3D12_RESOURCE_STATE_RESOLVE_SOURCE);
-	commandlist->ResourceBarrier(2, barriers);
+	if (!dstres->IsResState(D3D12_RESOURCE_STATE_RESOLVE_DEST))
+	{
+		barriers[0] = dstres->TransitionResState(D3D12_RESOURCE_STATE_RESOLVE_DEST); barriersused++;
+	}
+	if(!IsResourceState(D3D12_RESOURCE_STATE_RESOLVE_SOURCE))
+	{
+		barriers[1] = TransitionResState(D3D12_RESOURCE_STATE_RESOLVE_SOURCE); barriersused++;
+	}
+	commandlist->ResourceBarrier(barriersused, barriers);
 
 
 	commandlist->ResolveSubresourceRegion(dstresource.Get(), 0, 0, 0, m_resource.Get(), 0, nullptr, DXGI_FORMAT_R8_UINT, D3D12_RESOLVE_MODE_DECODE_SAMPLER_FEEDBACK);

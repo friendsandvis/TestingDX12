@@ -278,6 +278,7 @@ void DX12SamplerfeedbackApplication::Render()
 	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, nullptr);
 	float rtclearcolour[4] = { 1.0f,1.0f,1.0f,1.0f };
 	m_primarycmdlist->ClearRenderTargetView(rtvhandle, rtclearcolour, 0, nullptr);
+	if(m_sfsupported)
 	{
 		//clear feedback map first
 		D3D12_CPU_DESCRIPTOR_HANDLE feedbackcpuhandle = m_resaccessviewdescheapsrc.GetCPUHandleOffseted(0);
@@ -287,6 +288,7 @@ void DX12SamplerfeedbackApplication::Render()
 		m_primarycmdlist->ClearUnorderedAccessViewUint(feedbackgpuhandle, feedbackcpuhandle,feedbacktex.GetResource().Get() ,clearcolour , 0, nullptr);
 	}
 	m_primarycmdlist->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
+	if (m_sfsupported)
 	{
 		//issue the feedbackunit readback(i.e. after the draw command that actually writes the feeedback)
 		ComPtr<ID3D12GraphicsCommandList1> primerycommandlist1;
