@@ -182,7 +182,7 @@ void DX12SamplerfeedbackApplication::InitBasicPSO()
 		texsrvrange.NumDescriptors = 1;
 		texsrvrange.BaseShaderRegister = 1;
 		texsrvrange.RegisterSpace = 0;
-		texsrvrange.OffsetInDescriptorsFromTableStart = 0;
+		texsrvrange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 	}
 
 	psimgrootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
