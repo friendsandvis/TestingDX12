@@ -257,7 +257,7 @@ void DX12SamplerfeedbackApplication::Render()
 	m_primarycmdlist->SetGraphicsRootDescriptorTable(0, m_resaccessviewdescheap.GetGPUHandlefromstart());
 	//setroot constants
 	{
-		float rootconst = m_redtexfeedbackunit.GetLODClampValue();
+		unsigned rootconst = m_redtexfeedbackunit.GetLODClampValue();
 		m_primarycmdlist->SetGraphicsRoot32BitConstants(1, 1, &rootconst, 0);
 	}
 

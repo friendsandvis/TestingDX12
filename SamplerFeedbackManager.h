@@ -57,7 +57,7 @@ public:
 	DX12FeedBackUnit();
 	~DX12FeedBackUnit();
 	void InitReedbackBuffer();
-	const float GetLODClampValue() { return m_lodclampvalue; }
+	const unsigned GetLODClampValue() { return m_lodclampvalue; }
 	void Init(ComPtr<ID3D12Device8> creationdevice, samplerFeedbackUnitInitData initdata);
 	//issue a command on the commandlist to resolve the feedbacktexture into the readable buffer.
 	void Readback(ComPtr<ID3D12GraphicsCommandList1> commandlist);
@@ -78,7 +78,7 @@ private:
 	//heaps needed for being able to clear the resource colour if needed
 	DX12DESCHEAP m_uavheapupload, m_uavheap;
 	//lod clamp value is used to clamp the mip level access of the managed reserved resource texture to prevent it from accessing non resident mips.
-	float m_lodclampvalue=0.0f;
+	unsigned m_lodclampvalue=0;
 	
 	
 	
