@@ -47,26 +47,6 @@ void DX12FeedBackUnit::Init(ComPtr<ID3D12Device8> creationdevice, samplerFeedbac
 	m_feedbacktex.Pair(creationdevice, initdata.feedbacktexrestopairwith, initdata.feedbacktexuavhandle);
 	ComPtr<ID3D12Device> creationdevice1;
 	DXASSERT(creationdevice.As(&creationdevice1))
-		DX12ResourceCreationProperties minlodtexprops;
-	DX12Resource::InitResourceCreationProperties(minlodtexprops);
-	minlodtexprops.resdesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	minlodtexprops.resdesc.Format = DXGI_FORMAT_R8_UINT;
-	double minlodmapwidth =((double)feedbacktexturedata.feedbacktexdesc.Width / (double)initdata.feedbackmipregion.Width);
-	double minlodmapheight = ((double)feedbacktexturedata.feedbacktexdesc.Height / (double)initdata.feedbackmipregion.Height);
-	minlodtexprops.resdesc.Width = (UINT64)ceil(minlodmapwidth);
-	minlodtexprops.resdesc.Height = (UINT64)ceil(minlodmapheight);
-	//init minlod map texture next
-	m_minlod.Init(creationdevice1, minlodtexprops, ResourceCreationMode::COMMITED);
-	m_minlod.SetName(L"SamplerFeedbackMinLodMap");
-	D3D12_SHADER_RESOURCE_VIEW_DESC minlodsrvdesc = {};
-	minlodsrvdesc.Texture2D.MipLevels = minlodtexprops.resdesc.MipLevels;
-	minlodsrvdesc.Texture2D.MostDetailedMip = 0;
-	minlodsrvdesc.Texture2D.ResourceMinLODClamp = 0;
-	minlodsrvdesc.Texture2D.PlaneSlice = 0;
-	m_minloduploadhelper.PrepareUpload(creationdevice, &m_minlod);
-	
-	m_minlod.CreateSRV(creationdevice, minlodsrvdesc, initdata.minlodtexsrvhandle);
-
 	//init readbackbuffer
 	DX12ResourceCreationProperties readbackbufferproperties;
 	DX12Buffer::InitResourceCreationProperties(readbackbufferproperties);

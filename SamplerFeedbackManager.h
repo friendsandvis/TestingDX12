@@ -7,7 +7,9 @@
 #include"CommonDataStructures.h"
 #include"DX12DESCHEAP.h"
 
-
+/*
+In the current implementation we are not usin the residency map for making the implementation a bit simple Given that we know the whole texture will be visible at the same time so we can simple get away will a lod clamp constant sent to shader.
+*/
 
 
 
@@ -68,8 +70,8 @@ public:
 private:
 	SamplerFeedbackTexture m_feedbacktex;
 	DX12Buffer m_feedbackreadbackbuffer;
-	DX12TextureSimple m_minlod;
-	DX12TextureUploadHelperSimple m_minloduploadhelper;
+	
+	
 	DX12ReservedResourceMemoryManager m_reservedresmemorymanager;
 	//used to map unmap mips by comparing readback data
 	Set<uint8_t> m_currentlymappedmips;
