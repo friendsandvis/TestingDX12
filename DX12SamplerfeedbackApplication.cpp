@@ -157,7 +157,12 @@ void DX12SamplerfeedbackApplication::InitBasicPSO()
 	simplesampler.RegisterSpace = 0;
 	simplesampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-	D3D12_ROOT_PARAMETER psimgrootparam = {};
+	/*
+	* 2 root parameters,as follows:
+	* 0=table
+	* 1=root constants
+	*/
+	D3D12_ROOT_PARAMETER rootparams[2] = {};
 
 	D3D12_DESCRIPTOR_RANGE descranges[3];
 	{
@@ -185,14 +190,19 @@ void DX12SamplerfeedbackApplication::InitBasicPSO()
 		texsrvrange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 	}
 
-	psimgrootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	psimgrootparam.DescriptorTable.NumDescriptorRanges = 3;
-	psimgrootparam.DescriptorTable.pDescriptorRanges = descranges;
+	rootparams[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootparams[0].DescriptorTable.NumDescriptorRanges = 3;
+	rootparams[0].DescriptorTable.pDescriptorRanges = descranges;
+	rootparams[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	rootparams[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+	rootparams[1].Constants.Num32BitValues = 1;
+	rootparams[1].Constants.RegisterSpace = 0;
+	rootparams[1].Constants.ShaderRegister = 0;
 
 	CD3DX12_ROOT_SIGNATURE_DESC emptyrootsignaturedesc = {};
 	emptyrootsignaturedesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-	emptyrootsignaturedesc.NumParameters = 1;
-	emptyrootsignaturedesc.pParameters = &psimgrootparam;
+	emptyrootsignaturedesc.NumParameters = 2;
+	emptyrootsignaturedesc.pParameters = rootparams;
 	emptyrootsignaturedesc.NumStaticSamplers = 1;
 	emptyrootsignaturedesc.pStaticSamplers = &simplesampler;
 	DXASSERT(D3D12SerializeRootSignature(&emptyrootsignaturedesc, D3D_ROOT_SIGNATURE_VERSION_1, m_emptyrootsignatureblob.GetAddressOf(), m_rootsignatureerrors.GetAddressOf()))
@@ -245,6 +255,11 @@ void DX12SamplerfeedbackApplication::Render()
 	descheapstoset[0] = m_resaccessviewdescheap.GetDescHeap();
 	m_primarycmdlist->SetDescriptorHeaps(1, descheapstoset);
 	m_primarycmdlist->SetGraphicsRootDescriptorTable(0, m_resaccessviewdescheap.GetGPUHandlefromstart());
+	//setroot constants
+	{
+		float rootconst = m_redtexfeedbackunit.GetLODClampValue();
+		m_primarycmdlist->SetGraphicsRoot32BitConstants(1, 1, &rootconst, 0);
+	}
 
 	{
 		D3D12_VIEWPORT aviewport = {};
