@@ -145,6 +145,10 @@ void DX12FeedBackUnit::ProcessReadbackdata()
 	m_feedbackreadbackbuffer.UnMap(mapparams);
 }
 
+void DX12FeedBackUnit::TryUpdateLODClamp(unsigned loadedlodidx)
+{
+
+}
 
 void DX12FeedBackUnit::ClearReservedResourceMip(DX12Commandlist& cmdlist, uint8_t mipindextoclear, float* clearcolour)
 {
@@ -169,6 +173,8 @@ void DX12FeedBackUnit::BindMipLevel(uint8_t mipleveltobind)
 	assert(!m_reservedresmemorymanager.IsMemoryBound(mipleveltobind));
 	m_reservedresmemorymanager.BindMemory(mipleveltobind);
 	m_currentlymappedmips.PushUnique(mipleveltobind);
+	//update clamp value
+	TryUpdateLODClamp(mipleveltobind);
 }
 
 void DX12FeedBackUnit::InitReedbackBuffer()

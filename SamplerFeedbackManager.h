@@ -73,6 +73,7 @@ public:
 		m_reservedresmemorymanager.Update(commandqueue, creationdevice);
 	}
 private:
+	void TryUpdateLODClamp(unsigned loadedlodidx);
 	SamplerFeedbackTexture m_feedbacktex;
 	DX12Buffer m_feedbackreadbackbuffer;
 	

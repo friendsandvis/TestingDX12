@@ -73,6 +73,8 @@ void DX12SamplerfeedbackApplication::InitExtras()
 			if (m_sfsupported)
 			{
 				m_redtexfeedbackunit.Init(device8, sfunitinitdata);
+				//start by loading the least  detailed mip 
+				m_redtexfeedbackunit.BindMipLevel(m_sfsreservedresourcetex.GetTotalMipCount() - 1);
 				m_creationdevice->CopyDescriptorsSimple(1, m_resaccessviewdescheap.GetCPUHandleOffseted(1), m_resaccessviewdescheapsrc.GetCPUHandleOffseted(0), D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 			}
 	}
