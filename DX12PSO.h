@@ -32,7 +32,7 @@ public:
 	inline ID3D12PipelineState* GetPSO() { return m_pso.Get(); }
 
 	void Init(ComPtr< ID3D12Device> creationdevice,PSOInitData initdata);
-
+	static void DefaultInitPSOData(PSOInitData& initdata);
 private:
 	ComPtr< ID3D12PipelineState> m_pso;
 	PSOInitData m_initdata;

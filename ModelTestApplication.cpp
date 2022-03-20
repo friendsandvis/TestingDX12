@@ -36,7 +36,6 @@ void ModelTestApplication::InitPSO()
 	vs->Init(L"shaders/modeltest/ModelTestVertexShader.hlsl", DX12Shader::ShaderType::VS);
 	ps->Init(L"shaders/modeltest/ModelTestPixelShader.hlsl", DX12Shader::ShaderType::PS);
 	psoinitdata.m_shaderstouse.push_back(vs); psoinitdata.m_shaderstouse.push_back(ps);
-
-
+	DX12PSO::DefaultInitPSOData(psoinitdata);
 	m_pso.Init(m_creationdevice, psoinitdata);
 }
