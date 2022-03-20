@@ -169,6 +169,7 @@
     <ClCompile Include="DXTexManager.cpp" />
     <ClCompile Include="DXUtils.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ModelTestApplication.cpp" />
     <ClCompile Include="SamplerFeedbackManager.cpp" />
     <ClCompile Include="ShaderManager.cpp" />
     <ClCompile Include="windmaker.cpp" />
@@ -194,6 +195,7 @@
     <ClInclude Include="DX12Texture.h" />
     <ClInclude Include="DXTexManager.h" />
     <ClInclude Include="DXUtils.h" />
+    <ClInclude Include="ModelTestApplication.h" />
     <ClInclude Include="Renderable.h" />
     <ClInclude Include="SamplerFeedbackManager.h" />
     <ClInclude Include="ShaderManager.h" />
