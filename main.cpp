@@ -1,8 +1,9 @@
 #include"windmaker.h"
 #include"DX12Manager.h"
 //#include"DX12SimpleTexturedQuadApplication.h"
-#include"DX12SamplerfeedbackApplication.h"
+//#include"DX12SamplerfeedbackApplication.h"
 //#include"DX12ReservedResourceApplication.h"
+#include"ModelTestApplication.h"
 //#include"DX12ComputeApplication.h"
 #define ENABLEDEBUGLAYER true
 
@@ -13,7 +14,8 @@ int main()
 {
 	//DX12ReservedResourceApplication appmanager;
 	//DX12ComputeApplication appmanager;
-	DX12SamplerfeedbackApplication appmanager;
+	//DX12SamplerfeedbackApplication appmanager;
+	ModelTestApplication appmanager;
 	//TexturedQuadApplication appmanager;
 	WindMaker winmaker;
 	DX12Manager dxmanager;

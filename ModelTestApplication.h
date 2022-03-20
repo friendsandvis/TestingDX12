@@ -17,4 +17,4 @@ protected:
 private:
 	DX12PSO m_pso;
 	void InitPSO();
-}
+};
