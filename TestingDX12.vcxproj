@@ -162,6 +162,7 @@
     <ClCompile Include="DX12ReservedResourceApplication.cpp" />
     <ClCompile Include="DX12ReservedResourceMemoryManager.cpp" />
     <ClCompile Include="DX12Resource.cpp" />
+    <ClCompile Include="DX12RootSignature.cpp" />
     <ClCompile Include="DX12SamplerfeedbackApplication.cpp" />
     <ClCompile Include="DX12SimpleTexturedQuadApplication.cpp" />
     <ClCompile Include="DX12Swapchain.cpp" />
@@ -189,6 +190,7 @@
     <ClInclude Include="DX12ReservedResourceApplication.h" />
     <ClInclude Include="DX12ReservedResourceMemoryManager.h" />
     <ClInclude Include="DX12Resource.h" />
+    <ClInclude Include="DX12RootSignature.h" />
     <ClInclude Include="DX12SamplerfeedbackApplication.h" />
     <ClInclude Include="DX12SimpleTexturedQuadApplication.h" />
     <ClInclude Include="DX12Swapchain.h" />

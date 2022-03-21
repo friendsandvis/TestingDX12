@@ -8,7 +8,7 @@ struct VSConstants
 //matrix is alias for float4x4
 	matrix mvp;
 };
-Constantbuffer<VSConstants> vertexconsts:register(b0);
+ConstantBuffer<VSConstants> vertexconsts:register(b0);
 
 struct VSOut
 {
@@ -22,8 +22,6 @@ VSOut main(VSIn input)
 		
 		
 		output.pos =mul(vertexconsts.mvp,float4(input.vpos,1.0f));
-
-    output.color =float4(1.0,1.0,1.0,1.0f);
 
     return output;
 }

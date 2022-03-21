@@ -29,8 +29,10 @@ void DX12PSO::Init(ComPtr< ID3D12Device> creationdevice, PSOInitData initdata)
 			break;
 
 	case GRAPHICS:
-		DXASSERT(creationdevice->CreateGraphicsPipelineState(&initdata.psodesc.graphicspsodesc, IID_PPV_ARGS(m_pso.GetAddressOf())))
-			break;
+	{DXASSERT(creationdevice->CreateGraphicsPipelineState(&initdata.psodesc.graphicspsodesc, IID_PPV_ARGS(m_pso.GetAddressOf())))
+	
+	break;
+	}
 
 	default:
 		break;
@@ -44,6 +46,8 @@ void DX12PSO::DefaultInitPSOData(PSOInitData& initdata)
 		//not supported yet
 		return;
 	}
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC nullgraphicsstate = { 0 };
+	initdata.psodesc.graphicspsodesc = nullgraphicsstate;
 	//primitive setup
 	initdata.psodesc.graphicspsodesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	//rasterizer setup
@@ -51,6 +55,8 @@ void DX12PSO::DefaultInitPSOData(PSOInitData& initdata)
 	initdata.psodesc.graphicspsodesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
 	initdata.psodesc.graphicspsodesc.RasterizerState.DepthClipEnable = FALSE;
 	initdata.psodesc.graphicspsodesc.RasterizerState.AntialiasedLineEnable = FALSE;
+	initdata.psodesc.graphicspsodesc.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+	initdata.psodesc.graphicspsodesc.RasterizerState.ForcedSampleCount = 0;
 
 	//rtv&sample setup
 	initdata.psodesc.graphicspsodesc.SampleMask = UINT_MAX;
@@ -67,4 +73,9 @@ void DX12PSO::DefaultInitPSOData(PSOInitData& initdata)
 		initdata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].BlendEnable = FALSE;
 		initdata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 	}
+
+	//input layout
+	initdata.psodesc.graphicspsodesc.InputLayout.NumElements = 0;
+	initdata.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = nullptr;
+
 }

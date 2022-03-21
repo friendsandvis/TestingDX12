@@ -203,7 +203,7 @@ void DX12SamplerfeedbackApplication::InitBasicPSO()
 
 	CD3DX12_ROOT_SIGNATURE_DESC emptyrootsignaturedesc = {};
 	emptyrootsignaturedesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-	emptyrootsignaturedesc.NumParameters = 2;
+	emptyrootsignaturedesc.NumParameters = 0;
 	emptyrootsignaturedesc.pParameters = rootparams;
 	emptyrootsignaturedesc.NumStaticSamplers = 1;
 	emptyrootsignaturedesc.pStaticSamplers = &simplesampler;
