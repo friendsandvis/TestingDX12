@@ -4,7 +4,9 @@
 
 
 ModelTestApplication::ModelTestApplication()
+	:m_planemodel(ModelDataUploadMode::COPY)
 {
+	mvpmat= XMMatrixIdentity();
 }
 ModelTestApplication::~ModelTestApplication()
 {
@@ -17,9 +19,27 @@ void ModelTestApplication::Render()
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
 	m_primarycmdlist->SetPipelineState(m_pso.GetPSO());
 	m_primarycmdlist->SetGraphicsRootSignature(m_rootsignature.GetRootSignature());
+	m_primarycmdlist->SetGraphicsRoot32BitConstants(0,sizeof(XMMATRIX)/4, &mvpmat, 0);
 	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, nullptr);
 	float clearvalue[4] = {1.0f,1.0f,1.0f,1.0f};
 	m_primarycmdlist->ClearRenderTargetView(rtvhandle, clearvalue, 0, nullptr);
+	{
+		m_primarycmdlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+		D3D12_INDEX_BUFFER_VIEW ibview=m_planemodel.GetIBView();
+		D3D12_VERTEX_BUFFER_VIEW vbview = m_planemodel.GetVBView();
+		m_primarycmdlist->IASetVertexBuffers(0, 1, &vbview);
+		m_primarycmdlist->IASetIndexBuffer( &ibview);
+		
+	}
+	
+	{
+		aviewport = GetViewport();
+
+		ascissorrect = GetScissorRect();
+		m_primarycmdlist->RSSetViewports(1, &aviewport);
+		m_primarycmdlist->RSSetScissorRects(1, &ascissorrect);
+	}
+	m_primarycmdlist->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
 	DXASSERT(m_primarycmdlist->Close())
 	BasicRender();
 }
@@ -27,6 +47,12 @@ void ModelTestApplication::Render()
 void ModelTestApplication::InitExtras()
 {
 	InitPSO();
+	BasicModelManager::InitPlaneModel(m_creationdevice,m_planemodel);
+	m_planemodel.UploadModelDatatoBuffers();
+
+	m_uploadcommandlist.Reset();
+	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
+	DXASSERT(m_uploadcommandlist->Close());
 }
 
 void ModelTestApplication::InitPSO()
@@ -53,7 +79,7 @@ void ModelTestApplication::InitPSO()
 			
 			rootparams[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
 			rootparams[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-			rootparams[0].Constants.Num32BitValues = 4;
+			rootparams[0].Constants.Num32BitValues = sizeof(XMMATRIX) / 4;
 			rootparams[0].Constants.RegisterSpace=0;
 			rootparams[0].Constants.ShaderRegister = 0;
 			rootsigdesc.pParameters = rootparams;

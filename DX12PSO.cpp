@@ -56,7 +56,7 @@ void DX12PSO::DefaultInitPSOData(PSOInitData& initdata)
 	initdata.psodesc.graphicspsodesc.RasterizerState.DepthClipEnable = FALSE;
 	initdata.psodesc.graphicspsodesc.RasterizerState.AntialiasedLineEnable = FALSE;
 	initdata.psodesc.graphicspsodesc.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
-	initdata.psodesc.graphicspsodesc.RasterizerState.ForcedSampleCount = 0;
+	initdata.psodesc.graphicspsodesc.RasterizerState.ForcedSampleCount = 1;
 
 	//rtv&sample setup
 	initdata.psodesc.graphicspsodesc.SampleMask = UINT_MAX;
