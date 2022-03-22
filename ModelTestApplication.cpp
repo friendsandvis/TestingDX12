@@ -12,7 +12,15 @@ ModelTestApplication::~ModelTestApplication()
 }
 void ModelTestApplication::Update()
 {
-	
+	XMVECTOR eyepos = XMVectorSet(0, 0.0f, -10.0f, 1);
+	XMVECTOR focuspoint = XMVectorSet(0, 0, 0, 1);
+	XMVECTOR up = XMVectorSet(0, 1, 0, 0);
+	XMMATRIX viewmat = XMMatrixLookAtLH(eyepos, focuspoint, up);
+	float fov = 45;
+	float aspectratio = m_swapchain.GetSwapchainWidth()/(float)m_swapchain.GetSwapchainHeight();
+	XMMATRIX projmat = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), aspectratio, 0.1f, 100.0f);
+ 	m_maincamera.SetView(viewmat);
+	m_maincamera.SetProjection(projmat);
 }
 
 void ModelTestApplication::Render()
