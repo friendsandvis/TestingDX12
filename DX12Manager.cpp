@@ -88,6 +88,7 @@ void DX12Manager::Render()
 {
 	if (m_appmanager)
 	{
+		m_appmanager->Update();
 		m_appmanager->Render();
 	}
 }

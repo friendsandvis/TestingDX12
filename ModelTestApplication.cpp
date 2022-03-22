@@ -10,6 +10,10 @@ ModelTestApplication::ModelTestApplication()
 ModelTestApplication::~ModelTestApplication()
 {
 }
+void ModelTestApplication::Update()
+{
+	
+}
 
 void ModelTestApplication::Render()
 {
@@ -33,9 +37,9 @@ void ModelTestApplication::Render()
 	}
 	
 	{
-		aviewport = GetViewport();
+		D3D12_VIEWPORT aviewport = GetViewport();
 
-		ascissorrect = GetScissorRect();
+		D3D12_RECT ascissorrect = GetScissorRect();
 		m_primarycmdlist->RSSetViewports(1, &aviewport);
 		m_primarycmdlist->RSSetScissorRects(1, &ascissorrect);
 	}

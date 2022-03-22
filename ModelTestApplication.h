@@ -12,6 +12,7 @@ class ModelTestApplication :public DX12ApplicationManagerBase
 public:
 	ModelTestApplication();
 	~ModelTestApplication();
+	void Update()override;
 	void Render()override;
 
 protected:
@@ -22,7 +23,5 @@ private:
 	DX12RootSignature m_rootsignature;
 	Model m_planemodel;
 	void InitPSO();
-	D3D12_VIEWPORT aviewport;
-	D3D12_RECT ascissorrect;
 	DXCamera m_maincamera;
 };
