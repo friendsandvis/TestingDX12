@@ -5,7 +5,7 @@
 #include"DX12PSO.h"
 #include"DX12RootSignature.h"
 #include"AssetManager.h"
-#include<DirectXMath.h>
+#include"DXCamera.h"
 using namespace DirectX;
 class ModelTestApplication :public DX12ApplicationManagerBase
 {
@@ -24,5 +24,5 @@ private:
 	void InitPSO();
 	D3D12_VIEWPORT aviewport;
 	D3D12_RECT ascissorrect;
-	XMMATRIX mvpmat;
+	DXCamera m_maincamera;
 };

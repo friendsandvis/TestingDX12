@@ -6,7 +6,6 @@
 ModelTestApplication::ModelTestApplication()
 	:m_planemodel(ModelDataUploadMode::COPY)
 {
-	mvpmat= XMMatrixIdentity();
 }
 ModelTestApplication::~ModelTestApplication()
 {
@@ -19,7 +18,8 @@ void ModelTestApplication::Render()
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
 	m_primarycmdlist->SetPipelineState(m_pso.GetPSO());
 	m_primarycmdlist->SetGraphicsRootSignature(m_rootsignature.GetRootSignature());
-	m_primarycmdlist->SetGraphicsRoot32BitConstants(0,sizeof(XMMATRIX)/4, &mvpmat, 0);
+	XMMATRIX mvp = m_maincamera.GetMVP();
+	m_primarycmdlist->SetGraphicsRoot32BitConstants(0,sizeof(XMMATRIX)/4, &mvp, 0);
 	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, nullptr);
 	float clearvalue[4] = {1.0f,1.0f,1.0f,1.0f};
 	m_primarycmdlist->ClearRenderTargetView(rtvhandle, clearvalue, 0, nullptr);
