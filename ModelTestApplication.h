@@ -14,6 +14,7 @@ public:
 	~ModelTestApplication();
 	void Update()override;
 	void Render()override;
+	void ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)override;
 
 protected:
 	void InitExtras()override;

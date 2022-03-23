@@ -1,10 +1,17 @@
 #pragma once
 
-#include<Windows.h>
+#include"WindowProcHook.h"
 #include<assert.h>
 #include"Renderable.h"
 
-
+class WindProcManager
+{
+public:
+	inline static void SetProcHook(WindowProcHook* ahook) { s_prochook=ahook; }
+	static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+private:
+	static WindowProcHook* s_prochook;
+};
 
 class WindMaker
 {

@@ -5,9 +5,10 @@
 #include"DX12DESCHEAP.h"
 #include"DX12CommandQueue.h"
 #include"DX12Resource.h"
+#include"WindowProcHook.h"
 
 // interface for all dx12 applicationmanagers.Could help in creaing  speciialized dx12 applications
-class DX12ApplicationManagerBase
+class DX12ApplicationManagerBase:public WindowProcHook
 {
 public:
 	void Init(ComPtr< ID3D12Device> creationdevice);

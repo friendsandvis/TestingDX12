@@ -125,3 +125,13 @@ void ModelTestApplication::InitPSO()
 	}
 	m_pso.Init(m_creationdevice, psoinitdata);
 }
+
+void ModelTestApplication::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg)
+	{
+	case WM_XBUTTONDOWN:
+	default:
+		break;
+	}
+}

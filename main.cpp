@@ -16,11 +16,13 @@ int main()
 	//DX12ComputeApplication appmanager;
 	//DX12SamplerfeedbackApplication appmanager;
 	ModelTestApplication appmanager;
+	WindowProcHook* windhook = dynamic_cast<WindowProcHook*>(&appmanager);
+	assert(windhook != nullptr);//because all applicationd derive from base app which is derived from interface 
 	//TexturedQuadApplication appmanager;
 	WindMaker winmaker;
 	DX12Manager dxmanager;
 	dxmanager.Init(ENABLEDEBUGLAYER,&appmanager);
-	
+	WindProcManager::SetProcHook(windhook);
 	winmaker.CreateWind(1280, 720, L"DXTest");
 	appmanager.Initswapchain(dxmanager.GetDXGIFactory(), winmaker.GetWidth(), winmaker.GetHeight(), winmaker.Gethwnd());
 	winmaker.RunMessageloop(&dxmanager);

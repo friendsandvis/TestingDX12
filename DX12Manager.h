@@ -3,10 +3,11 @@
 
 #include"DXUtils.h"
 #include"Renderable.h"
+#include"WindowProcHook.h"
 #include"DX12ApplicationManagerBase.h"
 
 
-class DX12Manager:public Renderable
+class DX12Manager:public Renderable,WindowProcHook
 {
 public:
 	DX12Manager();

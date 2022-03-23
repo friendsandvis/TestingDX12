@@ -1,8 +1,12 @@
 #include"windmaker.h"
 
-
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+WindowProcHook* WindProcManager::s_prochook = nullptr;
+LRESULT CALLBACK WindProcManager::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	if (s_prochook != nullptr)
+	{
+		s_prochook->ProcessWindowProcEvent(hwnd, uMsg, wParam, lParam);
+	}
 	switch (uMsg)
 	{
 	case WM_CLOSE:
@@ -28,7 +32,7 @@ void WindMaker::CreateWind(unsigned width, unsigned height,LPCWSTR windowname)
 	WNDCLASS wndclass = {0};
 	wndclass.hInstance = GetModuleHandle(nullptr);
 	wndclass.lpszClassName = CLASS_NAME;
-	wndclass.lpfnWndProc = WindowProc;
+	wndclass.lpfnWndProc = WindProcManager::WindowProc;
 	ATOM atomres= RegisterClass(&wndclass);
 	assert(atomres != 0);
 	 m_hwnd =

@@ -175,6 +175,7 @@
     <ClCompile Include="SamplerFeedbackManager.cpp" />
     <ClCompile Include="ShaderManager.cpp" />
     <ClCompile Include="windmaker.cpp" />
+    <ClCompile Include="WindowProcHook.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AssetManager.h" />
@@ -204,6 +205,7 @@
     <ClInclude Include="SamplerFeedbackManager.h" />
     <ClInclude Include="ShaderManager.h" />
     <ClInclude Include="windmaker.h" />
+    <ClInclude Include="WindowProcHook.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
