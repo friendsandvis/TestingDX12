@@ -4,6 +4,7 @@
 #include"DX12CommandList.h"
 #include"DX12DESCHEAP.h"
 #include"DX12CommandQueue.h"
+#include"DX12Resource.h"
 
 // interface for all dx12 applicationmanagers.Could help in creaing  speciialized dx12 applications
 class DX12ApplicationManagerBase
@@ -45,5 +46,7 @@ protected:
 
 	//this one is just for swapchain buffers
 	DX12DESCHEAP m_rtvdescheap;
+	DX12DESCHEAP m_dsvdescheap;
+	DX12Resource m_depthbuffer;
 };
 

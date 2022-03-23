@@ -56,7 +56,7 @@ void DX12PSO::DefaultInitPSOData(PSOInitData& initdata)
 	initdata.psodesc.graphicspsodesc.RasterizerState.DepthClipEnable = FALSE;
 	initdata.psodesc.graphicspsodesc.RasterizerState.AntialiasedLineEnable = FALSE;
 	initdata.psodesc.graphicspsodesc.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
-	initdata.psodesc.graphicspsodesc.RasterizerState.ForcedSampleCount = 1;
+	initdata.psodesc.graphicspsodesc.RasterizerState.ForcedSampleCount = 0;
 
 	//rtv&sample setup
 	initdata.psodesc.graphicspsodesc.SampleMask = UINT_MAX;
@@ -64,6 +64,13 @@ void DX12PSO::DefaultInitPSOData(PSOInitData& initdata)
 	initdata.psodesc.graphicspsodesc.SampleDesc.Quality = 0;
 	initdata.psodesc.graphicspsodesc.RTVFormats[0] = DXGI_FORMAT_B8G8R8A8_UNORM;
 	initdata.psodesc.graphicspsodesc.NumRenderTargets = 1;
+
+	//depth stencil state setup
+	initdata.psodesc.graphicspsodesc.DepthStencilState.DepthEnable = TRUE;
+	initdata.psodesc.graphicspsodesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	initdata.psodesc.graphicspsodesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+	initdata.psodesc.graphicspsodesc.DepthStencilState.StencilEnable = FALSE;
+	initdata.psodesc.graphicspsodesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 
 	//blendstate setup
 	//blend state has fixed rt count of 8

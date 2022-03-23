@@ -2,13 +2,23 @@
 #include"DXUtils.h"
 #include"DX12Buffer.h"
 
-struct Vertex
+/*struct Vertex
 {
 	float X;
 	float Y;
 	float Z;
 	float U;
 	float V;
+};*/
+
+struct Vertex
+{
+	float X;
+	float Y;
+	float Z;
+	float R;
+	float G;
+	float B;
 };
 
 enum ModelDataUploadMode
@@ -47,5 +57,6 @@ class BasicModelManager
 {
 public:
 	static void InitPlaneModel(ComPtr< ID3D12Device> creationdevice, Model& planemodel);
+	static void InitCubeModel(ComPtr< ID3D12Device> creationdevice, Model& cubemodel);
 };
 

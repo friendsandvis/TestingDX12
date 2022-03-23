@@ -10,12 +10,46 @@ std::vector<Vertex> planeverticies =
 
 };
 
+
+
+std::vector<Vertex>  cubeverticices = {
+	{-1.0f, -1.0f, -1.0f,0.0,0.0f},	//0
+	{-1.0f,  1.0f, -1.0f,0.0,0.0f},	//1
+	{1.0f,  1.0f, -1.0f ,0.0,0.0f},	//2
+	{1.0f, -1.0f, -1.0f,0.0,0.0f},	//3
+	{-1.0f,-1.0f, 1.0f,0.0,0.0f},	//4
+	{-1.0f, 1.0f, 1.0f,0.0,0.0f},	//5
+	{ 1.0f, 1.0f, 1.0f,0.0,0.0f},	//6
+	{ 1.0f,-1.0f, 1.0f,0.0,0.0f},	//7
+};
+
+std::vector<Vertex>  cubeverticices2 = {
+	{-1.0f, -1.0f, -1.0f,0.0,0.0f,0.0f},	//0
+	{-1.0f,  1.0f, -1.0f,0.0,1.0f,0.0f},	//1
+	{1.0f,  1.0f, -1.0f ,1.0f,1.0f,0.0f},	//2
+	{1.0f, -1.0f, -1.0f,1.0,0.0f,0.0f},	//3
+	{-1.0f,-1.0f, 1.0f,0.0,0.0f,1.0f},	//4
+	{-1.0f, 1.0f, 1.0f,0.0,1.0f,1.0f},	//5
+	{ 1.0f, 1.0f, 1.0f,1.0,1.0f,1.0f},	//6
+	{ 1.0f,-1.0f, 1.0f,1.0,0.0f,1.0f},	//7
+};
+
+
+
+std::vector<unsigned>cubeindicies =
+{
+	0, 1, 2, 0, 2, 3,
+	4, 6, 5, 4, 7, 6,
+	4, 5, 1, 4, 1, 0,
+	3, 2, 6, 3, 6, 7,
+	1, 5, 6, 1, 6, 2,
+	4, 0, 3, 4, 3, 7
+};
 std::vector<unsigned> planeindicies =
 {
 	0,1,2,
 	0,2,3
 };
-
 //repesentation of a single mesh vertex
 
 
@@ -195,4 +229,11 @@ void BasicModelManager::InitPlaneModel(ComPtr< ID3D12Device> creationdevice, Mod
 	planemodel.InitVertexBuffer(creationdevice, planeverticies);
 	planemodel.InitIndexBuffer(creationdevice, planeindicies);
 	planemodel.UploadModelDatatoBuffers();
+}
+void BasicModelManager::InitCubeModel(ComPtr< ID3D12Device> creationdevice, Model& cubemodel)
+{
+
+	cubemodel.InitVertexBuffer(creationdevice, cubeverticices2);
+	cubemodel.InitIndexBuffer(creationdevice,cubeindicies);
+	cubemodel.UploadModelDatatoBuffers();
 }

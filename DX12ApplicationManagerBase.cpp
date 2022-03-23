@@ -34,7 +34,27 @@ D3D12_RECT DX12ApplicationManagerBase::GetScissorRect()
 void DX12ApplicationManagerBase::Initswapchain(ComPtr<IDXGIFactory2> factory, unsigned width, unsigned height, HWND hwnd)
 {
 	m_swapchain.Init(factory, width, height, hwnd, m_mainqueue.GetQueue());
-
+	//create depth buffer & dsv
+	{
+		DX12ResourceCreationProperties depthbufferprops = {};
+		DX12Resource::InitResourceCreationProperties(depthbufferprops);
+		depthbufferprops.resdesc.Width = width;
+		depthbufferprops.resdesc.Height = height;
+		depthbufferprops.resdesc.Format = DXGI_FORMAT_D32_FLOAT;//just a depth buffer for now no stencil
+		depthbufferprops.useclearvalue = true;
+		depthbufferprops.resinitialstate = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+		depthbufferprops.resdesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+		depthbufferprops.optimizedclearvalue.DepthStencil.Depth = 1.0f;
+		depthbufferprops.optimizedclearvalue.DepthStencil.Stencil = 0;
+		depthbufferprops.optimizedclearvalue.Format = DXGI_FORMAT_D32_FLOAT;//just a depth buffer for now no stencil
+		m_depthbuffer.Init(m_creationdevice, depthbufferprops, ResourceCreationMode::COMMITED);
+		m_depthbuffer.SetName(L"DepthBuffer");
+		D3D12_DEPTH_STENCIL_VIEW_DESC dsvdesc = {};
+		dsvdesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+		dsvdesc.Texture2D.MipSlice = 0;
+		dsvdesc.Format = DXGI_FORMAT_D32_FLOAT;
+		m_depthbuffer.CreateDSV(m_creationdevice, dsvdesc, m_dsvdescheap.GetCPUHandlefromstart());
+	}
 	//init rtv heap as well to create backbuffer rtvs
 	D3D12_DESCRIPTOR_HEAP_DESC rtvheapdesc = {};
 	rtvheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
@@ -72,6 +92,13 @@ void DX12ApplicationManagerBase::InitBase(ComPtr< ID3D12Device> creationdevice)
 	m_uploadcommandlist.Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
 	m_uploadcommandlist.SetName(L"uploadcmdlist");
 
+	//dsv heap
+	D3D12_DESCRIPTOR_HEAP_DESC dsvheapdesc = {};
+	dsvheapdesc.NodeMask = 0;
+	dsvheapdesc.NumDescriptors = 1;
+	dsvheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	m_dsvdescheap.Init(dsvheapdesc, m_creationdevice);
+	
 
 
 }

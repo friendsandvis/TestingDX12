@@ -22,6 +22,7 @@ private:
 	DX12PSO m_pso;
 	DX12RootSignature m_rootsignature;
 	Model m_planemodel;
+	Model m_cubemodel;
 	void InitPSO();
 	DXCamera m_maincamera;
 };
