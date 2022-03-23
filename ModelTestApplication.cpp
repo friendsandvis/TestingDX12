@@ -18,9 +18,10 @@ void ModelTestApplication::Update()
 	XMVECTOR focuspoint = XMVectorSet(0, 0, 0, 1);
 	XMVECTOR up = XMVectorSet(0, 1, 0, 0);
 	XMMATRIX viewmat = XMMatrixLookAtLH(eyepos, focuspoint, up);
-	float fov = 45;
+	
 	float aspectratio = m_swapchain.GetSwapchainWidth()/(float)m_swapchain.GetSwapchainHeight();
-	XMMATRIX projmat = XMMatrixPerspectiveFovLH(XMConvertToRadians(fov), aspectratio, 0.1f, 100.0f);
+	
+	XMMATRIX projmat = XMMatrixPerspectiveFovLH(XMConvertToRadians(m_maincamera.GetFoV()), aspectratio, 0.1f, 100.0f);
  	m_maincamera.SetView(viewmat);
 	m_maincamera.SetProjection(projmat);
 }
@@ -128,9 +129,17 @@ void ModelTestApplication::InitPSO()
 
 void ModelTestApplication::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+
 	switch (uMsg)
 	{
-	case WM_XBUTTONDOWN:
+		
+	case WM_MOUSEWHEEL:
+	{
+		float wheeldelta =GET_WHEEL_DELTA_WPARAM(wParam)/30.0f;
+		float fovupdated=m_maincamera.GetFoV() - wheeldelta;
+		m_maincamera.SetFov(fovupdated);
+		
+	}
 	default:
 		break;
 	}

@@ -1,6 +1,8 @@
 #include"DXCamera.h"
 
 DXCamera::DXCamera()
+	:
+	m_fovdegree(45.0f)
 {
 	m_view = XMMatrixIdentity();
 	m_projection = XMMatrixIdentity();
