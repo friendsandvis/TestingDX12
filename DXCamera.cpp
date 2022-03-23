@@ -19,3 +19,16 @@ XMMATRIX DXCamera::GetMVP()
 	mvp = XMMatrixMultiply(mvp, m_projection);
 	return mvp;
 }
+
+void DXCamera::SetFov(float fovdeg)
+{
+	if (fovdeg >= 90)
+	{
+		fovdeg -= 45.0f;
+	}
+	else if(fovdeg<=0.0f)
+	{
+		fovdeg += 45.0f;
+	}
+	m_fovdegree = fovdeg;
+}
