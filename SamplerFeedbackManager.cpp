@@ -147,7 +147,14 @@ void DX12FeedBackUnit::ProcessReadbackdata()
 
 void DX12FeedBackUnit::TryUpdateLODClamp(unsigned loadedlodidx)
 {
-
+	if (m_reservedresmemorymanager.IsMemoryBound(m_lodclampvalue))
+	{
+		if (m_lodclampvalue > loadedlodidx) { m_lodclampvalue=loadedlodidx; }
+	}
+	else
+	{
+		m_lodclampvalue = loadedlodidx;
+	}
 }
 
 void DX12FeedBackUnit::ClearReservedResourceMip(DX12Commandlist& cmdlist, uint8_t mipindextoclear, float* clearcolour)
