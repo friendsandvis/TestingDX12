@@ -202,13 +202,14 @@ void DX12SamplerfeedbackApplication::InitBasicPSO()
 	rootparams[1].Constants.ShaderRegister = 0;
 	rootparams[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rootparams[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+	rootparams[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
 	rootparams[2].Constants.Num32BitValues = sizeof(XMMATRIX) / 4;
 	rootparams[2].Constants.RegisterSpace = 0;
 	rootparams[2].Constants.ShaderRegister = 1;
 	rootparams[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-
-	D3D12_ROOT_SIGNATURE_DESC emptyrootsignaturedesc = {};
-	emptyrootsignaturedesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	
+		D3D12_ROOT_SIGNATURE_DESC emptyrootsignaturedesc = {};
+		emptyrootsignaturedesc.Flags= D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 	emptyrootsignaturedesc.NumParameters = 3;
 	emptyrootsignaturedesc.pParameters = rootparams;
 	emptyrootsignaturedesc.NumStaticSamplers = 1;

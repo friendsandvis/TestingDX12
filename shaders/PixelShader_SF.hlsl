@@ -10,14 +10,13 @@ FeedbackTexture2D<SAMPLER_FEEDBACK_MIN_MIP> imagefeedback:register(u0);
 ConstantBuffer<SFConstants> sfsconstants:register(b0);
 
 
-struct Vout
+struct VSOut
 {
-	float4 opos:SV_Position;
-	float4 vcol : COLOUR0;
+    float4 pos : SV_Position;
 	float2 uv:UV;
 };
 
-float4 main(Vout psin) : SV_TARGET0
+float4 main(VSOut psin) : SV_TARGET0
 {
  float4 outcol=image.Sample(simplesampler,psin.uv);
  imagefeedback.WriteSamplerFeedback(image,simplesampler,psin.uv);
