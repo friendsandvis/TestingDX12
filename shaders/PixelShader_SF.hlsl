@@ -1,5 +1,5 @@
 
-stuct SFConstants
+struct SFConstants
 {
 	float lodclamp;
 };

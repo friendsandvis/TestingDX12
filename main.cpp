@@ -1,10 +1,10 @@
 #include"windmaker.h"
 #include"DX12Manager.h"
 #include"DX12SimpleTexturedQuadApplication.h"
-//#include"DX12SamplerfeedbackApplication.h"
+#include"DX12SamplerfeedbackApplication.h"
 #include"DX12ReservedResourceApplication.h"
 //#include"ModelTestApplication.h"
-#include"MipTestApplication.h"
+//#include"MipTestApplication.h"
 //#include"DX12ComputeApplication.h"
 #define ENABLEDEBUGLAYER true
 
@@ -15,9 +15,9 @@ int main()
 {
 	//DX12ReservedResourceApplication appmanager;
 	//DX12ComputeApplication appmanager;
-	//DX12SamplerfeedbackApplication appmanager;
+	DX12SamplerfeedbackApplication appmanager;
 	//ModelTestApplication appmanager;
-	MipTestApplication appmanager;
+	//MipTestApplication appmanager;
 	//TexturedQuadApplication appmanager;
 	WindowProcHook* windhook = dynamic_cast<WindowProcHook*>(&appmanager);
 	assert(windhook != nullptr);//because all applicationd derive from base app which is derived from interface 
