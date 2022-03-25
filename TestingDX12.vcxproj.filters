@@ -102,6 +102,9 @@
     <ClCompile Include="WindowProcHook.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MipTestApplication.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="windmaker.h">
@@ -186,6 +189,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="WindowProcHook.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MipTestApplication.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

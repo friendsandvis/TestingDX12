@@ -3,8 +3,8 @@
 
 std::vector<Vertex> planeverticies =
 {
-	{-1.0f,1.0f,0.0f,0.0,0.0f},	//0(left-top)
-	{-1.0f,-1.0f,0.0f,0.0f,1.0f},	//1(left-bottom)
+	{-1.0f,1.0f,0.0f,0.0f,0.0f},	//0(left-top)
+	{-1.0f,-1.0f,0.0f,1.0f,1.0f},	//1(left-bottom)
 	{1.0f,-1.0f,0.0f,1.0f,1.0f},	//2(right-bottom)
 	{1.0f,1.0f,0.0f,1.0f,0.0f}	//3(right-top)
 
@@ -23,7 +23,7 @@ std::vector<Vertex>  cubeverticices = {
 	{ 1.0f,-1.0f, 1.0f,0.0,0.0f},	//7
 };
 
-std::vector<Vertex>  cubeverticices2 = {
+std::vector<Vertex>  cubeverticices2;/* = {
 	{-1.0f, -1.0f, -1.0f,0.0,0.0f,0.0f},	//0
 	{-1.0f,  1.0f, -1.0f,0.0,1.0f,0.0f},	//1
 	{1.0f,  1.0f, -1.0f ,1.0f,1.0f,0.0f},	//2
@@ -32,7 +32,7 @@ std::vector<Vertex>  cubeverticices2 = {
 	{-1.0f, 1.0f, 1.0f,0.0,1.0f,1.0f},	//5
 	{ 1.0f, 1.0f, 1.0f,1.0,1.0f,1.0f},	//6
 	{ 1.0f,-1.0f, 1.0f,1.0,0.0f,1.0f},	//7
-};
+};*/
 
 
 

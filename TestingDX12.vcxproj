@@ -171,6 +171,7 @@
     <ClCompile Include="DXTexManager.cpp" />
     <ClCompile Include="DXUtils.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MipTestApplication.cpp" />
     <ClCompile Include="ModelTestApplication.cpp" />
     <ClCompile Include="SamplerFeedbackManager.cpp" />
     <ClCompile Include="ShaderManager.cpp" />
@@ -200,6 +201,7 @@
     <ClInclude Include="DXCamera.h" />
     <ClInclude Include="DXTexManager.h" />
     <ClInclude Include="DXUtils.h" />
+    <ClInclude Include="MipTestApplication.h" />
     <ClInclude Include="ModelTestApplication.h" />
     <ClInclude Include="Renderable.h" />
     <ClInclude Include="SamplerFeedbackManager.h" />

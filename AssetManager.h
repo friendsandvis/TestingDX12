@@ -16,9 +16,8 @@ struct Vertex
 	float X;
 	float Y;
 	float Z;
-	float R;
-	float G;
-	float B;
+	float U;
+	float V;
 };
 
 enum ModelDataUploadMode
