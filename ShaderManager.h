@@ -4,6 +4,7 @@
 #include<d3dcompiler.h>
 #include<Windows.h>
 #include<DXC/dxcapi.h>
+#include<string>
 
 #define USEDXC
 
@@ -35,8 +36,15 @@ public:
 		CS
 	};
 
+	struct ShaderDefine
+	{
+		std::wstring definename;
+		std::wstring value;
 
-	bool Init(LPCWSTR sourcehlslfilepath, ShaderType shadertype);
+	};
+
+
+	bool Init(LPCWSTR sourcehlslfilepath, ShaderType shadertype,vector<ShaderDefine> shaderdefines= vector<ShaderDefine>());
 	size_t GetCompiledCodeSize() { return m_compiledcode.m_datasize; }
 	void* GetCompiledCode();
 	
@@ -54,6 +62,7 @@ struct DXCCOMPILEParams
 	 LPCWSTR entrypoint; 
 	 LPCWSTR targetprofile;
 	 vector<LPCWSTR> args;
+	 vector<DxcDefine> defines;
 	 DX12Customblob* out_compiledcodeblob;
 	 DX12Customblob* out_errorblob;
 };

@@ -17,7 +17,7 @@ void* DX12Shader::GetCompiledCode()
 	return reinterpret_cast<void*>(m_compiledcode.m_data);
 }
 
-bool DX12Shader::Init(LPCWSTR sourcehlslfilepath, ShaderType shadertype)
+bool DX12Shader::Init(LPCWSTR sourcehlslfilepath, ShaderType shadertype, vector<ShaderDefine> shaderdefines)
 {
 	m_shadertype = shadertype;
 	m_sourcehlslfilename = sourcehlslfilepath;
@@ -32,6 +32,14 @@ bool DX12Shader::Init(LPCWSTR sourcehlslfilepath, ShaderType shadertype)
 	dxccompileparams.args.push_back(L"-Zi");
 	dxccompileparams.args.push_back(L"-Qembed_debug");
 #endif // DEBUGSHADER
+	for (size_t i = 0; i < shaderdefines.size(); i++)
+	{
+		DxcDefine adxcdefine = {};
+		adxcdefine.Name=shaderdefines[i].definename.c_str();
+		adxcdefine.Value= shaderdefines[i].value.c_str();
+		dxccompileparams.defines.push_back(adxcdefine);
+	}
+
 
 	
 	
@@ -155,7 +163,7 @@ void DXCmanager::CompileShader(DXCCOMPILEParams& compileparams)
 	ComPtr<IDxcBlobEncoding> hlslsource;
 	DXASSERT(m_lib->CreateBlobFromFile(compileparams.sourcehlslfilepath, &codePage, hlslsource.GetAddressOf()))
 
-		DXASSERT(m_compiler->Compile(hlslsource.Get(), compileparams.sourcehlslfilepath, compileparams.entrypoint, compileparams.targetprofile, compileparams.args.data(), compileparams.args.size(), nullptr, 0, nullptr, opres.GetAddressOf()))
+		DXASSERT(m_compiler->Compile(hlslsource.Get(), compileparams.sourcehlslfilepath, compileparams.entrypoint, compileparams.targetprofile, compileparams.args.data(), compileparams.args.size(),compileparams.defines.data(),compileparams.defines.size(), nullptr, opres.GetAddressOf()))
 
 		ComPtr<IDxcBlob> rescode;
 		ComPtr<IDxcBlobEncoding> errors;
