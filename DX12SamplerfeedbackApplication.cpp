@@ -107,7 +107,13 @@ void DX12SamplerfeedbackApplication::InitBasicPSO()
 	DX12Shader* vs = new DX12Shader();
 	DX12Shader* ps = new DX12Shader();
 	vs->Init(L"shaders/VertexShader_SF.hlsl", DX12Shader::ShaderType::VS);
-	ps->Init(L"shaders/PixelShader_SF.hlsl", DX12Shader::ShaderType::PS);
+	vector<DX12Shader::ShaderDefine> psdefines;
+	if (m_sfsupported)
+	{
+		DX12Shader::ShaderDefine sfsdefine = { L"SFSSUPPORTED",L"1" };
+		psdefines.push_back(sfsdefine);
+	}
+	ps->Init(L"shaders/PixelShader_SF.hlsl", DX12Shader::ShaderType::PS,psdefines);
 	basicpsodata.m_shaderstouse.push_back(vs);
 	basicpsodata.m_shaderstouse.push_back(ps);
 

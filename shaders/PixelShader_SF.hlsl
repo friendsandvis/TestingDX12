@@ -19,7 +19,9 @@ struct VSOut
 float4 main(VSOut psin) : SV_TARGET0
 {
  float4 outcol=image.Sample(simplesampler,psin.uv);
+ #ifdef SFSSUPPORTED
  imagefeedback.WriteSamplerFeedback(image,simplesampler,psin.uv);
+ #endif//SFSSUPPORTED
 	//return float4(psin.uv,0.0f,1.0f);
 	return outcol;
 }
