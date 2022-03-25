@@ -106,7 +106,7 @@ void DX12SamplerfeedbackApplication::InitBasicPSO()
 	//shaders to use
 	DX12Shader* vs = new DX12Shader();
 	DX12Shader* ps = new DX12Shader();
-	vs->Init(L"shaders/BasicVertexShader_1.hlsl", DX12Shader::ShaderType::VS);
+	vs->Init(L"shaders/VertexShader_SF.hlsl", DX12Shader::ShaderType::VS);
 	ps->Init(L"shaders/PixelShader_SF.hlsl", DX12Shader::ShaderType::PS);
 	basicpsodata.m_shaderstouse.push_back(vs);
 	basicpsodata.m_shaderstouse.push_back(ps);
@@ -164,7 +164,7 @@ void DX12SamplerfeedbackApplication::InitBasicPSO()
 	* 0=table
 	* 1=root constants
 	*/
-	D3D12_ROOT_PARAMETER rootparams[2] = {};
+	D3D12_ROOT_PARAMETER rootparams[3] = {};
 
 	D3D12_DESCRIPTOR_RANGE descranges[3];
 	{
@@ -184,26 +184,32 @@ void DX12SamplerfeedbackApplication::InitBasicPSO()
 		feedbackuavrange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 	}
 	{
-		D3D12_DESCRIPTOR_RANGE& texsrvrange = descranges[2];
-		texsrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		texsrvrange.NumDescriptors = 1;
-		texsrvrange.BaseShaderRegister = 1;
-		texsrvrange.RegisterSpace = 0;
-		texsrvrange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+		D3D12_DESCRIPTOR_RANGE& minlodsrvrange = descranges[2];
+		minlodsrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		minlodsrvrange.NumDescriptors = 1;
+		minlodsrvrange.BaseShaderRegister = 1;
+		minlodsrvrange.RegisterSpace = 0;
+		minlodsrvrange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 	}
 
 	rootparams[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	rootparams[0].DescriptorTable.NumDescriptorRanges = 3;
 	rootparams[0].DescriptorTable.pDescriptorRanges = descranges;
-	rootparams[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	rootparams[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	rootparams[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
 	rootparams[1].Constants.Num32BitValues = 1;
 	rootparams[1].Constants.RegisterSpace = 0;
 	rootparams[1].Constants.ShaderRegister = 0;
+	rootparams[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootparams[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+	rootparams[2].Constants.Num32BitValues = sizeof(XMMATRIX) / 4;
+	rootparams[2].Constants.RegisterSpace = 0;
+	rootparams[2].Constants.ShaderRegister = 1;
+	rootparams[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 
-	CD3DX12_ROOT_SIGNATURE_DESC emptyrootsignaturedesc = {};
-	emptyrootsignaturedesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-	emptyrootsignaturedesc.NumParameters = 0;
+	D3D12_ROOT_SIGNATURE_DESC emptyrootsignaturedesc = {};
+	emptyrootsignaturedesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	emptyrootsignaturedesc.NumParameters = 3;
 	emptyrootsignaturedesc.pParameters = rootparams;
 	emptyrootsignaturedesc.NumStaticSamplers = 1;
 	emptyrootsignaturedesc.pStaticSamplers = &simplesampler;
@@ -247,6 +253,19 @@ void DX12SamplerfeedbackApplication::InitBasicPSO()
 	m_basicpso.Init(m_creationdevice, basicpsodata);
 }
 
+void DX12SamplerfeedbackApplication::Update()
+{
+	XMVECTOR eyepos = XMVectorSet(0.0f, 0.0f, 10.0f, 1);
+	XMVECTOR focuspoint = XMVectorSet(0, 0, 0, 1);
+	XMVECTOR up = XMVectorSet(0, 1, 0, 0);
+	XMMATRIX viewmat = XMMatrixLookAtLH(eyepos, focuspoint, up);
+
+	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
+
+	XMMATRIX projmat = XMMatrixPerspectiveFovLH(XMConvertToRadians(m_maincamera.GetFoV()), aspectratio, 0.1f, 100.0f);
+	m_maincamera.SetView(viewmat);
+	m_maincamera.SetProjection(projmat);
+}
 
 void DX12SamplerfeedbackApplication::Render()
 {
@@ -261,6 +280,8 @@ void DX12SamplerfeedbackApplication::Render()
 	{
 		unsigned rootconst = m_redtexfeedbackunit.GetLODClampValue();
 		m_primarycmdlist->SetGraphicsRoot32BitConstants(1, 1, &rootconst, 0);
+		XMMATRIX mvp = m_maincamera.GetMVP();
+		m_primarycmdlist->SetGraphicsRoot32BitConstants(2, sizeof(XMMATRIX) / 4, &mvp, 0);
 	}
 
 	{
@@ -333,6 +354,24 @@ void DX12SamplerfeedbackApplication::Render()
 
 		BasicRender();
 	
+}
+
+void DX12SamplerfeedbackApplication::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+
+	switch (uMsg)
+	{
+
+	case WM_MOUSEWHEEL:
+	{
+		float wheeldelta = GET_WHEEL_DELTA_WPARAM(wParam) / 60.0f;
+		float fovupdated = m_maincamera.GetFoV() - wheeldelta;
+		m_maincamera.SetFov(fovupdated);
+
+	}
+	default:
+		break;
+	}
 }
 
 

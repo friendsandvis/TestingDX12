@@ -4,6 +4,7 @@
 #include"AssetManager.h"
 #include"DXTexManager.h"
 #include"SamplerFeedbackManager.h"
+#include"DXCamera.h"
 
 
 class DX12SamplerfeedbackApplication :public DX12ApplicationManagerBase
@@ -11,11 +12,13 @@ class DX12SamplerfeedbackApplication :public DX12ApplicationManagerBase
 public:
 	DX12SamplerfeedbackApplication();
 	~DX12SamplerfeedbackApplication();
+	void Update()override;
 	void Render()override;
+	void ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)override;
 
 
 protected:
-	void InitExtras();
+	void InitExtras()override;
 
 private:
 	DX12PSO m_basicpso;
@@ -29,6 +32,7 @@ private:
 	DX12ReservedResource m_sfsreservedresourcetex;
 	DXImageData m_imagedataforreservedrestex;
 	bool m_sfsupported;
+	DXCamera m_maincamera;
 	
 	
 
