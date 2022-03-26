@@ -106,7 +106,7 @@ void DX12ReservedResourceMemoryManager::Update(ComPtr<ID3D12CommandQueue>command
 	//bind heaps needed
 	for (size_t i = 0; i < subrestomap.size(); i++)
 	{
-		UINT targetsubresidx = subrestounmap[i];
+		UINT targetsubresidx = subrestomap[i];
 		SubResouceInfo& subresinfo = m_subresourceinfo[targetsubresidx];
 		D3D12_TILE_RANGE_FLAGS rangeflag = D3D12_TILE_RANGE_FLAGS::D3D12_TILE_RANGE_FLAG_NONE;
 		UINT heapoffset = 0;
@@ -140,12 +140,13 @@ void DX12ReservedResourceMemoryManager::InitHeap(size_t indexinheapvector, ComPt
 
 void DX12ReservedResourceMemoryManager::DeleteHeap(size_t heapindex)
 {
+	assert(heapindex < m_heaps.size());
 	if (!m_heaps[heapindex].Get())
 	{
 		//heap does not exists so nothing to do
 		return;
 	}
-	assert(heapindex < m_heaps.size());
+	
 	m_heaps[heapindex]->Release();
 	m_heaps[heapindex] = ComPtr<ID3D12Heap>();
 	assert(m_heaps[heapindex].Get() == nullptr);

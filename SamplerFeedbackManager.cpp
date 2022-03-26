@@ -43,6 +43,7 @@ void DX12FeedBackUnit::Init(ComPtr<ID3D12Device8> creationdevice, samplerFeedbac
 
 	//init feedback texture first
 	m_feedbacktex.Init(creationdevice, feedbacktexturedata);
+	m_feedbacktex.SetName(L"Feedbacktexture");
 	//pair the feedback texture to create uav
 	m_feedbacktex.Pair(creationdevice, initdata.feedbacktexrestopairwith, initdata.feedbacktexuavhandle);
 	ComPtr<ID3D12Device> creationdevice1;
@@ -218,19 +219,21 @@ void SamplerFeedbackTexture::Readback(ComPtr<ID3D12GraphicsCommandList1> command
 	ComPtr<ID3D12Resource> dstresource = dstres->GetResource();
 	if (!dstres->IsResState(D3D12_RESOURCE_STATE_RESOLVE_DEST))
 	{
-		barriers[0] = dstres->TransitionResState(D3D12_RESOURCE_STATE_RESOLVE_DEST); barriersused++;
+		D3D12_RESOURCE_BARRIER abarrier = dstres->TransitionResState(D3D12_RESOURCE_STATE_RESOLVE_DEST);
+		commandlist->ResourceBarrier(1, &abarrier);
 	}
 	if(!IsResourceState(D3D12_RESOURCE_STATE_RESOLVE_SOURCE))
 	{
-		barriers[1] = TransitionResState(D3D12_RESOURCE_STATE_RESOLVE_SOURCE); barriersused++;
+		D3D12_RESOURCE_BARRIER abarrier = TransitionResState(D3D12_RESOURCE_STATE_RESOLVE_SOURCE);
+		commandlist->ResourceBarrier(1, &abarrier);
 	}
-	commandlist->ResourceBarrier(barriersused, barriers);
+	
 
 
 	commandlist->ResolveSubresourceRegion(dstresource.Get(), 0, 0, 0, m_resource.Get(), 0, nullptr, DXGI_FORMAT_R8_UINT, D3D12_RESOLVE_MODE_DECODE_SAMPLER_FEEDBACK);
 	//transition feedback res back to uav after resolve
-	barriers[1] = TransitionResState(D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-	commandlist->ResourceBarrier(1, &barriers[1]);
+	D3D12_RESOURCE_BARRIER abarrier= TransitionResState(D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+	commandlist->ResourceBarrier(1, &abarrier);
 }
 
 void SamplerFeedbackTexture::Init(ComPtr<ID3D12Device8> creationdevice, SamplerFeedbackTextureInitData initdata)
