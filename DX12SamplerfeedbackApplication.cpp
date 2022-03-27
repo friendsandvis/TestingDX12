@@ -76,7 +76,7 @@ void DX12SamplerfeedbackApplication::InitExtras()
 				//start by loading the least  detailed mip 
 				m_redtexfeedbackunit.BindMipLevel(m_sfsreservedresourcetex.GetTotalMipCount() - 1,true);
 				//imidiate update feedback unit to reflect the requested mip level.
-				m_redtexfeedbackunit.Update(m_mainqueue.GetQueue(), m_creationdevice);
+				m_redtexfeedbackunit.PreRenderUpdate(m_mainqueue.GetQueue(), m_creationdevice);
 				
 				m_creationdevice->CopyDescriptorsSimple(1, m_resaccessviewdescheap.GetCPUHandleOffseted(1), m_resaccessviewdescheapsrc.GetCPUHandleOffseted(0), D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 			}
@@ -263,7 +263,7 @@ void DX12SamplerfeedbackApplication::InitBasicPSO()
 	m_basicpso.Init(m_creationdevice, basicpsodata);
 }
 
-void DX12SamplerfeedbackApplication::Update()
+void DX12SamplerfeedbackApplication::PreRenderUpdate()
 {
 	XMVECTOR eyepos = XMVectorSet(0.0f, 0.0f, 10.0f, 1);
 	XMVECTOR focuspoint = XMVectorSet(0, 0, 0, 1);

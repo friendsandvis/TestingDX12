@@ -12,7 +12,7 @@ class ModelTestApplication :public DX12ApplicationManagerBase
 public:
 	ModelTestApplication();
 	~ModelTestApplication();
-	void Update()override;
+	void PreRenderUpdate()override;
 	void Render()override;
 	void ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)override;
 

@@ -14,7 +14,7 @@ class MipTestApplication :public DX12ApplicationManagerBase
 public:
 	MipTestApplication();
 	~MipTestApplication();
-	void Update()override;
+	void PreRenderUpdate()override;
 	void Render()override;
 	void ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)override;
 

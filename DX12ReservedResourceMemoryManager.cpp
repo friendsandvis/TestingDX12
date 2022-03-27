@@ -68,7 +68,7 @@ void DX12ReservedResourceMemoryManager::Init(DX12ReservedResource* reservedresou
 	}
 }
 
-void DX12ReservedResourceMemoryManager::Update(ComPtr<ID3D12CommandQueue>commandqueue, ComPtr< ID3D12Device> creationdevice)
+void DX12ReservedResourceMemoryManager::PreRenderUpdate(ComPtr<ID3D12CommandQueue>commandqueue, ComPtr< ID3D12Device> creationdevice)
 {
 	vector<UINT> subrestomap, subrestounmap;
 	//map the unmapped region & vice versa(heap managment done as needed

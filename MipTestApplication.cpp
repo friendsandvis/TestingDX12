@@ -10,7 +10,7 @@ MipTestApplication::MipTestApplication()
 MipTestApplication::~MipTestApplication()
 {
 }
-void MipTestApplication::Update()
+void MipTestApplication::PreRenderUpdate()
 {
 
 	XMVECTOR eyepos = XMVectorSet(0.0f, 0.0f, 10.0f, 1);

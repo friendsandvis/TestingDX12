@@ -16,7 +16,8 @@ public:
 	void InitBase(ComPtr< ID3D12Device> creationdevice);
 	void Initswapchain(ComPtr<IDXGIFactory2> factory, unsigned width, unsigned height, HWND hwnd);
 	virtual void Render() = 0;
-	virtual void Update() {}
+	virtual void PreRenderUpdate() {}
+	virtual void PostRenderUpdate() {}
 	//called inside init function san be overriden by child class to init other app specific members at app init time
 	
 

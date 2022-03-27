@@ -25,7 +25,7 @@ public:
 	inline size_t GetSubResCount() { return m_subresourceinfo.size(); }
 	void Init(DX12ReservedResource* reservedresourcetomanage);
 	//updates the physical memory mapping for the reserved resource(queue needed for updating the mappings and device for creating new heaps if needed)
-	void Update(ComPtr<ID3D12CommandQueue>commandqueue, ComPtr< ID3D12Device> creationdevice);
+	void PreRenderUpdate(ComPtr<ID3D12CommandQueue>commandqueue, ComPtr< ID3D12Device> creationdevice);
 	void BindMemory(UINT subresourceindex,bool makeunmapable=false);
 	void UnbindMemory(UINT subresourceindex);
 	//returns whether memory for the subresoource is bound or not

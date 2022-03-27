@@ -11,7 +11,7 @@ ModelTestApplication::ModelTestApplication()
 ModelTestApplication::~ModelTestApplication()
 {
 }
-void ModelTestApplication::Update()
+void ModelTestApplication::PreRenderUpdate()
 {
 	
 	XMVECTOR eyepos = XMVectorSet(0.0f, 0.0f, 10.0f, 1);
