@@ -1,7 +1,7 @@
 
 struct SFConstants
 {
-	float lodclamp;
+	uint lodclamp;
 };
 Texture2D<float4> image:register(t0);
 Texture2D<float4> minlodmap:register(t1);
@@ -18,7 +18,8 @@ struct VSOut
 
 float4 main(VSOut psin) : SV_TARGET0
 {
- float4 outcol=image.Sample(simplesampler,psin.uv);
+int2 offset=int2(0,0);
+ float4 outcol=image.Sample(simplesampler,psin.uv,offset,sfsconstants.lodclamp);
  #ifdef SFSSUPPORTED
  imagefeedback.WriteSamplerFeedback(image,simplesampler,psin.uv);
  #endif//SFSSUPPORTED
