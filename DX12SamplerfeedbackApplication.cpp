@@ -95,6 +95,11 @@ void DX12SamplerfeedbackApplication::InitExtras()
 
 	//upload asset data
 	m_uploadcommandlist.Reset();
+	{
+		//clear the reserved resource texture for texting binding(forced) for mip levels
+		float redclearcolour[4] = {1.0f,0.0f,0.0f,1.0f};
+		m_redtexfeedbackunit.ClearReservedResourceMip(m_uploadcommandlist, m_sfsreservedresourcetex.GetTotalMipCount() - 1, redclearcolour);
+	}
 	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_redtexture.UploadTexture(m_uploadcommandlist);
 	DXASSERT(m_uploadcommandlist->Close())
