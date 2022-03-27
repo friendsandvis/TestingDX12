@@ -11,6 +11,7 @@ struct SubResouceInfo
 	D3D12_TILED_RESOURCE_COORDINATE coordinates;
 	bool isMapped = false;//is the subresource mapped to the reserved resource
 	bool ispacked = false;
+	bool isunmapable = false;//states if the subres can be unmaped
 
 
 
@@ -25,7 +26,7 @@ public:
 	void Init(DX12ReservedResource* reservedresourcetomanage);
 	//updates the physical memory mapping for the reserved resource(queue needed for updating the mappings and device for creating new heaps if needed)
 	void Update(ComPtr<ID3D12CommandQueue>commandqueue, ComPtr< ID3D12Device> creationdevice);
-	void BindMemory(UINT subresourceindex);
+	void BindMemory(UINT subresourceindex,bool makeunmapable=false);
 	void UnbindMemory(UINT subresourceindex);
 	//returns whether memory for the subresoource is bound or not
 	bool IsMemoryBound(UINT subresourceindex);

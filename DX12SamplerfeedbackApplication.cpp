@@ -74,7 +74,7 @@ void DX12SamplerfeedbackApplication::InitExtras()
 			{
 				m_redtexfeedbackunit.Init(device8, sfunitinitdata);
 				//start by loading the least  detailed mip 
-				m_redtexfeedbackunit.BindMipLevel(m_sfsreservedresourcetex.GetTotalMipCount() - 1);
+				m_redtexfeedbackunit.BindMipLevel(m_sfsreservedresourcetex.GetTotalMipCount() - 1,true);
 				//imidiate update feedback unit to reflect the requested mip level.
 				m_redtexfeedbackunit.Update(m_mainqueue.GetQueue(), m_creationdevice);
 				

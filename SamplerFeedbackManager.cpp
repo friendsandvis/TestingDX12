@@ -169,7 +169,7 @@ void DX12FeedBackUnit::ClearReservedResourceMip(DX12Commandlist& cmdlist, uint8_
 	cmdlist->ClearUnorderedAccessViewFloat(gpuhandle,cpuhandle , reservedrestex->GetResource().Get(), clearcolour, 0, nullptr);
 }
 
-void DX12FeedBackUnit::BindMipLevel(uint8_t mipleveltobind)
+void DX12FeedBackUnit::BindMipLevel(uint8_t mipleveltobind, bool makeunmapable)
 {
 	bool valfound;
 	m_currentlymappedmips.Find(mipleveltobind,valfound);
@@ -179,7 +179,7 @@ void DX12FeedBackUnit::BindMipLevel(uint8_t mipleveltobind)
 		return;
 	}
 	assert(!m_reservedresmemorymanager.IsMemoryBound(mipleveltobind));
-	m_reservedresmemorymanager.BindMemory(mipleveltobind);
+	m_reservedresmemorymanager.BindMemory(mipleveltobind,makeunmapable);
 	m_currentlymappedmips.PushUnique(mipleveltobind);
 	//update clamp value
 	TryUpdateLODClamp(mipleveltobind);

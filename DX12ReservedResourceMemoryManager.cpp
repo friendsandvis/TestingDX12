@@ -76,7 +76,7 @@ void DX12ReservedResourceMemoryManager::Update(ComPtr<ID3D12CommandQueue>command
 	{
 		UINT targetsubresidx = m_dirtysubres[i];
 		SubResouceInfo& subresinfo=m_subresourceinfo[targetsubresidx];
-		if (subresinfo.isMapped)
+		if (subresinfo.isMapped && !subresinfo.isunmapable)
 		{
 			//need to unmap as it's already mapped
 			subrestounmap.push_back(targetsubresidx);
@@ -152,13 +152,17 @@ void DX12ReservedResourceMemoryManager::DeleteHeap(size_t heapindex)
 	assert(m_heaps[heapindex].Get() == nullptr);
 }
 
-void DX12ReservedResourceMemoryManager::BindMemory(UINT subresourceindex)
+void DX12ReservedResourceMemoryManager::BindMemory(UINT subresourceindex,bool makeunmapable)
 {
 	assert(subresourceindex < m_subresourceinfo.size());
 
 	if (!m_subresourceinfo[subresourceindex].isMapped)
 	{
 		m_dirtysubres.push_back(subresourceindex);
+	}
+	if (makeunmapable)
+	{
+		m_subresourceinfo[subresourceindex].isunmapable = true;
 	}
 
 }
