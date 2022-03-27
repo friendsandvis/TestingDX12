@@ -214,8 +214,7 @@ UINT64 SamplerFeedbackTexture::GetRequiredBufferSizeForTranscodeing()
 
 void SamplerFeedbackTexture::Readback(ComPtr<ID3D12GraphicsCommandList1> commandlist, DX12ResourceBase* dstres)
 {
-	uint8_t barriersused = 0;
-	D3D12_RESOURCE_BARRIER barriers[2];
+	
 	ComPtr<ID3D12Resource> dstresource = dstres->GetResource();
 	if (!dstres->IsResState(D3D12_RESOURCE_STATE_RESOLVE_DEST))
 	{
