@@ -68,9 +68,9 @@ public:
 	void ClearReservedResourceMip(DX12Commandlist& cmdlist, uint8_t mipindextoclear, float* clearcolour);
 	SamplerFeedbackTexture& GetFeedbackTexture() { return m_feedbacktex; }
 	//updates the physical memory mapping for the reserved resource(queue needed for updating the mappings and device for creating new heaps if needed)
-	void PreRenderUpdate(ComPtr<ID3D12CommandQueue>commandqueue, ComPtr< ID3D12Device> creationdevice)
+	void UpdateMemoryMappings(ComPtr<ID3D12CommandQueue>commandqueue, ComPtr< ID3D12Device> creationdevice)
 	{
-		m_reservedresmemorymanager.PreRenderUpdate(commandqueue, creationdevice);
+		m_reservedresmemorymanager.Update(commandqueue, creationdevice);
 	}
 private:
 	void TryUpdateLODClamp(unsigned loadedlodidx);

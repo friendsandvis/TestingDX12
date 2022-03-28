@@ -136,8 +136,11 @@ void DX12FeedBackUnit::ProcessReadbackdata()
 		for (size_t i = 0; i < mipstobeunmapped.GetSize(); i++)
 		{
 			assert(m_reservedresmemorymanager.IsMemoryBound(mipstounmap[i]));
-			m_reservedresmemorymanager.UnbindMemory(mipstounmap[i]);
-			m_currentlymappedmips.Remove(mipstounmap[i]);
+			bool unbindissued=m_reservedresmemorymanager.UnbindMemory(mipstounmap[i]);
+			if (unbindissued)
+			{
+				m_currentlymappedmips.Remove(mipstounmap[i]);
+			}
 		}
 	}
 

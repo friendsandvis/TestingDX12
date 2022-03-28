@@ -68,7 +68,7 @@ void DX12ReservedResourceMemoryManager::Init(DX12ReservedResource* reservedresou
 	}
 }
 
-void DX12ReservedResourceMemoryManager::PreRenderUpdate(ComPtr<ID3D12CommandQueue>commandqueue, ComPtr< ID3D12Device> creationdevice)
+void DX12ReservedResourceMemoryManager::Update(ComPtr<ID3D12CommandQueue>commandqueue, ComPtr< ID3D12Device> creationdevice)
 {
 	vector<UINT> subrestomap, subrestounmap;
 	//map the unmapped region & vice versa(heap managment done as needed
@@ -76,7 +76,7 @@ void DX12ReservedResourceMemoryManager::PreRenderUpdate(ComPtr<ID3D12CommandQueu
 	{
 		UINT targetsubresidx = m_dirtysubres[i];
 		SubResouceInfo& subresinfo=m_subresourceinfo[targetsubresidx];
-		if (subresinfo.isMapped && !subresinfo.isunmapable)
+		if (subresinfo.isMapped && subresinfo.isunmapable)
 		{
 			//need to unmap as it's already mapped
 			subrestounmap.push_back(targetsubresidx);
@@ -91,15 +91,22 @@ void DX12ReservedResourceMemoryManager::PreRenderUpdate(ComPtr<ID3D12CommandQueu
 			subresinfo.isMapped = true;
 		}
 	}
+	//empty dirtysubres vector now as we have processed all dirty onse.
+	m_dirtysubres.clear();
 
 	//unbind all heaps not needed
 	for (size_t i = 0; i < subrestounmap.size(); i++)
 	{
 		UINT targetsubresidx = subrestounmap[i];
 		SubResouceInfo& subresinfo = m_subresourceinfo[targetsubresidx];
-		D3D12_TILE_RANGE_FLAGS rangeflag = D3D12_TILE_RANGE_FLAGS::D3D12_TILE_RANGE_FLAG_NULL;
-		commandqueue->UpdateTileMappings(m_restomanage->GetResource().Get(), 1, &subresinfo.coordinates, &subresinfo.tileregionsize, nullptr, 1, &rangeflag, nullptr, &subresinfo.tileregionsize.NumTiles, D3D12_TILE_MAPPING_FLAG_NONE);
-		DeleteHeap(subresinfo.heapindex);
+		
+		assert(subresinfo.isunmapable);
+		bool heapdeletesuccess= DeleteHeap(subresinfo.heapindex);
+		if (heapdeletesuccess)
+		{
+			D3D12_TILE_RANGE_FLAGS rangeflag = D3D12_TILE_RANGE_FLAGS::D3D12_TILE_RANGE_FLAG_NULL;
+			commandqueue->UpdateTileMappings(m_restomanage->GetResource().Get(), 1, &subresinfo.coordinates, &subresinfo.tileregionsize, nullptr, 1, &rangeflag, nullptr, &subresinfo.tileregionsize.NumTiles, D3D12_TILE_MAPPING_FLAG_NONE);
+		}
 
 	}
 
@@ -111,8 +118,8 @@ void DX12ReservedResourceMemoryManager::PreRenderUpdate(ComPtr<ID3D12CommandQueu
 		D3D12_TILE_RANGE_FLAGS rangeflag = D3D12_TILE_RANGE_FLAGS::D3D12_TILE_RANGE_FLAG_NONE;
 		UINT heapoffset = 0;
 		//make sure heap exists
-		assert(m_heaps[subresinfo.heapindex].Get() != nullptr);
-		commandqueue->UpdateTileMappings(m_restomanage->GetResource().Get(), 1, &subresinfo.coordinates, &subresinfo.tileregionsize, m_heaps[subresinfo.heapindex].Get(), 1, &rangeflag, &heapoffset, &subresinfo.tileregionsize.NumTiles, D3D12_TILE_MAPPING_FLAG_NONE);
+		assert(m_heaps[subresinfo.heapindex].heap.Get() != nullptr);
+		commandqueue->UpdateTileMappings(m_restomanage->GetResource().Get(), 1, &subresinfo.coordinates, &subresinfo.tileregionsize, m_heaps[subresinfo.heapindex].heap.Get(), 1, &rangeflag, &heapoffset, &subresinfo.tileregionsize.NumTiles, D3D12_TILE_MAPPING_FLAG_NONE);
 	}
 
 
@@ -120,9 +127,10 @@ void DX12ReservedResourceMemoryManager::PreRenderUpdate(ComPtr<ID3D12CommandQueu
 
 void DX12ReservedResourceMemoryManager::InitHeap(size_t indexinheapvector, ComPtr< ID3D12Device> creationdevice, UINT64 heapsize)
 {
-	if (m_heaps[indexinheapvector].Get())
+	if (m_heaps[indexinheapvector].heap.Get())
 	{
-		//heap is already created do not recreate.
+		//heap is already created do not recreate but increment heap usage count
+		m_heaps[indexinheapvector].usagecount++;
 		return;
 	}
 	D3D12_HEAP_DESC heapdesc = {};
@@ -134,22 +142,20 @@ void DX12ReservedResourceMemoryManager::InitHeap(size_t indexinheapvector, ComPt
 	heapdesc.Properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
 	heapdesc.Properties.Type = D3D12_HEAP_TYPE_DEFAULT;
 
-	DXASSERT(creationdevice->CreateHeap(&heapdesc, IID_PPV_ARGS(m_heaps[indexinheapvector].GetAddressOf())))
-		DXASSERT(m_heaps[indexinheapvector]->SetName(L"ReservedResourceheap"))
+	DXASSERT(creationdevice->CreateHeap(&heapdesc, IID_PPV_ARGS(m_heaps[indexinheapvector].heap.GetAddressOf())))
+		DXASSERT(m_heaps[indexinheapvector].heap->SetName(L"ReservedResourceheap"))
+		m_heaps[indexinheapvector].usagecount++;
 }
 
-void DX12ReservedResourceMemoryManager::DeleteHeap(size_t heapindex)
+bool DX12ReservedResourceMemoryManager::DeleteHeap(size_t heapindex)
 {
 	assert(heapindex < m_heaps.size());
-	if (!m_heaps[heapindex].Get())
+	if (!m_heaps[heapindex].heap.Get())
 	{
 		//heap does not exists so nothing to do
-		return;
+		return false;
 	}
-	
-	m_heaps[heapindex]->Release();
-	m_heaps[heapindex] = ComPtr<ID3D12Heap>();
-	assert(m_heaps[heapindex].Get() == nullptr);
+	return m_heaps[heapindex].Delete();
 }
 
 void DX12ReservedResourceMemoryManager::BindMemory(UINT subresourceindex,bool makeunmapable)
@@ -162,17 +168,19 @@ void DX12ReservedResourceMemoryManager::BindMemory(UINT subresourceindex,bool ma
 	}
 	if (makeunmapable)
 	{
-		m_subresourceinfo[subresourceindex].isunmapable = true;
+		m_subresourceinfo[subresourceindex].isunmapable = false;
 	}
 
 }
-void DX12ReservedResourceMemoryManager::UnbindMemory(UINT subresourceindex)
+bool DX12ReservedResourceMemoryManager::UnbindMemory(UINT subresourceindex)
 {
 	assert(subresourceindex < m_subresourceinfo.size());
-	if (m_subresourceinfo[subresourceindex].isMapped)
+	if (m_subresourceinfo[subresourceindex].isMapped && m_subresourceinfo[subresourceindex].isunmapable)
 	{
 		m_dirtysubres.push_back(subresourceindex);
+		return true;
 	}
+	return false;
 }
 
 bool DX12ReservedResourceMemoryManager::IsMemoryBound(UINT subresourceindex)

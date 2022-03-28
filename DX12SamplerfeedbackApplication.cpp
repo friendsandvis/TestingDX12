@@ -76,7 +76,7 @@ void DX12SamplerfeedbackApplication::InitExtras()
 				//start by loading the least  detailed mip 
 				m_redtexfeedbackunit.BindMipLevel(m_sfsreservedresourcetex.GetTotalMipCount() - 1,true);
 				//imidiate update feedback unit to reflect the requested mip level.
-				m_redtexfeedbackunit.PreRenderUpdate(m_mainqueue.GetQueue(), m_creationdevice);
+				m_redtexfeedbackunit.UpdateMemoryMappings(m_mainqueue.GetQueue(), m_creationdevice);
 				
 				m_creationdevice->CopyDescriptorsSimple(1, m_resaccessviewdescheap.GetCPUHandleOffseted(1), m_resaccessviewdescheapsrc.GetCPUHandleOffseted(0), D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 			}
@@ -274,10 +274,12 @@ void DX12SamplerfeedbackApplication::PreRenderUpdate()
 	XMVECTOR focuspoint = XMVectorSet(0, 0, 0, 1);
 	XMVECTOR up = XMVectorSet(0, 1, 0, 0);
 	XMMATRIX viewmat = XMMatrixLookAtLH(eyepos, focuspoint, up);
+	
 
 	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
 
 	XMMATRIX projmat = XMMatrixPerspectiveFovLH(XMConvertToRadians(m_maincamera.GetFoV()), aspectratio, 0.1f, 100.0f);
+	
 	m_maincamera.SetView(viewmat);
 	m_maincamera.SetProjection(projmat);
 }
@@ -369,6 +371,13 @@ void DX12SamplerfeedbackApplication::Render()
 
 		BasicRender();
 	
+}
+
+void DX12SamplerfeedbackApplication::PostRenderUpdate()
+{
+	//process the feedback data after renderend(i.e. feedback written by draw calls)
+	m_redtexfeedbackunit.ProcessReadbackdata();
+	m_redtexfeedbackunit.UpdateMemoryMappings(m_mainqueue.GetQueue(), m_creationdevice);
 }
 
 void DX12SamplerfeedbackApplication::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
