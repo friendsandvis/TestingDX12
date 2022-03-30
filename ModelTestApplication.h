@@ -25,5 +25,4 @@ private:
 	Model m_planemodel;
 	Model m_cubemodel;
 	void InitPSO();
-	DXCamera m_maincamera;
 };

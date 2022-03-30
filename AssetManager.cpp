@@ -23,7 +23,7 @@ std::vector<Vertex>  cubeverticices = {
 	{ 1.0f,-1.0f, 1.0f,0.0,0.0f},	//7
 };
 
-std::vector<Vertex>  cubeverticices2;/* = {
+/*std::vector<Vertex>  cubeverticices2 = {
 	{-1.0f, -1.0f, -1.0f,0.0,0.0f,0.0f},	//0
 	{-1.0f,  1.0f, -1.0f,0.0,1.0f,0.0f},	//1
 	{1.0f,  1.0f, -1.0f ,1.0f,1.0f,0.0f},	//2
@@ -233,7 +233,7 @@ void BasicModelManager::InitPlaneModel(ComPtr< ID3D12Device> creationdevice, Mod
 void BasicModelManager::InitCubeModel(ComPtr< ID3D12Device> creationdevice, Model& cubemodel)
 {
 
-	cubemodel.InitVertexBuffer(creationdevice, cubeverticices2);
+	cubemodel.InitVertexBuffer(creationdevice, cubeverticices);
 	cubemodel.InitIndexBuffer(creationdevice,cubeindicies);
 	cubemodel.UploadModelDatatoBuffers();
 }

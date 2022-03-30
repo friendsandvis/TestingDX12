@@ -34,6 +34,9 @@ D3D12_RECT DX12ApplicationManagerBase::GetScissorRect()
 void DX12ApplicationManagerBase::Initswapchain(ComPtr<IDXGIFactory2> factory, unsigned width, unsigned height, HWND hwnd)
 {
 	m_swapchain.Init(factory, width, height, hwnd, m_mainqueue.GetQueue());
+	//update the aspect ratio for the main camera
+	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
+	m_maincamera.SetAspectRatio(aspectratio);
 	//create depth buffer & dsv
 	{
 		DX12ResourceCreationProperties depthbufferprops = {};

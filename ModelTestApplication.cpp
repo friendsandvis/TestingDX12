@@ -14,16 +14,6 @@ ModelTestApplication::~ModelTestApplication()
 void ModelTestApplication::PreRenderUpdate()
 {
 	
-	XMVECTOR eyepos = XMVectorSet(0.0f, 0.0f, 10.0f, 1);
-	XMVECTOR focuspoint = XMVectorSet(0, 0, 0, 1);
-	XMVECTOR up = XMVectorSet(0, 1, 0, 0);
-	XMMATRIX viewmat = XMMatrixLookAtLH(eyepos, focuspoint, up);
-	
-	float aspectratio = m_swapchain.GetSwapchainWidth()/(float)m_swapchain.GetSwapchainHeight();
-	
-	XMMATRIX projmat = XMMatrixPerspectiveFovLH(XMConvertToRadians(m_maincamera.GetFoV()), aspectratio, 0.1f, 100.0f);
- 	m_maincamera.SetView(viewmat);
-	m_maincamera.SetProjection(projmat);
 }
 
 void ModelTestApplication::Render()
@@ -63,6 +53,8 @@ void ModelTestApplication::Render()
 
 void ModelTestApplication::InitExtras()
 {
+	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
+	m_maincamera.SetAspectRatio(aspectratio);
 	InitPSO();
 	BasicModelManager::InitPlaneModel(m_creationdevice,m_planemodel);
 	BasicModelManager::InitCubeModel(m_creationdevice, m_cubemodel);

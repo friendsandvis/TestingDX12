@@ -31,6 +31,18 @@ public:
 	void UploadTexture(DX12Commandlist& copycmdlist);
 };
 
+class DXTextureCube :public DX12ResourceBase
+{
+	DXImageData m_texdata;
+	vector<D3D12_SUBRESOURCE_DATA> m_subresdata;
+
+public:
+	void UploadTexureData(DX12Commandlist& copycmdlist);
+void Init(ComPtr< ID3D12Device> creationdevice);
+	DXImageData& GetDXImageData() { return m_texdata; }
+	DX12Buffer m_uploadbuffer;
+};
+
 class DXTexManager
 {
 public:

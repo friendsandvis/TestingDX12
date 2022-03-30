@@ -77,4 +77,44 @@ void DXTexture::CreateSRV(ComPtr< ID3D12Device> creationdevice, D3D12_SHADER_RES
 }
 
 
+void DXTextureCube::Init(ComPtr< ID3D12Device> creationdevice)
+{
+	//make sure is a cube texture;
+	assert(m_texdata.m_imagemetadata.arraySize % 6 == 0);
+	D3D12_RESOURCE_DESC resourcedesc = {};
+	resourcedesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	resourcedesc.Alignment = 0;
+	resourcedesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	resourcedesc.Format = m_texdata.m_imagemetadata.format;
+	resourcedesc.Height = m_texdata.m_imagemetadata.height;
+	resourcedesc.Width = m_texdata.m_imagemetadata.width;
+	resourcedesc.DepthOrArraySize = m_texdata.m_imagemetadata.arraySize;
+	resourcedesc.MipLevels = m_texdata.m_imagemetadata.mipLevels;
+	resourcedesc.SampleDesc.Count = 1;
+	resourcedesc.SampleDesc.Quality = 0;
+
+	D3D12_HEAP_PROPERTIES heapprops = {};
+	heapprops.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	heapprops.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+	heapprops.Type = D3D12_HEAP_TYPE_DEFAULT;
+	DXASSERT(creationdevice->CreateCommittedResource(&heapprops, D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE, &resourcedesc, D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(m_resource.GetAddressOf())))
+		m_currentresstate = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST;
+	m_texdata.GetSubresData(creationdevice, m_subresdata);
+	UINT64 uploadbuffersize = GetRequiredIntermediateSize(m_resource.Get(), 0, static_cast<UINT>(m_subresdata.size()));
+	DX12ResourceCreationProperties uploadbufferresprops;
+	DX12Buffer::InitResourceCreationProperties(uploadbufferresprops);
+	uploadbufferresprops.resdesc.Width = uploadbuffersize;
+	m_uploadbuffer.Init(creationdevice, uploadbufferresprops, ResourceCreationMode::COMMITED);
+	m_uploadbuffer.SetName(L"Texturecubeuploadbuffer");
+
+}
+
+void DXTextureCube::UploadTexureData(DX12Commandlist& copycmdlist)
+{
+	
+	UpdateSubresources(copycmdlist.GetcmdList(), m_resource.Get(), m_uploadbuffer.GetResource().Get(), 0, 0, static_cast<UINT>(m_subresdata.size()), m_subresdata.data());
+	D3D12_RESOURCE_BARRIER barrier = TransitionResState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	copycmdlist->ResourceBarrier(1, &barrier);
+}
+
 

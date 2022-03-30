@@ -6,6 +6,7 @@
 #include"DX12CommandQueue.h"
 #include"DX12Resource.h"
 #include"WindowProcHook.h"
+#include"DXCamera.h"
 
 // interface for all dx12 applicationmanagers.Could help in creaing  speciialized dx12 applications
 class DX12ApplicationManagerBase:public WindowProcHook
@@ -29,6 +30,8 @@ public:
 	~DX12ApplicationManagerBase();
 
 protected:
+	//a camera object representing the main camera for a basic application
+	DXCamera m_maincamera;
 	 virtual void InitExtras() {}
 	
 

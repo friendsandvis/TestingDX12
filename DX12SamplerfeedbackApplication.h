@@ -33,7 +33,6 @@ private:
 	DX12ReservedResource m_sfsreservedresourcetex;
 	DXImageData m_imagedataforreservedrestex;
 	bool m_sfsupported;
-	DXCamera m_maincamera;
 	
 	
 
