@@ -7,12 +7,15 @@ SkyboxTestApplication::SkyboxTestApplication()
 	:m_planemodel(ModelDataUploadMode::COPY),
 	 m_cubemodel(ModelDataUploadMode::COPY)
 {
+	m_maincameracontroller.SetCameratoControl(&m_maincamera);
 }
 SkyboxTestApplication::~SkyboxTestApplication()
 {
 }
 void SkyboxTestApplication::PreRenderUpdate()
-{}
+{
+	m_maincameracontroller.Update();
+}
 
 void SkyboxTestApplication::Render()
 {
@@ -153,18 +156,5 @@ void SkyboxTestApplication::InitPSO()
 
 void SkyboxTestApplication::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-
-	switch (uMsg)
-	{
-
-	case WM_MOUSEWHEEL:
-	{
-		float wheeldelta = GET_WHEEL_DELTA_WPARAM(wParam) / 30.0f;
-		float fovupdated = m_maincamera.GetFoV() - wheeldelta;
-		m_maincamera.SetFov(fovupdated);
-
-	}
-	default:
-		break;
-	}
+	m_maincameracontroller.ProcessWindowProcEvent(hwnd, uMsg, wParam, lParam);
 }

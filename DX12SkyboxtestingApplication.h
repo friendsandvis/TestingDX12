@@ -4,8 +4,8 @@
 #include"DX12PSO.h"
 #include"DX12RootSignature.h"
 #include"AssetManager.h"
-#include"DXCamera.h"
 #include"DXTexManager.h"
+#include"CameraMovementManager.h"
 using namespace DirectX;
 class SkyboxTestApplication :public DX12ApplicationManagerBase
 {
@@ -20,6 +20,7 @@ protected:
 	void InitExtras()override;
 
 private:
+	DXFPSCameraController m_maincameracontroller;
 	DXTexture m_skyboxtex;
 	DX12PSO m_pso;
 	DX12RootSignature m_rootsignature;

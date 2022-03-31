@@ -17,6 +17,10 @@ public:
 	void SetFov(float fovdeg);
 	float GetAspectRatio() { return m_aspectratio; }
 	void SetAspectRatio(float ar) { m_aspectratio=ar; }
+	XMVECTOR GetCamPos() { return m_camerapos; }
+	XMVECTOR GetCamUp() { return m_up; }
+	XMVECTOR GetCamForward() { return m_forward; }
+	void SetCamPos(XMVECTOR campos) { m_camerapos=campos; }
 private:
 	XMVECTOR m_camerapos, m_targetpoint;
 	XMVECTOR m_up, m_forward;
