@@ -1,6 +1,7 @@
 #pragma once
 #include"DXUtils.h"
 #include"DX12Buffer.h"
+#include"DXVertexManager.h"
 
 /*struct Vertex
 {
@@ -42,6 +43,8 @@ public:
 	void UploadModelDatatoGPUBuffers(DX12Commandlist& copycmdlist);
 	inline size_t GetIndiciesCount() { return m_indicies.size(); }
 	inline ModelDataUploadMode GetUploadMode() { return m_uploadmode; }
+	inline VertexVersion GetVertexVersionUsed() { return m_vertexversionused; }
+	inline void SetVertexVersionUsed(VertexVersion vvused) { m_vertexversionused=vvused; }
 
 private:
 	DX12Buffer m_vertexbuffer, m_indexbuffer,m_vertexuploadbuffer,m_indexuploadbuffer;
@@ -50,6 +53,7 @@ private:
 	D3D12_VERTEX_BUFFER_VIEW m_vertexbufferview;
 	D3D12_INDEX_BUFFER_VIEW m_indexbufferview;
 	ModelDataUploadMode m_uploadmode;
+	VertexVersion m_vertexversionused;
 };
 
 class BasicModelManager
@@ -57,5 +61,9 @@ class BasicModelManager
 public:
 	static void InitPlaneModel(ComPtr< ID3D12Device> creationdevice, Model& planemodel);
 	static void InitCubeModel(ComPtr< ID3D12Device> creationdevice, Model& cubemodel);
+
+private:
+	static void InitCubeVerticiesV1(vector<VetexV1>& verticies);
+	static void InitCubeIndicies(vector<unsigned>& indicies);
 };
 

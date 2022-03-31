@@ -1,10 +1,10 @@
 #include"DXVertexManager.h"
 
-void DXVertexManager::BuildDefaultInputelementdesc(std::vector< D3D12_INPUT_ELEMENT_DESC>& outinputelementdescs, VertexType vtype)
+void DXVertexManager::BuildDefaultInputelementdesc(std::vector< D3D12_INPUT_ELEMENT_DESC>& outinputelementdescs, VertexVersion vtype)
 {
 	switch (vtype)
 	{
-	case VertexType::VERTEXVERSION0:
+	case VertexVersion::VERTEXVERSION0:
 	{
 		{
 		D3D12_INPUT_ELEMENT_DESC element1 = {};
@@ -30,7 +30,7 @@ void DXVertexManager::BuildDefaultInputelementdesc(std::vector< D3D12_INPUT_ELEM
 		}
 	}
 	break;
-	case VertexType::VERTEXVERSION1:
+	case VertexVersion::VERTEXVERSION1:
 	{
 		{
 			D3D12_INPUT_ELEMENT_DESC element1 = {};
@@ -56,7 +56,7 @@ void DXVertexManager::BuildDefaultInputelementdesc(std::vector< D3D12_INPUT_ELEM
 		}
 	}
 	break;
-	case VertexType::VERTEXVERSION2:
+	case VertexVersion::VERTEXVERSION2:
 	{
 		{
 			D3D12_INPUT_ELEMENT_DESC element1 = {};

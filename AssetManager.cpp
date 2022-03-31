@@ -54,7 +54,8 @@ std::vector<unsigned> planeindicies =
 
 
 Model::Model(ModelDataUploadMode uploadmode)
-	:m_uploadmode(uploadmode)
+	:m_uploadmode(uploadmode),
+	m_vertexversionused(VertexVersion::UNKNOWN)
 {
 }
 
@@ -236,4 +237,12 @@ void BasicModelManager::InitCubeModel(ComPtr< ID3D12Device> creationdevice, Mode
 	cubemodel.InitVertexBuffer(creationdevice, cubeverticices);
 	cubemodel.InitIndexBuffer(creationdevice,cubeindicies);
 	cubemodel.UploadModelDatatoBuffers();
+}
+ void BasicModelManager::InitCubeVerticiesV1(vector<VetexV1>& verticies)
+{
+
+}
+ void BasicModelManager::InitCubeIndicies(vector<unsigned>& indicies)
+{
+
 }
