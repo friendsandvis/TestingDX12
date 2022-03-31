@@ -200,6 +200,9 @@
     <ClInclude Include="DX12SkyboxtestingApplication.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DXVertexManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

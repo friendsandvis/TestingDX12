@@ -81,7 +81,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)Includes;$(SolutionDir)Includes\directx;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Includes\dxmath;$(SolutionDir)Includes;$(SolutionDir)Includes\directx;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Libraries;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -203,6 +203,7 @@
     <ClInclude Include="DXCamera.h" />
     <ClInclude Include="DXTexManager.h" />
     <ClInclude Include="DXUtils.h" />
+    <ClInclude Include="DXVertexManager.h" />
     <ClInclude Include="MipTestApplication.h" />
     <ClInclude Include="ModelTestApplication.h" />
     <ClInclude Include="Renderable.h" />

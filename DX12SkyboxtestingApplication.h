@@ -1,6 +1,5 @@
 #pragma once
 #include"DXUtils.h"
-#include<DirectXMath.h>
 #include"DX12ApplicationManagerBase.h"
 #include"DX12PSO.h"
 #include"DX12RootSignature.h"

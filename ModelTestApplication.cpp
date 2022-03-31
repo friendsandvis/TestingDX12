@@ -31,7 +31,7 @@ void ModelTestApplication::Render()
 	m_primarycmdlist->ClearRenderTargetView(rtvhandle, clearvalue, 0, nullptr);
 	m_primarycmdlist->ClearDepthStencilView(dsvhandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	{
-		m_primarycmdlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+		m_primarycmdlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		D3D12_INDEX_BUFFER_VIEW ibview=m_cubemodel.GetIBView();
 		D3D12_VERTEX_BUFFER_VIEW vbview = m_cubemodel.GetVBView();
 		m_primarycmdlist->IASetVertexBuffers(0, 1, &vbview);
