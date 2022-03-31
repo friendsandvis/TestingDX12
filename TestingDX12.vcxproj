@@ -171,6 +171,7 @@
     <ClCompile Include="DXCamera.cpp" />
     <ClCompile Include="DXTexManager.cpp" />
     <ClCompile Include="DXUtils.cpp" />
+    <ClCompile Include="DXVertexManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MipTestApplication.cpp" />
     <ClCompile Include="ModelTestApplication.cpp" />
