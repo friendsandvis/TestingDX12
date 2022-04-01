@@ -46,9 +46,10 @@ void DXFPSCameraController::Update()
 	if (m_moveforward)
 	 {
 		XMVECTOR camforward=m_cameratocontrol->GetCamForward();
+		camforward = XMVector3Normalize(camforward);
 		XMVECTOR campos = m_cameratocontrol->GetCamPos();
-		campos = campos - camforward;
-		m_cameratocontrol->SetCamPos(campos);
+		campos = campos + camforward;
+		m_cameratocontrol->SetCamPos(campos);	
 	}
 }
 	
