@@ -11,10 +11,11 @@ public:
 	void SetCameratoControl(DXCamera* cameratocontrol) { m_cameratocontrol = cameratocontrol; }
 	void ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void Update();
-	bool isMovingForward() { return m_moveforward; }
 private:
 	DXCamera* m_cameratocontrol;
-	bool m_moveforward;
+	float m_movefrontbackmodifier;
 	//requirnments to control camera movement via mouse
-	float yaw, pitch;
+	float m_camyaw, m_campitch;
+	int m_lastmouseXpos, m_lastmouseYpos;
+	bool m_mousefirstmove;
 };

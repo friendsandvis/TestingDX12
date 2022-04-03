@@ -21,8 +21,9 @@ public:
 	XMVECTOR GetCamUp() { return m_up; }
 	XMVECTOR GetCamForward() { return m_forward; }
 	void SetCamPos(XMVECTOR campos) { m_camerapos=campos; }
+	void UpdateCameraVectors(float pitch, float yaw);
 private:
-	XMVECTOR m_camerapos, m_targetpoint;
+	XMVECTOR m_camerapos;
 	XMVECTOR m_up, m_forward;
 	XMMATRIX m_model;
 	XMMATRIX m_view;
