@@ -10,9 +10,9 @@ LRESULT CALLBACK WindProcManager::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam
 	switch (uMsg)
 	{
 	case WM_CLOSE:
-		DestroyWindow(hwnd); break;
 	case WM_DESTROY:
-		PostQuitMessage(0); break;
+		PostQuitMessage(0);
+		break;
 		
 	default:
 		return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -45,19 +45,14 @@ void WindMaker::CreateWind(unsigned width, unsigned height,LPCWSTR windowname)
 void WindMaker::RunMessageloop(Renderable* dx12manager)
 {
 	
-	MSG msg;
+	
+
 	//using hwnd here instead of null causes window created to be in stuck state
 	
 	
-	BOOL getmsgres;
-	while (getmsgres = GetMessage(&msg, NULL, 0, 0) !=0)
+	 bool running = true;
+	while(running)
 	{
-		
-		assert(getmsgres != -1);
-		TranslateMessage(&msg);
-		
-		DispatchMessage(&msg);
-		//do check for the validity of window before drawing upon it(if you try to prresent upon a destroyed window then app crashs.
 		if (IsWindow(m_hwnd))
 		{
 			//draw here
@@ -66,6 +61,29 @@ void WindMaker::RunMessageloop(Renderable* dx12manager)
 				dx12manager->Render();
 			}
 		}
+		MSG msg = {0};
+		while (PeekMessage(&msg, m_hwnd, 0, 0, PM_REMOVE))
+		{
+
+
+
+
+			if (msg.message == WM_QUIT)
+			{
+				running = false;
+			}
+			else
+			{
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+			}
+		}
+		
+		
+
+		
+		//do check for the validity of window before drawing upon it(if you try to prresent upon a destroyed window then app crashs.
+		
 		
 		
 		

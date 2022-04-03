@@ -20,10 +20,10 @@ void DXFPSCameraController::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM 
 
 	case WM_MOUSEWHEEL:
 	{
-		float wheeldelta = GET_WHEEL_DELTA_WPARAM(wParam) / 30.0f;
+		float wheeldelta = GET_WHEEL_DELTA_WPARAM(wParam) / 100.0f;
 		float fovupdated = m_cameratocontrol->GetFoV() - wheeldelta;
 		m_cameratocontrol->SetFov(fovupdated);
-
+		break;
 	}
 	case WM_XBUTTONDOWN:
 	{
@@ -48,7 +48,7 @@ void DXFPSCameraController::Update()
 		XMVECTOR camforward=m_cameratocontrol->GetCamForward();
 		camforward = XMVector3Normalize(camforward);
 		XMVECTOR campos = m_cameratocontrol->GetCamPos();
-		campos = campos + camforward;
+		campos = campos + 0.25f*camforward;
 		m_cameratocontrol->SetCamPos(campos);	
 	}
 }
