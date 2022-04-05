@@ -25,8 +25,10 @@ void SkyboxTestApplication::Render()
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
 	m_primarycmdlist->SetPipelineState(m_pso.GetPSO());
 	m_primarycmdlist->SetGraphicsRootSignature(m_rootsignature.GetRootSignature());
-	XMMATRIX mvp = m_maincamera.GetMVP();
-	m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvp, 0);
+	CameraConstants camconst;
+	camconst.mvp = m_maincamera.GetMVP();
+	camconst.campos = m_maincamera.GetCamPos();
+	m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(CameraConstants) / 4, &camconst, 0);
 	{
 		ID3D12DescriptorHeap* heapstoset[1] = { m_resourceaccessheap.GetDescHeap() };
 		m_primarycmdlist->SetDescriptorHeaps(1, heapstoset);
@@ -100,6 +102,8 @@ void SkyboxTestApplication::InitPSO()
 	ps->Init(L"shaders/skybox/SkyboxTestPixelShader.hlsl", DX12Shader::ShaderType::PS);
 	psoinitdata.m_shaderstouse.push_back(vs); psoinitdata.m_shaderstouse.push_back(ps);
 	DX12PSO::DefaultInitPSOData(psoinitdata);
+	psoinitdata.psodesc.graphicspsodesc.DepthStencilState.DepthEnable = true;
+	psoinitdata.psodesc.graphicspsodesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC::D3D12_COMPARISON_FUNC_LESS_EQUAL;
 	psoinitdata.psodesc.graphicspsodesc.PS.BytecodeLength = ps->GetCompiledCodeSize();
 	psoinitdata.psodesc.graphicspsodesc.PS.pShaderBytecode = ps->GetCompiledCode();
 	psoinitdata.psodesc.graphicspsodesc.VS.BytecodeLength = vs->GetCompiledCodeSize();
@@ -119,7 +123,7 @@ void SkyboxTestApplication::InitPSO()
 
 			rootparams[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
 			rootparams[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-			rootparams[0].Constants.Num32BitValues = sizeof(XMMATRIX) / 4;
+			rootparams[0].Constants.Num32BitValues = sizeof(CameraConstants) / 4;
 			rootparams[0].Constants.RegisterSpace = 0;
 			rootparams[0].Constants.ShaderRegister = 0;
 			rootparams[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;

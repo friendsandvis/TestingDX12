@@ -87,7 +87,7 @@ void DXFPSCameraController::Update()
 		XMVECTOR camforward=m_cameratocontrol->GetCamForward();
 		camforward = XMVector3Normalize(camforward);
 		XMVECTOR campos = m_cameratocontrol->GetCamPos();
-		campos = campos + 0.25f* m_movefrontbackmodifier*camforward;
+		campos = campos + 0.01f* m_movefrontbackmodifier*camforward;
 		m_cameratocontrol->SetCamPos(campos);	
 	}
 }

@@ -8,6 +8,7 @@ struct VSConstants
 {
 //matrix is alias for float4x4
 	matrix mvp;
+	float4 campos;
 };
 ConstantBuffer<VSConstants> vertexconsts:register(b0);
 
@@ -22,8 +23,11 @@ VSOut main(VSIn input)
     VSOut output;
 
 		
+		float4 vposmod=float4(input.vpos,1.0f)+vertexconsts.campos;
+		output.pos =mul(vertexconsts.mvp,vposmod);
+		//output.pos=output.pos-vertexconsts.campos;
 		
-		output.pos =mul(vertexconsts.mvp,float4(input.vpos,1.0f));
+		output.pos.z=output.pos.w;
 		output.cubesamplecoord=normalize(input.vpos);
 
     return output;

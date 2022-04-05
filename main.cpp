@@ -28,7 +28,7 @@ int main()
 	DX12Manager dxmanager;
 	dxmanager.Init(ENABLEDEBUGLAYER,&appmanager);
 	WindProcManager::SetProcHook(windhook);
-	winmaker.CreateWind(1280, 720, L"DXTest");
+	winmaker.CreateWind(1920, 1080, L"DXTest");
 	appmanager.Initswapchain(dxmanager.GetDXGIFactory(), winmaker.GetWidth(), winmaker.GetHeight(), winmaker.Gethwnd());
 	winmaker.RunMessageloop(&dxmanager);
 

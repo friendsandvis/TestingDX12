@@ -68,7 +68,7 @@ void DX12PSO::DefaultInitPSOData(PSOInitData& initdata)
 	//depth stencil state setup
 	initdata.psodesc.graphicspsodesc.DepthStencilState.DepthEnable = TRUE;
 	initdata.psodesc.graphicspsodesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-	initdata.psodesc.graphicspsodesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+	initdata.psodesc.graphicspsodesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC::D3D12_COMPARISON_FUNC_LESS;
 	initdata.psodesc.graphicspsodesc.DepthStencilState.StencilEnable = FALSE;
 	initdata.psodesc.graphicspsodesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 

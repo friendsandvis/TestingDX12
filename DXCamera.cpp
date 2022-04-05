@@ -27,7 +27,7 @@ XMMATRIX DXCamera::GetMVP()
 	//update view matrix & projection matrix first
 	GetView();
 	GetProjection();
-	XMMATRIX mvp = XMMatrixMultiply(m_model, m_view);
+	XMMATRIX mvp = XMMatrixMultiply(m_model,m_view);
 	mvp = XMMatrixMultiply(mvp, m_projection);
 	return mvp;
 }

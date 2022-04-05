@@ -31,3 +31,9 @@ private:
 	float m_fovdegree,m_aspectratio,m_near,m_far;
 };
 
+struct CameraConstants
+{
+	XMMATRIX mvp;
+	XMVECTOR campos;
+};
+
