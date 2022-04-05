@@ -99,8 +99,11 @@ void DX12SamplerfeedbackApplication::InitExtras()
 	m_uploadcommandlist.Reset();
 	{
 		//clear the reserved resource texture for texting binding(forced) for mip levels
-		float redclearcolour[4] = {1.0f,0.0f,0.0f,1.0f};
-		m_redtexfeedbackunit.ClearReservedResourceMip(m_uploadcommandlist, m_sfsreservedresourcetex.GetTotalMipCount() - 1, redclearcolour);
+		if (m_sfsupported)
+		{
+			float redclearcolour[4] = { 1.0f,0.0f,0.0f,1.0f };
+			m_redtexfeedbackunit.ClearReservedResourceMip(m_uploadcommandlist, m_sfsreservedresourcetex.GetTotalMipCount() - 1, redclearcolour);
+		}
 	}
 	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_redtexture.UploadTexture(m_uploadcommandlist);
@@ -364,6 +367,8 @@ void DX12SamplerfeedbackApplication::Render()
 
 void DX12SamplerfeedbackApplication::PostRenderUpdate()
 {
+	if (!m_sfsupported)
+		return;
 	//process the feedback data after renderend(i.e. feedback written by draw calls)
 	m_redtexfeedbackunit.ProcessReadbackdata();
 	m_redtexfeedbackunit.UpdateMemoryMappings(m_mainqueue.GetQueue(), m_creationdevice);
