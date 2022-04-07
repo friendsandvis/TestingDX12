@@ -1,18 +1,8 @@
 #pragma once
-#include"DXUtils.h"
-#include<dxtex/DirectXTex.h>
+#include"DXTextureUtils.h"
 #include"DX12Buffer.h"
 
-using namespace DirectX;
 
-struct DXImageData
-{
-	ScratchImage m_image;
-	TexMetadata m_imagemetadata;
-
-	void GetSubresData(ComPtr< ID3D12Device> creationdevice, vector< D3D12_SUBRESOURCE_DATA>& out_subresdata);
-
-};
 class DX12Commandlist;
 
 //does not represents a generic dx12 texture but just a dx12 texture resource representing a directxtex loaded textre(the init creates commited resource as it calls DXTex createtexture fuction)

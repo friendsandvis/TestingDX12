@@ -14,22 +14,7 @@ DX12ReservedResourceApplication::~DX12ReservedResourceApplication()
 void DX12ReservedResourceApplication::InitExtras()
 {
 	{
-		
-		//init minlod map
-		DX12ResourceCreationProperties minlodmapprops;
-		DX12Resource::InitResourceCreationProperties(minlodmapprops);
-		
-		minlodmapprops.resdesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-		minlodmapprops.resdesc.Format = DXGI_FORMAT_R8_UINT;
-		minlodmapprops.resdesc.Width = 64;
-		minlodmapprops.resdesc.Height = 64;
 
-		m_minlodmap.Init(m_creationdevice, minlodmapprops, ResourceCreationMode::COMMITED);
-		m_minlodmap.SetName(L"MinLODMap");
-		m_minloduploader.PrepareUpload(m_creationdevice, &m_minlodmap);
-		
-		m_minloduploader.SetUploadData();
-		m_minloduploader.SetTextureData();
 	}
 	//init pso
 	InitBasicPSO();
@@ -37,7 +22,7 @@ void DX12ReservedResourceApplication::InitExtras()
 	//init desc heaps
 	D3D12_DESCRIPTOR_HEAP_DESC heapdesc = {};
 	heapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	heapdesc.NumDescriptors = 1;	//just creating for an srv
+	heapdesc.NumDescriptors = 1;	//just creating for a srv
 	heapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
 	m_resaccessviewdescheap.Init(heapdesc, m_creationdevice);
@@ -57,7 +42,7 @@ void DX12ReservedResourceApplication::InitExtras()
 		redtexsrvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 		{
 			//reservedresource init
-			
+			DXImageData& imagedata = m_greentex_reservedres.GetImageData();
 			DXTexManager::LoadTexture(L"textures/tex3_miped.dds", imagedata);
 			
 			
@@ -72,10 +57,10 @@ void DX12ReservedResourceApplication::InitExtras()
 			reservedresprops.resdesc.Format = imagedata.m_imagemetadata.format;
 			reservedresprops.resdesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 			
-			m_greentex_reservedres.Init(m_creationdevice, reservedresprops);
+			//m_greentex_reservedres.Init(m_creationdevice, reservedresprops);
+			m_greentex_reservedres.Init(m_creationdevice);
 			m_greentex_reservedres.SetName(L"GREENTTEX_RESERVEDRES");
-			m_greentexuploadhelper.PrepareUpload(m_creationdevice, &m_greentex_reservedres);
-			m_greentexuploadhelper.SetUploadTextureData(imagedata);
+			m_greentexmemmanager.Init(&m_greentex_reservedres);
 			
 			
 			 
@@ -104,8 +89,6 @@ void DX12ReservedResourceApplication::InitExtras()
 
 			 intermidiateuploadbuffer.Init(m_creationdevice, intermidiatebufferprop, ResourceCreationMode::COMMITED);
 			 intermidiateuploadbuffer.SetName(L"uploadbuffer");
-			 m_greentex_reservedresmemorymanager.Init(m_creationdevice, &m_greentex_reservedres);
-			 m_greentex_reservedresmemorymanager.UpdateReservedresourcePhysicalMemoryMappings(m_mainqueue.GetQueue());
 			
 
 			 m_uploadcommandlist.Reset();
@@ -132,10 +115,8 @@ void DX12ReservedResourceApplication::InitExtras()
 
 	
 	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
-	m_minloduploader.Upload(m_uploadcommandlist);
 	//m_redtexture.UploadTexture(m_uploadcommandlist);
 	//m_greentexuploadhelper.Upload(m_uploadcommandlist);
-	m_greentex_reservedresmemorymanager.ClearReservedResource(m_uploadcommandlist);
 	DXASSERT(m_uploadcommandlist->Close())
 
 }
@@ -148,8 +129,8 @@ void DX12ReservedResourceApplication::InitBasicPSO()
 	//shaders to use
 	DX12Shader* vs = new DX12Shader();
 	DX12Shader* ps = new DX12Shader();
-	vs->Init(L"shaders/BasicVertexShader_1.hlsl", DX12Shader::ShaderType::VS);
-	ps->Init(L"shaders/BasicPixelShader_1.hlsl", DX12Shader::ShaderType::PS);
+	vs->Init(L"shaders/reseredresource/VS.hlsl", DX12Shader::ShaderType::VS);
+	ps->Init(L"shaders/reseredresource/PS.hlsl", DX12Shader::ShaderType::PS);
 	basicpsodata.m_shaderstouse.push_back(vs);
 	basicpsodata.m_shaderstouse.push_back(ps);
 

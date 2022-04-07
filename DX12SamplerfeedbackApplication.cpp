@@ -14,17 +14,16 @@ DX12SamplerfeedbackApplication::~DX12SamplerfeedbackApplication()
 
 void DX12SamplerfeedbackApplication::InitExtras()
 {
-	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
-	m_maincamera.SetAspectRatio(aspectratio);
 	//init sampler feedback reserved resorce
 	{
-		DXTexManager::LoadTexture(L"textures/tex3_miped.dds",m_imagedataforreservedrestex);
+		DXImageData& reservedresimgdata = m_sfsreservedresourcetex.GetImageData();
+		DXTexManager::LoadTexture(L"textures/tex3_miped.dds", reservedresimgdata);
 		DX12ResourceCreationProperties reservedrestexprops;
 		DX12ReservedResource::InitResourceCreationProperties(reservedrestexprops);
-		reservedrestexprops.resdesc.Width = m_imagedataforreservedrestex.m_imagemetadata.width;
-		reservedrestexprops.resdesc.Height = m_imagedataforreservedrestex.m_imagemetadata.height;
-		reservedrestexprops.resdesc.MipLevels = m_imagedataforreservedrestex.m_imagemetadata.mipLevels;
-		reservedrestexprops.resdesc.Format = m_imagedataforreservedrestex.m_imagemetadata.format;
+		reservedrestexprops.resdesc.Width = reservedresimgdata.m_imagemetadata.width;
+		reservedrestexprops.resdesc.Height = reservedresimgdata.m_imagemetadata.height;
+		reservedrestexprops.resdesc.MipLevels = reservedresimgdata.m_imagemetadata.mipLevels;
+		reservedrestexprops.resdesc.Format = reservedresimgdata.m_imagemetadata.format;
 		reservedrestexprops.resdesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 		m_sfsreservedresourcetex.Init(m_creationdevice, reservedrestexprops);
 		m_sfsreservedresourcetex.SetName(L"Greentexreservedresourcesfstest");

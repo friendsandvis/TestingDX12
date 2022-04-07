@@ -1,5 +1,5 @@
 #pragma once
-#include"DX12Resource.h"
+#include"DX12ReservedResource.h"
 
 
 struct SubResouceInfo

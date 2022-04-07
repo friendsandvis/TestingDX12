@@ -31,7 +31,6 @@ private:
 	DX12DESCHEAP m_resaccessviewdescheapsrc;//CBV/SRV/UAV(staging)
 	DX12FeedBackUnit m_redtexfeedbackunit;
 	DX12ReservedResource m_sfsreservedresourcetex;
-	DXImageData m_imagedataforreservedrestex;
 	bool m_sfsupported;
 	
 	

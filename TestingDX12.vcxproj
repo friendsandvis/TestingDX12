@@ -160,9 +160,11 @@
     <ClCompile Include="DX12DESCHEAP.cpp" />
     <ClCompile Include="DX12Manager.cpp" />
     <ClCompile Include="DX12PSO.cpp" />
+    <ClCompile Include="DX12ReservedResource.cpp" />
     <ClCompile Include="DX12ReservedResourceApplication.cpp" />
     <ClCompile Include="DX12ReservedResourceMemoryManager.cpp" />
     <ClCompile Include="DX12Resource.cpp" />
+    <ClCompile Include="DX12ResourceBase.cpp" />
     <ClCompile Include="DX12RootSignature.cpp" />
     <ClCompile Include="DX12SamplerfeedbackApplication.cpp" />
     <ClCompile Include="DX12SimpleTexturedQuadApplication.cpp" />
@@ -171,6 +173,7 @@
     <ClCompile Include="DX12Texture.cpp" />
     <ClCompile Include="DXCamera.cpp" />
     <ClCompile Include="DXTexManager.cpp" />
+    <ClCompile Include="DXTextureUtils.cpp" />
     <ClCompile Include="DXUtils.cpp" />
     <ClCompile Include="DXVertexManager.cpp" />
     <ClCompile Include="main.cpp" />
@@ -194,9 +197,11 @@
     <ClInclude Include="DX12DESCHEAP.h" />
     <ClInclude Include="DX12Manager.h" />
     <ClInclude Include="DX12PSO.h" />
+    <ClInclude Include="DX12ReservedResource.h" />
     <ClInclude Include="DX12ReservedResourceApplication.h" />
     <ClInclude Include="DX12ReservedResourceMemoryManager.h" />
     <ClInclude Include="DX12Resource.h" />
+    <ClInclude Include="DX12ResourceBase.h" />
     <ClInclude Include="DX12RootSignature.h" />
     <ClInclude Include="DX12SamplerfeedbackApplication.h" />
     <ClInclude Include="DX12SimpleTexturedQuadApplication.h" />
@@ -205,6 +210,7 @@
     <ClInclude Include="DX12Texture.h" />
     <ClInclude Include="DXCamera.h" />
     <ClInclude Include="DXTexManager.h" />
+    <ClInclude Include="DXTextureUtils.h" />
     <ClInclude Include="DXUtils.h" />
     <ClInclude Include="DXVertexManager.h" />
     <ClInclude Include="MipTestApplication.h" />
