@@ -27,7 +27,7 @@ void TexturedQuadApplication::InitExtras()
 
 	//init assets
 	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
-	DXTexManager::LoadTexture(L"textures/tex3_miped.dds", m_redtexture.GetDXImageData());
+	DXTexManager::LoadTexture(L"textures/texlargemiped.dds", m_redtexture.GetDXImageData());
 	bool initsuccess = m_redtexture.Init(m_creationdevice);
 	m_redtexture.SetName(L"GREENTEX");
 	{
@@ -95,7 +95,7 @@ void TexturedQuadApplication::InitBasicPSO()
 
 	//1 root param for ps texture & sampler 
 	D3D12_STATIC_SAMPLER_DESC simplesampler = {};
-	simplesampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+	simplesampler.Filter = D3D12_FILTER::D3D12_FILTER_MIN_MAG_MIP_LINEAR;
 	simplesampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 	simplesampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 	simplesampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;

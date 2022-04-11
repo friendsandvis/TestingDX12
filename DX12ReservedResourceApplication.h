@@ -27,8 +27,6 @@ private:
 	DXTexture m_redtexture;
 	DX12ReservedResource m_greentex_reservedres;
 	DX12ReservedResourceMemoryManager m_greentexmemmanager;
-	DX12Resource intermidiateuploadbuffer;
-	vector<D3D12_SUBRESOURCE_DATA> subresdata;
 	DX12DESCHEAP m_resaccessviewdescheap;//CBV/SRV/UAV
 
 	void InitBasicPSO();

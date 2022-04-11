@@ -7,7 +7,7 @@ class DX12ReservedResource :public DX12ResourceBase
 {
 public:
 	void Init(ComPtr< ID3D12Device> creationdevice, DX12ResourceCreationProperties resprops);
-	void Init(ComPtr< ID3D12Device> creationdevice);
+	void Init(ComPtr< ID3D12Device> creationdevice,bool forceallowunorderedaccess=false);
 	void InitTilingInfo(ComPtr< ID3D12Device> creationdevice);
 
 	inline size_t GetTotalMipCount() { return m_creationproperties.resdesc.MipLevels; }

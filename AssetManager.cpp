@@ -4,7 +4,7 @@
 std::vector<Vertex> planeverticies =
 {
 	{-1.0f,1.0f,0.0f,0.0f,0.0f},	//0(left-top)
-	{-1.0f,-1.0f,0.0f,1.0f,1.0f},	//1(left-bottom)
+	{-1.0f,-1.0f,0.0f,0.0f,1.0f},	//1(left-bottom)
 	{1.0f,-1.0f,0.0f,1.0f,1.0f},	//2(right-bottom)
 	{1.0f,1.0f,0.0f,1.0f,0.0f}	//3(right-top)
 

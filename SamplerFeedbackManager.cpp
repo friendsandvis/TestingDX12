@@ -57,7 +57,7 @@ void DX12FeedBackUnit::Init(ComPtr<ID3D12Device8> creationdevice, samplerFeedbac
 
 	//init physical memory manager
 	
-	m_reservedresmemorymanager.Init(initdata.feedbacktexrestopairwith);
+	m_reservedresmemorymanager.Init(creationdevice,initdata.feedbacktexrestopairwith);
 
 	//init the uav heaps if needed
 	if(initdata.allowreservedresourceuavclear)

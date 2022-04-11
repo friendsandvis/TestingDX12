@@ -43,10 +43,9 @@ void DX12ReservedResourceApplication::InitExtras()
 		{
 			//reservedresource init
 			DXImageData& imagedata = m_greentex_reservedres.GetImageData();
-			DXTexManager::LoadTexture(L"textures/tex3_miped.dds", imagedata);
+			DXTexManager::LoadTexture(L"textures/texlargemiped.dds", imagedata);
 			
 			
-			imagedata.GetSubresData(m_creationdevice, subresdata);
 			
 			DX12ResourceCreationProperties reservedresprops;
 			DX12ReservedResource::InitResourceCreationProperties(reservedresprops);
@@ -60,47 +59,18 @@ void DX12ReservedResourceApplication::InitExtras()
 			//m_greentex_reservedres.Init(m_creationdevice, reservedresprops);
 			m_greentex_reservedres.Init(m_creationdevice);
 			m_greentex_reservedres.SetName(L"GREENTTEX_RESERVEDRES");
-			m_greentexmemmanager.Init(&m_greentex_reservedres);
+			m_greentexmemmanager.Init(m_creationdevice,&m_greentex_reservedres);
+			
+			//for(unsigned i=0;i<9;i++)
+				m_greentexmemmanager.BindMemory(2);
+
+			m_greentexmemmanager.Update(m_mainqueue.GetQueue(),m_creationdevice);
 			
 			
 			 
-			 DX12ResourceCreationProperties intermidiatebufferprop;
-			 intermidiatebufferprop.useclearvalue = false;
-			 intermidiatebufferprop.resheapflags = D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE;
-			 intermidiatebufferprop.resinitialstate = D3D12_RESOURCE_STATE_COPY_SOURCE;
-			 intermidiatebufferprop.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
-			 intermidiatebufferprop.resheapprop.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-			 intermidiatebufferprop.resheapprop.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-			 intermidiatebufferprop.resheapprop.VisibleNodeMask = 0;
-			 intermidiatebufferprop.resheapprop.CreationNodeMask=0;
-			 intermidiatebufferprop.resdesc.Format = DXGI_FORMAT_UNKNOWN;
-			 intermidiatebufferprop.resdesc.Alignment = 0;
-			 intermidiatebufferprop.resdesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-			 intermidiatebufferprop.resdesc.Height=1;
-			 intermidiatebufferprop.resdesc.MipLevels = 1;
-			 intermidiatebufferprop.resdesc.SampleDesc.Count = 1;
-			 intermidiatebufferprop.resdesc.SampleDesc.Quality = 0;
-
-			 intermidiatebufferprop.resdesc.DepthOrArraySize = 1;
-			 intermidiatebufferprop.resdesc.Flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_NONE;
-			 intermidiatebufferprop.resdesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-			 intermidiatebufferprop.resdesc.Width = GetRequiredIntermediateSize(m_greentex_reservedres.GetResource().Get(),0, static_cast<UINT>(subresdata.size()));
-			 
-
-			 intermidiateuploadbuffer.Init(m_creationdevice, intermidiatebufferprop, ResourceCreationMode::COMMITED);
-			 intermidiateuploadbuffer.SetName(L"uploadbuffer");
 			
 
 			 m_uploadcommandlist.Reset();
-			//UpdateSubresources(m_uploadcommandlist.GetcmdList(), m_greentex_reservedres.GetResource().Get(), intermidiateuploadbuffer.GetResource().Get(), 0,0,static_cast<UINT>(subresdata.size()), subresdata.data());
-			//D3D12_RESOURCE_BARRIER barrier=m_greentex_reservedres.TransitionResState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-			//m_uploadcommandlist->ResourceBarrier(1, &barrier);
-			 //m_greentexuploadhelper.Upload(m_uploadcommandlist);
-			 if (!m_greentex_reservedres.IsResourceState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE))
-			 {
-				 D3D12_RESOURCE_BARRIER barrier = m_greentex_reservedres.TransitionResState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-				 m_uploadcommandlist->ResourceBarrier(1, &barrier);
-			 }
 		}
 		{
 			D3D12_SHADER_RESOURCE_VIEW_DESC greentexsrvdesc = {};
@@ -115,8 +85,9 @@ void DX12ReservedResourceApplication::InitExtras()
 
 	
 	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
-	//m_redtexture.UploadTexture(m_uploadcommandlist);
-	//m_greentexuploadhelper.Upload(m_uploadcommandlist);
+	m_greentexmemmanager.UploadData(m_creationdevice,m_uploadcommandlist);
+	//float clearcolour[4] = {1.0f,0.0f,0.0f,1.0f};
+	//m_greentexmemmanager.ClearMip(m_uploadcommandlist, 0, clearcolour);
 	DXASSERT(m_uploadcommandlist->Close())
 
 }
@@ -168,7 +139,7 @@ void DX12ReservedResourceApplication::InitBasicPSO()
 
 	//1 root param for ps texture & sampler 
 	D3D12_STATIC_SAMPLER_DESC simplesampler = {};
-	simplesampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+	simplesampler.Filter = D3D12_FILTER::D3D12_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT;
 	simplesampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 	simplesampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 	simplesampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;

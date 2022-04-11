@@ -20,7 +20,7 @@ void DX12ReservedResource::Init(ComPtr< ID3D12Device> creationdevice, DX12Resour
 
 }
 
-void DX12ReservedResource::Init(ComPtr< ID3D12Device> creationdevice)
+void DX12ReservedResource::Init(ComPtr< ID3D12Device> creationdevice, bool forceallowunorderedaccess)
 {
 	m_rescreationmode = ResourceCreationMode::RESERVED;
 	SetResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST);
@@ -30,6 +30,10 @@ void DX12ReservedResource::Init(ComPtr< ID3D12Device> creationdevice)
 	m_creationproperties.resdesc.Width = m_imagedata.m_imagemetadata.width;
 	m_creationproperties.resdesc.Height = m_imagedata.m_imagemetadata.height;
 	m_creationproperties.resdesc.MipLevels = m_imagedata.m_imagemetadata.mipLevels;
+	if (forceallowunorderedaccess)
+	{
+		m_creationproperties.resdesc.Flags |= D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	}
 	DXASSERT((creationdevice->CreateReservedResource(&m_creationproperties.resdesc, m_currentresstate, nullptr, IID_PPV_ARGS(m_resource.GetAddressOf()))))
 		InitTilingInfo(creationdevice);
 

@@ -2,14 +2,22 @@
 
 
 DX12ReservedResourceMemoryManager::DX12ReservedResourceMemoryManager()
-	:m_restomanage(nullptr)
+	:m_restomanage(nullptr),
+	m_allowuploadonmapping(true)
 {
 }
 
 DX12ReservedResourceMemoryManager::~DX12ReservedResourceMemoryManager()
-{}
+{
+	//delete upload buffers
+	for (size_t i = 0; i < m_uploadbuffers.size(); i++)
+	{
+		delete m_uploadbuffers[i];
+	}
+	m_uploadbuffers.clear();
+}
 
-void DX12ReservedResourceMemoryManager::Init(DX12ReservedResource* reservedresourcetomanage)
+void DX12ReservedResourceMemoryManager::Init(ComPtr< ID3D12Device> creationdevice,DX12ReservedResource* reservedresourcetomanage,bool inituav)
 {
 	m_restomanage = reservedresourcetomanage;
 
@@ -62,12 +70,70 @@ void DX12ReservedResourceMemoryManager::Init(DX12ReservedResource* reservedresou
 		}
 
 	}
-	//initiialize uav heaps for
-	{
+	//initialize upload data upload utils
+	DXImageData& resimgdata = m_restomanage->GetImageData();
+	resimgdata.GetSubresData(creationdevice, m_reservedresourcesubresdata);
+	UINT64 uploadbuffersize=GetRequiredIntermediateSize(m_restomanage->GetResource().Get(), 0, m_reservedresourcesubresdata.size());
+	
+	//UINT64 uploadbuffersize = GetRequiredIntermediateSize(m_restomanage->GetResource().Get(), 0, 1);
 
+	DX12ResourceCreationProperties uploadbufferprops;
+	DX12Buffer::InitResourceCreationProperties(uploadbufferprops);
+	uploadbufferprops.resdesc.Width = uploadbuffersize;
+	uploadbufferprops.resheapprop.Type = D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD;
+	uploadbufferprops.resinitialstate = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_GENERIC_READ;
+	m_uploadbuffer.Init(creationdevice, uploadbufferprops, ResourceCreationMode::COMMITED);
+
+	if (inituav)
+	{
+		D3D12_DESCRIPTOR_HEAP_DESC uavheapdesc = {};
+		uavheapdesc.NumDescriptors = m_restomanage->GetTotalMipCount();
+		uavheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		uavheapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		m_uavheapupload.Init(uavheapdesc, creationdevice);
+		uavheapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		m_uavheap.Init(uavheapdesc, creationdevice);
+		for (unsigned i = 0; i < m_restomanage->GetTotalMipCount(); i++)
+		{
+			D3D12_UNORDERED_ACCESS_VIEW_DESC uavdesc = {};
+			uavdesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+			uavdesc.Texture2D.MipSlice = i;
+			uavdesc.Texture2D.PlaneSlice = 0;
+			m_restomanage->CreateUAV(creationdevice, uavdesc, m_uavheapupload.GetCPUHandleOffseted(i));
+		}
+		creationdevice->CopyDescriptorsSimple(m_restomanage->GetTotalMipCount(), m_uavheap.GetCPUHandlefromstart(), m_uavheapupload.GetCPUHandlefromstart(), D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	}
 }
 
+void DX12ReservedResourceMemoryManager::RequestUploadData(UINT subresindextoupload)
+{
+	m_subrestoupload.push_back(subresindextoupload);
+}
+
+void DX12ReservedResourceMemoryManager::UploadData(ComPtr< ID3D12Device> creationdevice,DX12Commandlist& uploadcmdlist)
+{
+
+	if(m_restomanage->GetCurrentResourceState()!= D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST)
+	{
+		D3D12_RESOURCE_BARRIER barrier = m_restomanage->TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST);
+		uploadcmdlist->ResourceBarrier(1, &barrier);
+	}
+	for (unsigned i = 0; i < m_subrestoupload.size(); i++)
+	{
+		UINT subresidx = m_subrestoupload[i];
+		//create un upload buffer
+		UINT64 uploadbuffersize = GetRequiredIntermediateSize(m_restomanage->GetResource().Get(), subresidx, 1);
+		DX12Buffer* uploadbuffer = CreateUploadBuffer(creationdevice, uploadbuffersize);
+		UpdateSubresources(uploadcmdlist.GetcmdList(), m_restomanage->GetResource().Get(),uploadbuffer->GetResource().Get(), 0, subresidx, 1, &m_reservedresourcesubresdata[subresidx]);
+	}
+	m_subrestoupload.clear();
+	if (m_restomanage->GetCurrentResourceState() != D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+	{
+		D3D12_RESOURCE_BARRIER barrier = m_restomanage->TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		uploadcmdlist->ResourceBarrier(1, &barrier);
+	}
+
+}
 void DX12ReservedResourceMemoryManager::Update(ComPtr<ID3D12CommandQueue>commandqueue, ComPtr< ID3D12Device> creationdevice)
 {
 	vector<UINT> subrestomap, subrestounmap;
@@ -120,6 +186,11 @@ void DX12ReservedResourceMemoryManager::Update(ComPtr<ID3D12CommandQueue>command
 		//make sure heap exists
 		assert(m_heaps[subresinfo.heapindex].heap.Get() != nullptr);
 		commandqueue->UpdateTileMappings(m_restomanage->GetResource().Get(), 1, &subresinfo.coordinates, &subresinfo.tileregionsize, m_heaps[subresinfo.heapindex].heap.Get(), 1, &rangeflag, &heapoffset, &subresinfo.tileregionsize.NumTiles, D3D12_TILE_MAPPING_FLAG_NONE);
+		//mark for upload if needed.
+		if (m_allowuploadonmapping)
+		{
+			m_subrestoupload.push_back(targetsubresidx);
+		}
 	}
 
 
@@ -168,7 +239,7 @@ void DX12ReservedResourceMemoryManager::BindMemory(UINT subresourceindex,bool ma
 	}
 	if (makeunmapable)
 	{
-		m_subresourceinfo[subresourceindex].isunmapable = false;
+		m_subresourceinfo[subresourceindex].isunmapable = true;
 	}
 
 }
@@ -182,9 +253,46 @@ bool DX12ReservedResourceMemoryManager::UnbindMemory(UINT subresourceindex)
 	}
 	return false;
 }
+void DX12ReservedResourceMemoryManager::ClearMip(DX12Commandlist& cmdlist, unsigned mipindex, float* clearcolour)
+{
+	if (m_uavheap.GetDescHeap() == nullptr)
+	{
+		//not using uavs
+		return;
+	}
+	//bind uav heap
+	ID3D12DescriptorHeap* heapstoset[] = { m_uavheap.GetDescHeap() };
+	cmdlist->SetDescriptorHeaps(1, heapstoset);
+	if (m_restomanage->GetCurrentResourceState() != D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
+	{
+		D3D12_RESOURCE_BARRIER barrier = m_restomanage->TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		cmdlist->ResourceBarrier(1, &barrier);
+	}
+	D3D12_GPU_DESCRIPTOR_HANDLE gpuhandle = m_uavheap.GetGPUHandleOffseted(mipindex);
+	D3D12_CPU_DESCRIPTOR_HANDLE cpuhandle = m_uavheapupload.GetCPUHandleOffseted(mipindex);
+	cmdlist->ClearUnorderedAccessViewFloat(gpuhandle, cpuhandle, m_restomanage->GetResource().Get(), clearcolour, 0, nullptr);
+	if (m_restomanage->GetCurrentResourceState() != D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+	{
+		D3D12_RESOURCE_BARRIER barrier = m_restomanage->TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		cmdlist->ResourceBarrier(1, &barrier);
+	}
+}
 
 bool DX12ReservedResourceMemoryManager::IsMemoryBound(UINT subresourceindex)
 {
 	assert(subresourceindex < m_subresourceinfo.size());
 	return m_subresourceinfo[subresourceindex].isMapped;
+}
+
+DX12Buffer* DX12ReservedResourceMemoryManager::CreateUploadBuffer(ComPtr< ID3D12Device> creationdevice,UINT64 size)
+{
+	DX12Buffer* anuplodbuffer = new DX12Buffer();
+	DX12ResourceCreationProperties uploadbufferprops;
+	DX12Buffer::InitResourceCreationProperties(uploadbufferprops);
+	uploadbufferprops.resdesc.Width = size;
+	uploadbufferprops.resheapprop.Type = D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD;
+	uploadbufferprops.resinitialstate = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_GENERIC_READ;
+	anuplodbuffer->Init(creationdevice, uploadbufferprops, ResourceCreationMode::COMMITED);
+	m_uploadbuffers.push_back(anuplodbuffer);
+	return anuplodbuffer;
 }
