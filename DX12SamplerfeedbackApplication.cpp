@@ -35,6 +35,7 @@ void DX12SamplerfeedbackApplication::InitExtras()
 
 	//init pso
 	InitBasicPSO();
+	m_reservedresuploadcmdlist.Init(D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
 
 	//init desc heaps
 	D3D12_DESCRIPTOR_HEAP_DESC heapdesc = {};
@@ -359,7 +360,10 @@ void DX12SamplerfeedbackApplication::Render()
 	
 
 	DXASSERT(m_primarycmdlist->Close())
-
+	{
+		ID3D12CommandList* cmdliststoexecute[1] = { m_reservedresuploadcmdlist.GetcmdList() };
+		m_mainqueue.GetQueue()->ExecuteCommandLists(1, cmdliststoexecute);
+	}
 		BasicRender();
 	
 }
@@ -371,6 +375,9 @@ void DX12SamplerfeedbackApplication::PostRenderUpdate()
 	//process the feedback data after renderend(i.e. feedback written by draw calls)
 	m_redtexfeedbackunit.ProcessReadbackdata();
 	m_redtexfeedbackunit.UpdateMemoryMappings(m_mainqueue.GetQueue(), m_creationdevice);
+	m_reservedresuploadcmdlist.Reset();
+	m_redtexfeedbackunit.UploadTextureData(m_creationdevice, m_reservedresuploadcmdlist);
+	DXASSERT(m_reservedresuploadcmdlist->Close())
 }
 
 void DX12SamplerfeedbackApplication::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)

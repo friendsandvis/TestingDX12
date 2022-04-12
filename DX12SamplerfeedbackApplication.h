@@ -32,6 +32,7 @@ private:
 	DX12FeedBackUnit m_redtexfeedbackunit;
 	DX12ReservedResource m_sfsreservedresourcetex;
 	bool m_sfsupported;
+	DX12Commandlist m_reservedresuploadcmdlist;
 	
 	
 
