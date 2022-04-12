@@ -19,6 +19,8 @@ void DX12ReservedResourceApplication::InitExtras()
 	//init pso
 	InitBasicPSO();
 
+	m_reservedresuploadcmdlist.Init(D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
+
 	//init desc heaps
 	D3D12_DESCRIPTOR_HEAP_DESC heapdesc = {};
 	heapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -85,7 +87,7 @@ void DX12ReservedResourceApplication::InitExtras()
 
 	
 	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
-	m_greentexmemmanager.UploadData(m_creationdevice,m_uploadcommandlist);
+	
 	//float clearcolour[4] = {1.0f,0.0f,0.0f,1.0f};
 	//m_greentexmemmanager.ClearMip(m_uploadcommandlist, 0, clearcolour);
 	DXASSERT(m_uploadcommandlist->Close())
@@ -271,7 +273,14 @@ void DX12ReservedResourceApplication::Render()
 
 	DXASSERT(m_primarycmdlist->Close())
 
+	{
+		m_reservedresuploadcmdlist.Reset();
+		m_greentexmemmanager.UploadData(m_creationdevice, m_reservedresuploadcmdlist);
+		DXASSERT(m_reservedresuploadcmdlist->Close())
+	}
 
+		ID3D12CommandList* cmdliststoexecute[1] = {m_reservedresuploadcmdlist.GetcmdList()};
+	m_mainqueue.GetQueue()->ExecuteCommandLists(1, cmdliststoexecute);
 		BasicRender();
 }
 

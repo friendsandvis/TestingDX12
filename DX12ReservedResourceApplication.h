@@ -28,6 +28,8 @@ private:
 	DX12ReservedResource m_greentex_reservedres;
 	DX12ReservedResourceMemoryManager m_greentexmemmanager;
 	DX12DESCHEAP m_resaccessviewdescheap;//CBV/SRV/UAV
+	//comandlist exclusively used for uploading reservedresource data
+	DX12Commandlist m_reservedresuploadcmdlist;
 
 	void InitBasicPSO();
 
