@@ -112,6 +112,11 @@ void DX12ReservedResourceMemoryManager::RequestUploadData(UINT subresindextouplo
 
 void DX12ReservedResourceMemoryManager::UploadData(ComPtr< ID3D12Device> creationdevice,DX12Commandlist& uploadcmdlist)
 {
+	if (m_subrestoupload.size() == 0)
+	{
+		//nothing to do if nothing to upload.
+		return;
+	}
 
 	if(m_restomanage->GetCurrentResourceState()!= D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST)
 	{

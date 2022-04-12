@@ -72,6 +72,11 @@ public:
 	{
 		m_reservedresmemorymanager.Update(commandqueue, creationdevice);
 	}
+	//upload any data to managed reserved resource texture if needed
+	void UploadTextureData(ComPtr< ID3D12Device> creationdevice, DX12Commandlist& uploadcmdlist)
+	{
+		m_reservedresmemorymanager.UploadData(creationdevice, uploadcmdlist);
+	}
 private:
 	void TryUpdateLODClamp(unsigned loadedlodidx);
 	SamplerFeedbackTexture m_feedbacktex;

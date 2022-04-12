@@ -61,6 +61,11 @@ public:
 	bool UnbindMemory(UINT subresourceindex);
 	//used to clear uav for a reserved resource mip if uav allowed
 	void ClearMip(DX12Commandlist& cmdlist,unsigned mipindex, float* clearcolour);
+	//allows uploading a mip's data upon binding it's memory in reserved resource
+	void AllowUploadOnMapping(bool allow)
+	{
+		m_allowuploadonmapping=allow;
+	}
 	
 	//returns whether memory for the subresoource is bound or not
 	bool IsMemoryBound(UINT subresourceindex);
