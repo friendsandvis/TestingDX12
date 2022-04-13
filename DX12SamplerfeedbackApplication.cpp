@@ -25,7 +25,7 @@ void DX12SamplerfeedbackApplication::InitExtras()
 		reservedrestexprops.resdesc.MipLevels = reservedresimgdata.m_imagemetadata.mipLevels;
 		reservedrestexprops.resdesc.Format = reservedresimgdata.m_imagemetadata.format;
 		reservedrestexprops.resdesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-		m_sfsreservedresourcetex.Init(m_creationdevice, reservedrestexprops);
+		m_sfsreservedresourcetex.Init(m_creationdevice);
 		m_sfsreservedresourcetex.SetName(L"Greentexreservedresourcesfstest");
 	}
 	//check sampler feedback support
@@ -79,7 +79,7 @@ void DX12SamplerfeedbackApplication::InitExtras()
 				m_redtexfeedbackunit.BindMipLevel(m_sfsreservedresourcetex.GetTotalMipCount() - 1,true);
 				//imidiate update feedback unit to reflect the requested mip level.
 				m_redtexfeedbackunit.UpdateMemoryMappings(m_mainqueue.GetQueue(), m_creationdevice);
-				
+				//copy feedbacktex uav heap to gpu descriptor(we need both cpu & gpu one for clearuav call).
 				m_creationdevice->CopyDescriptorsSimple(1, m_resaccessviewdescheap.GetCPUHandleOffseted(1), m_resaccessviewdescheapsrc.GetCPUHandleOffseted(0), D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 			}
 	}
@@ -98,11 +98,10 @@ void DX12SamplerfeedbackApplication::InitExtras()
 	//upload asset data
 	m_uploadcommandlist.Reset();
 	{
-		//clear the reserved resource texture for texting binding(forced) for mip levels
 		if (m_sfsupported)
 		{
-			float redclearcolour[4] = { 1.0f,0.0f,0.0f,1.0f };
-			m_redtexfeedbackunit.ClearReservedResourceMip(m_uploadcommandlist, m_sfsreservedresourcetex.GetTotalMipCount() - 1, redclearcolour);
+			//upload texture data to reserved resources for any mip thatt might be forced rewquested(here being the persistent mapped mip) & for the same reason we are using upload cmd list here(we know what we are making this step part of init)
+			m_redtexfeedbackunit.UploadTextureData(m_creationdevice, m_uploadcommandlist);
 		}
 	}
 	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
