@@ -132,9 +132,10 @@ void DX12FeedBackUnit::ProcessReadbackdata()
 	{
 		//unmap mips needed to be unmapped
 		uint8_t* mipstounmap = mipstobeunmapped.GetDataptr();
-
+		
 		for (size_t i = 0; i < mipstobeunmapped.GetSize(); i++)
 		{
+			
 			assert(m_reservedresmemorymanager.IsMemoryBound(mipstounmap[i]));
 			bool unbindissued=m_reservedresmemorymanager.UnbindMemory(mipstounmap[i]);
 			if (unbindissued)

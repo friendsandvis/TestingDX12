@@ -147,7 +147,7 @@ void DX12ReservedResourceMemoryManager::Update(ComPtr<ID3D12CommandQueue>command
 	{
 		UINT targetsubresidx = m_dirtysubres[i];
 		SubResouceInfo& subresinfo=m_subresourceinfo[targetsubresidx];
-		if (subresinfo.isMapped && subresinfo.isunmapable)
+		if (subresinfo.isMapped)
 		{
 			//need to unmap as it's already mapped
 			subrestounmap.push_back(targetsubresidx);
@@ -165,7 +165,7 @@ void DX12ReservedResourceMemoryManager::Update(ComPtr<ID3D12CommandQueue>command
 	//empty dirtysubres vector now as we have processed all dirty onse.
 	m_dirtysubres.clear();
 
-	//unbind all heaps not needed
+	//unbind all heaps not needed & delete heaps
 	for (size_t i = 0; i < subrestounmap.size(); i++)
 	{
 		UINT targetsubresidx = subrestounmap[i];
@@ -244,7 +244,7 @@ void DX12ReservedResourceMemoryManager::BindMemory(UINT subresourceindex,bool ma
 	}
 	if (makeunmapable)
 	{
-		m_subresourceinfo[subresourceindex].isunmapable = true;
+		m_subresourceinfo[subresourceindex].isunmapable = false;
 	}
 
 }

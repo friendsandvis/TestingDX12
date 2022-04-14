@@ -14,7 +14,7 @@ struct SubResouceInfo
 	D3D12_TILED_RESOURCE_COORDINATE coordinates;
 	bool isMapped = false;//is the subresource mapped to the reserved resource
 	bool ispacked = false;
-	bool isunmapable = false;//states if the subres can be unmaped
+	bool isunmapable = true;//states if the subres can be unmaped
 
 
 

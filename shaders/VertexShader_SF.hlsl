@@ -23,7 +23,8 @@ VSOut main(VSIn input)
 
 		
 		
-		output.pos =mul(vertexconsts.mvp,float4(input.vpos,1.0f));
+		//output.pos =mul(vertexconsts.mvp,float4(input.vpos,1.0f));
+		output.pos=float4(input.vpos,1.0f);
 		output.uv=input.uv;
 
     return output;

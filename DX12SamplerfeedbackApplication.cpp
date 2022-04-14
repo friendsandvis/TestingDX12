@@ -64,7 +64,7 @@ void DX12SamplerfeedbackApplication::InitExtras()
 		sfunitinitdata.feedbackmipregion.Width = 4;
 		sfunitinitdata.feedbackmipregion.Height = 4;
 		sfunitinitdata.isMinMipMap = true;
-		sfunitinitdata.allowreservedresourceuavclear = true;
+		sfunitinitdata.allowreservedresourceuavclear = false;
 		sfunitinitdata.feedbacktexrestopairwith=&m_sfsreservedresourcetex;
 		sfunitinitdata.feedbacktexuavhandle = m_resaccessviewdescheapsrc.GetCPUHandleOffseted(0);
 		sfunitinitdata.minlodtexsrvhandle = m_resaccessviewdescheap.GetCPUHandleOffseted(2);
