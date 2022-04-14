@@ -78,7 +78,8 @@ public:
 		m_reservedresmemorymanager.UploadData(creationdevice, uploadcmdlist);
 	}
 private:
-	void TryUpdateLODClamp(unsigned loadedlodidx);
+	//used to update mip clamp value when a mip level is loaded
+	void TryUpdateLODClamp_MipLoaded(unsigned loadedlodidx);
 	SamplerFeedbackTexture m_feedbacktex;
 	DX12Buffer m_feedbackreadbackbuffer;
 	

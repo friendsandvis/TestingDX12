@@ -17,7 +17,7 @@ void DX12SamplerfeedbackApplication::InitExtras()
 	//init sampler feedback reserved resorce
 	{
 		DXImageData& reservedresimgdata = m_sfsreservedresourcetex.GetImageData();
-		DXTexManager::LoadTexture(L"textures/tex3_miped.dds", reservedresimgdata);
+		DXTexManager::LoadTexture(L"textures/texlargemiped.dds", reservedresimgdata);
 		DX12ResourceCreationProperties reservedrestexprops;
 		DX12ReservedResource::InitResourceCreationProperties(reservedrestexprops);
 		reservedrestexprops.resdesc.Width = reservedresimgdata.m_imagemetadata.width;
@@ -85,14 +85,14 @@ void DX12SamplerfeedbackApplication::InitExtras()
 	}
 
 	{
-		D3D12_SHADER_RESOURCE_VIEW_DESC redtexsrvdesc = {};
-		redtexsrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		redtexsrvdesc.Texture2D.MipLevels = (UINT)m_redtexture.GetTotalMipCount();
-		redtexsrvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		D3D12_SHADER_RESOURCE_VIEW_DESC sfsreservedrestexsrvdesc = {};
+		sfsreservedrestexsrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		sfsreservedrestexsrvdesc.Texture2D.MipLevels = (UINT)m_sfsreservedresourcetex.GetTotalMipCount();
+		sfsreservedrestexsrvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 
 
 		//m_redtexture.CreateSRV(m_creationdevice, redtexsrvdesc, m_resaccessviewdescheap.GetCPUHandleOffseted(0));
-		m_sfsreservedresourcetex.CreateSRV(m_creationdevice, redtexsrvdesc, m_resaccessviewdescheap.GetCPUHandleOffseted(0));
+		m_sfsreservedresourcetex.CreateSRV(m_creationdevice, sfsreservedrestexsrvdesc, m_resaccessviewdescheap.GetCPUHandleOffseted(0));
 	}
 
 	//upload asset data

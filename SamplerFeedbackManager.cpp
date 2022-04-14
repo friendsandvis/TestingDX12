@@ -127,6 +127,8 @@ void DX12FeedBackUnit::ProcessReadbackdata()
 			assert(!m_reservedresmemorymanager.IsMemoryBound(mipstomap[i]));
 			m_reservedresmemorymanager.BindMemory(mipstomap[i]);
 			m_currentlymappedmips.PushUnique(mipstomap[i]);
+			//also try update mip clamp.
+			TryUpdateLODClamp_MipLoaded(mipstomap[i]);
 		}
 	}
 	{
@@ -150,8 +152,9 @@ void DX12FeedBackUnit::ProcessReadbackdata()
 	m_feedbackreadbackbuffer.UnMap(mapparams);
 }
 
-void DX12FeedBackUnit::TryUpdateLODClamp(unsigned loadedlodidx)
+void DX12FeedBackUnit::TryUpdateLODClamp_MipLoaded(unsigned loadedlodidx)
 {
+	//special case where the current lod clamp is not bound(eg at starting) then bluindly update lodclamp to the new loaded mip level
 	if (m_reservedresmemorymanager.IsMemoryBound(m_lodclampvalue))
 	{
 		if (m_lodclampvalue > loadedlodidx) { m_lodclampvalue=loadedlodidx; }
@@ -186,7 +189,7 @@ void DX12FeedBackUnit::BindMipLevel(uint8_t mipleveltobind, bool makeunmapable)
 	m_reservedresmemorymanager.BindMemory(mipleveltobind,makeunmapable);
 	m_currentlymappedmips.PushUnique(mipleveltobind);
 	//update clamp value
-	TryUpdateLODClamp(mipleveltobind);
+	TryUpdateLODClamp_MipLoaded(mipleveltobind);
 }
 
 void DX12FeedBackUnit::InitReedbackBuffer()
