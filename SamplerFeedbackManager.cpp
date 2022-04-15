@@ -114,6 +114,12 @@ void DX12FeedBackUnit::ProcessReadbackdata()
 		}
 
 	}
+	//logic specifically ment to reduce the scope of sfs by testing in condition were a single mip level is sampledd through out the texture(hence avoiding the need of a residency map;mip clamp can be handled by a simple constant.
+	{
+		//if simplified case is to work then only 1 mip level must have been sampled.
+		assert(currentmipssampled.GetSize() == 1);
+		uint8_t expectedmiplevelclamp=currentmipssampled.GetDataptr()[0];
+	}
 	Set<uint8_t> mipstobemapped = currentmipssampled.Minus(m_currentlymappedmips);
 	Set<uint8_t> mipstobeunmapped = m_currentlymappedmips.Minus(currentmipssampled);
 
