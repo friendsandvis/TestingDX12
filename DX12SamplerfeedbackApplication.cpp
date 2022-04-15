@@ -163,7 +163,7 @@ void DX12SamplerfeedbackApplication::InitBasicPSO()
 
 	//1 root param for ps texture & sampler 
 	D3D12_STATIC_SAMPLER_DESC simplesampler = {};
-	simplesampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+	simplesampler.Filter = D3D12_FILTER::D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
 	simplesampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 	simplesampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 	simplesampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;

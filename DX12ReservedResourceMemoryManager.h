@@ -54,6 +54,7 @@ public:
 	void Init(ComPtr< ID3D12Device> creationdevice,DX12ReservedResource* reservedresourcetomanage, bool inituav=false);
 	//updates the physical memory mapping for the reserved resource(queue needed for updating the mappings and device for creating new heaps if needed)
 	void Update(ComPtr<ID3D12CommandQueue>commandqueue, ComPtr< ID3D12Device> creationdevice);
+	
 	void RequestUploadData(UINT subresindextoupload);
 	void UploadData(ComPtr< ID3D12Device> creationdevice,DX12Commandlist& uploadcmdlist);
 	void BindMemory(UINT subresourceindex,bool makeunmapable=false);
@@ -69,6 +70,7 @@ public:
 	
 	//returns whether memory for the subresoource is bound or not
 	bool IsMemoryBound(UINT subresourceindex);
+	unsigned GetMostDetailedMappedMipIndex();
 	DX12ReservedResource* GetReservedresource() { return m_restomanage; }
 private:
 	

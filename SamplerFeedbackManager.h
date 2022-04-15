@@ -71,6 +71,8 @@ public:
 	void UpdateMemoryMappings(ComPtr<ID3D12CommandQueue>commandqueue, ComPtr< ID3D12Device> creationdevice)
 	{
 		m_reservedresmemorymanager.Update(commandqueue, creationdevice);
+		//at last verify that the currect lod clamp value is used
+		VerifyLodClamp();
 	}
 	//upload any data to managed reserved resource texture if needed
 	void UploadTextureData(ComPtr< ID3D12Device> creationdevice, DX12Commandlist& uploadcmdlist)
@@ -80,6 +82,8 @@ public:
 private:
 	//used to update mip clamp value when a mip level is loaded
 	void TryUpdateLODClamp_MipLoaded(unsigned loadedlodidx);
+	//ment to verify/find/set the correct lodclamp value for reserved res texture based on the residency of mips.(tipically used after updating memory mappings.
+	void VerifyLodClamp();
 	SamplerFeedbackTexture m_feedbacktex;
 	DX12Buffer m_feedbackreadbackbuffer;
 	

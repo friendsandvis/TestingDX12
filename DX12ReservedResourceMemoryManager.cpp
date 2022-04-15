@@ -201,6 +201,7 @@ void DX12ReservedResourceMemoryManager::Update(ComPtr<ID3D12CommandQueue>command
 
 }
 
+
 void DX12ReservedResourceMemoryManager::InitHeap(size_t indexinheapvector, ComPtr< ID3D12Device> creationdevice, UINT64 heapsize)
 {
 	if (m_heaps[indexinheapvector].heap.Get())
@@ -287,6 +288,17 @@ bool DX12ReservedResourceMemoryManager::IsMemoryBound(UINT subresourceindex)
 {
 	assert(subresourceindex < m_subresourceinfo.size());
 	return m_subresourceinfo[subresourceindex].isMapped;
+}
+unsigned DX12ReservedResourceMemoryManager::GetMostDetailedMappedMipIndex()
+{
+	//iterate through each subres data(from most detailed to least detailed mip,choose the first one mapped
+	for (size_t i = 0; i < m_subresourceinfo.size(); i++)
+	{
+		if (m_subresourceinfo[i].isMapped)
+		{
+			return i;
+		}
+	}
 }
 
 DX12Buffer* DX12ReservedResourceMemoryManager::CreateUploadBuffer(ComPtr< ID3D12Device> creationdevice,UINT64 size)

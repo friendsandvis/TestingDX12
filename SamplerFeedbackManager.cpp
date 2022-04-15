@@ -105,10 +105,12 @@ void DX12FeedBackUnit::ProcessReadbackdata()
 	for (size_t i = 0; i < mapparams.range.End; i++)
 	{
 		//each entry is a mip level used.
-		UINT miplevelsampled = readbackdata[i];
+		uint8_t miplevelsampled = readbackdata[i];
 		
 		if (miplevelsampled != 0xFF)
 		{
+			//if(currentmipssampled.GetSize())
+			//assert(miplevelsampled == currentmipssampled.GetDataptr()[0]);
 			//some mip was sampled(0xff is clear value in feedback.
 			currentmipssampled.PushUnique(miplevelsampled);
 		}
@@ -117,8 +119,11 @@ void DX12FeedBackUnit::ProcessReadbackdata()
 	//logic specifically ment to reduce the scope of sfs by testing in condition were a single mip level is sampledd through out the texture(hence avoiding the need of a residency map;mip clamp can be handled by a simple constant.
 	{
 		//if simplified case is to work then only 1 mip level must have been sampled.
-		assert(currentmipssampled.GetSize() == 1);
+		//assert(currentmipssampled.GetSize() == 1);
+		
 		uint8_t expectedmiplevelclamp=currentmipssampled.GetDataptr()[0];
+		//in this simplified implementation single mip level is expected to be sampled throughout so that is expected to be the lod clamp directly(the residency of the mip itself is verified in the update step to avoid any glitches).
+		m_lodclampvalue = expectedmiplevelclamp;
 	}
 	Set<uint8_t> mipstobemapped = currentmipssampled.Minus(m_currentlymappedmips);
 	Set<uint8_t> mipstobeunmapped = m_currentlymappedmips.Minus(currentmipssampled);
@@ -169,6 +174,17 @@ void DX12FeedBackUnit::TryUpdateLODClamp_MipLoaded(unsigned loadedlodidx)
 	{
 		m_lodclampvalue = loadedlodidx;
 	}
+}
+void DX12FeedBackUnit::VerifyLodClamp()
+{
+	//if the lod clamp value is a mip of reserved res texture that is bound then proceed safely nothing to do.
+	if (m_reservedresmemorymanager.IsMemoryBound(m_lodclampvalue))
+	{
+		return;
+	}
+	//otherwise find the most detailed mip that is bound so that we can clamp to it.
+	m_lodclampvalue=m_reservedresmemorymanager.GetMostDetailedMappedMipIndex();
+
 }
 
 void DX12FeedBackUnit::ClearReservedResourceMip(DX12Commandlist& cmdlist, uint8_t mipindextoclear, float* clearcolour)
