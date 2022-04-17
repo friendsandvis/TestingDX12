@@ -139,6 +139,7 @@ void DX12ReservedResourceMemoryManager::UploadData(ComPtr< ID3D12Device> creatio
 	}
 
 }
+
 void DX12ReservedResourceMemoryManager::Update(ComPtr<ID3D12CommandQueue>commandqueue, ComPtr< ID3D12Device> creationdevice)
 {
 	vector<UINT> subrestomap, subrestounmap;
@@ -249,6 +250,19 @@ void DX12ReservedResourceMemoryManager::BindMemory(UINT subresourceindex,bool ma
 	}
 
 }
+void DX12ReservedResourceMemoryManager::BindMemory2(UINT subresourceindex)
+{
+	assert(subresourceindex < m_subresourceinfo.size());
+
+	for (size_t i = subresourceindex; i < m_subresourceinfo.size(); i++)
+	{
+		if (!m_subresourceinfo[i].isMapped)
+		{
+			m_dirtysubres.push_back(i);
+		}
+	}
+
+}
 bool DX12ReservedResourceMemoryManager::UnbindMemory(UINT subresourceindex)
 {
 	assert(subresourceindex < m_subresourceinfo.size());
@@ -288,6 +302,11 @@ bool DX12ReservedResourceMemoryManager::IsMemoryBound(UINT subresourceindex)
 {
 	assert(subresourceindex < m_subresourceinfo.size());
 	return m_subresourceinfo[subresourceindex].isMapped;
+}
+bool DX12ReservedResourceMemoryManager::IsPacked(UINT subresourceindex)
+{
+	assert(subresourceindex < m_subresourceinfo.size());
+	return m_subresourceinfo[subresourceindex].ispacked;
 }
 unsigned DX12ReservedResourceMemoryManager::GetMostDetailedMappedMipIndex()
 {

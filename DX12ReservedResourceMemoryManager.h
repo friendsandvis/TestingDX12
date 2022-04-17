@@ -57,7 +57,9 @@ public:
 	
 	void RequestUploadData(UINT subresindextoupload);
 	void UploadData(ComPtr< ID3D12Device> creationdevice,DX12Commandlist& uploadcmdlist);
+	void ClearUAV(DX12Commandlist& uploadcmdlist);
 	void BindMemory(UINT subresourceindex,bool makeunmapable=false);
+	void BindMemory2(UINT subresourceindex);
 	//returns if the unbind operation was issued for the requested resourceindex or not.
 	bool UnbindMemory(UINT subresourceindex);
 	//used to clear uav for a reserved resource mip if uav allowed
@@ -70,6 +72,7 @@ public:
 	
 	//returns whether memory for the subresoource is bound or not
 	bool IsMemoryBound(UINT subresourceindex);
+	bool IsPacked(UINT subresourceindex);
 	unsigned GetMostDetailedMappedMipIndex();
 	DX12ReservedResource* GetReservedresource() { return m_restomanage; }
 private:

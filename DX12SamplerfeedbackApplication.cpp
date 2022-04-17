@@ -25,7 +25,7 @@ void DX12SamplerfeedbackApplication::InitExtras()
 		reservedrestexprops.resdesc.MipLevels = reservedresimgdata.m_imagemetadata.mipLevels;
 		reservedrestexprops.resdesc.Format = reservedresimgdata.m_imagemetadata.format;
 		reservedrestexprops.resdesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-		m_sfsreservedresourcetex.Init(m_creationdevice);
+		m_sfsreservedresourcetex.Init(m_creationdevice,true);
 		m_sfsreservedresourcetex.SetName(L"Greentexreservedresourcesfstest");
 	}
 	//check sampler feedback support
@@ -64,7 +64,7 @@ void DX12SamplerfeedbackApplication::InitExtras()
 		sfunitinitdata.feedbackmipregion.Width = 4;
 		sfunitinitdata.feedbackmipregion.Height = 4;
 		sfunitinitdata.isMinMipMap = true;
-		sfunitinitdata.allowreservedresourceuavclear = false;
+		sfunitinitdata.allowreservedresourceuavclear = true;
 		sfunitinitdata.feedbacktexrestopairwith=&m_sfsreservedresourcetex;
 		sfunitinitdata.feedbacktexuavhandle = m_resaccessviewdescheapsrc.GetCPUHandleOffseted(0);
 		sfunitinitdata.minlodtexsrvhandle = m_resaccessviewdescheap.GetCPUHandleOffseted(2);
@@ -77,6 +77,7 @@ void DX12SamplerfeedbackApplication::InitExtras()
 				m_redtexfeedbackunit.Init(device8, sfunitinitdata);
 				//start by loading the least  detailed mip 
 				m_redtexfeedbackunit.BindMipLevel(m_sfsreservedresourcetex.GetTotalMipCount() - 1,true);
+				
 				//imidiate update feedback unit to reflect the requested mip level.
 				m_redtexfeedbackunit.UpdateMemoryMappings(m_mainqueue.GetQueue(), m_creationdevice);
 				//copy feedbacktex uav heap to gpu descriptor(we need both cpu & gpu one for clearuav call).
@@ -163,7 +164,7 @@ void DX12SamplerfeedbackApplication::InitBasicPSO()
 
 	//1 root param for ps texture & sampler 
 	D3D12_STATIC_SAMPLER_DESC simplesampler = {};
-	simplesampler.Filter = D3D12_FILTER::D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+	simplesampler.Filter = D3D12_FILTER::D3D12_FILTER_MIN_MAG_MIP_LINEAR;
 	simplesampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 	simplesampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 	simplesampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
@@ -375,6 +376,7 @@ void DX12SamplerfeedbackApplication::PostRenderUpdate()
 	m_redtexfeedbackunit.ProcessReadbackdata();
 	m_redtexfeedbackunit.UpdateMemoryMappings(m_mainqueue.GetQueue(), m_creationdevice);
 	m_reservedresuploadcmdlist.Reset();
+	//m_redtexfeedbackunit.AllClearReservedResourceMip(m_reservedresuploadcmdlist);
 	m_redtexfeedbackunit.UploadTextureData(m_creationdevice, m_reservedresuploadcmdlist);
 	DXASSERT(m_reservedresuploadcmdlist->Close())
 }

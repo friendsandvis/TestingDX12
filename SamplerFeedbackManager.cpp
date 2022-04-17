@@ -125,22 +125,48 @@ void DX12FeedBackUnit::ProcessReadbackdata()
 		//in this simplified implementation single mip level is expected to be sampled throughout so that is expected to be the lod clamp directly(the residency of the mip itself is verified in the update step to avoid any glitches).
 		m_lodclampvalue = expectedmiplevelclamp;
 	}
-	Set<uint8_t> mipstobemapped = currentmipssampled.Minus(m_currentlymappedmips);
+	Set<uint8_t> mipstobemapped;
 	Set<uint8_t> mipstobeunmapped = m_currentlymappedmips.Minus(currentmipssampled);
+	Set<uint8_t> mipsexpectedtobemapped = currentmipssampled.Minus(m_currentlymappedmips);
+	if (mipsexpectedtobemapped.GetSize() != 0)
+	{
+		size_t mostdetailedexpectedmip = mipsexpectedtobemapped.GetDataptr()[0];
+		
+		for (size_t i = 0; i < mipsexpectedtobemapped.GetSize(); i++)
+		{
+			uint8_t expectedmip = mipsexpectedtobemapped.GetDataptr()[i];
+			if (expectedmip < mostdetailedexpectedmip)
+			{
+				mostdetailedexpectedmip = expectedmip;
+			}
+
+
+		}
+		/*for (uint8_t i = mostdetailedexpectedmip; i < m_reservedresmemorymanager.GetSubResCount(); i++)
+		{
+				
+				mipstobemapped.Push(i);
+		}*/
+		//map mips needed to be mapped
+		m_reservedresmemorymanager.BindMemory2(mostdetailedexpectedmip);
+	}
 
 	
 	{
-		//map mips needed to be mapped
-		uint8_t* mipstomap = mipstobemapped.GetDataptr();
+		
+		/*uint8_t* mipstomap = mipstobemapped.GetDataptr();
 
 		for (size_t i = 0; i < mipstobemapped.GetSize(); i++)
 		{
-			assert(!m_reservedresmemorymanager.IsMemoryBound(mipstomap[i]));
+			if (m_reservedresmemorymanager.IsMemoryBound(mipstomap[i]))
+			{
+				continue;
+			}
 			m_reservedresmemorymanager.BindMemory(mipstomap[i]);
 			m_currentlymappedmips.PushUnique(mipstomap[i]);
 			//also try update mip clamp.
-			TryUpdateLODClamp_MipLoaded(mipstomap[i]);
-		}
+			//TryUpdateLODClamp_MipLoaded(mipstomap[i]);
+		}*/
 	}
 	{
 		//unmap mips needed to be unmapped
@@ -196,6 +222,20 @@ void DX12FeedBackUnit::ClearReservedResourceMip(DX12Commandlist& cmdlist, uint8_
 	ID3D12DescriptorHeap* heapstoset[1] = {m_uavheap.GetDescHeap()};
 	cmdlist->SetDescriptorHeaps(1, heapstoset);
 	cmdlist->ClearUnorderedAccessViewFloat(gpuhandle,cpuhandle , reservedrestex->GetResource().Get(), clearcolour, 0, nullptr);
+}
+void DX12FeedBackUnit::AllClearReservedResourceMip(DX12Commandlist& cmdlist)
+{
+	float clearcolour[4] = {1.0f,0.0f,0.0f,1.0f};
+	ID3D12DescriptorHeap* heapstoset[1] = { m_uavheap.GetDescHeap() };
+	cmdlist->SetDescriptorHeaps(1, heapstoset);
+	DX12ReservedResource* reservedrestex = m_reservedresmemorymanager.GetReservedresource();
+	for (size_t mipindextoclear = 0; mipindextoclear < reservedrestex->GetTotalMipCount(); mipindextoclear++)
+	{
+		D3D12_CPU_DESCRIPTOR_HANDLE cpuhandle = m_uavheapupload.GetCPUHandleOffseted(mipindextoclear);
+		D3D12_GPU_DESCRIPTOR_HANDLE gpuhandle = m_uavheap.GetGPUHandleOffseted(mipindextoclear);
+
+		cmdlist->ClearUnorderedAccessViewFloat(gpuhandle, cpuhandle, reservedrestex->GetResource().Get(), clearcolour, 0, nullptr);
+	}
 }
 
 void DX12FeedBackUnit::BindMipLevel(uint8_t mipleveltobind, bool makeunmapable)
