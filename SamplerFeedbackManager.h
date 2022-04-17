@@ -81,6 +81,7 @@ public:
 		m_reservedresmemorymanager.UploadData(creationdevice, uploadcmdlist);
 	}
 private:
+	uint8_t GetMinimunMipValue(uint8_t* values, size_t nummipvalues);
 	//used to update mip clamp value when a mip level is loaded
 	void TryUpdateLODClamp_MipLoaded(unsigned loadedlodidx);
 	//ment to verify/find/set the correct lodclamp value for reserved res texture based on the residency of mips.(tipically used after updating memory mappings.

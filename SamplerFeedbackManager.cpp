@@ -121,16 +121,29 @@ void DX12FeedBackUnit::ProcessReadbackdata()
 		//if simplified case is to work then only 1 mip level must have been sampled.
 		//assert(currentmipssampled.GetSize() == 1);
 		
+		
 		uint8_t expectedmiplevelclamp=currentmipssampled.GetDataptr()[0];
 		//in this simplified implementation single mip level is expected to be sampled throughout so that is expected to be the lod clamp directly(the residency of the mip itself is verified in the update step to avoid any glitches).
 		m_lodclampvalue = expectedmiplevelclamp;
 	}
 	Set<uint8_t> mipstobemapped;
-	Set<uint8_t> mipstobeunmapped = m_currentlymappedmips.Minus(currentmipssampled);
+	//doing very specicialized thing  here(retrive from sampled mips set  a set of mips that should be resident)
+	Set<uint8_t> mipstoberesident;
+	{
+		//remember if minlod feedback map returns x mip as sampled then it means x till the last mip must be resident.
+		//first find the most detailed(smallest) mip level of the sampledmips
+		uint8_t minmipvaluesampled = GetMinimunMipValue(currentmipssampled.GetDataptr(), currentmipssampled.GetSize());
+		//use it to get all resident mips
+		for (; minmipvaluesampled < m_reservedresmemorymanager.GetSubResCount(); minmipvaluesampled++)
+		{
+			mipstoberesident.Push(minmipvaluesampled);
+		}
+	}
+	Set<uint8_t> mipstobeunmapped = m_currentlymappedmips.Minus(mipstoberesident);
 	Set<uint8_t> mipsexpectedtobemapped = currentmipssampled.Minus(m_currentlymappedmips);
 	if (mipsexpectedtobemapped.GetSize() != 0)
 	{
-		size_t mostdetailedexpectedmip = mipsexpectedtobemapped.GetDataptr()[0];
+		size_t mostdetailedexpectedmip = GetMinimunMipValue(mipsexpectedtobemapped.GetDataptr(),mipsexpectedtobemapped.GetSize());
 		
 		for (size_t i = 0; i < mipsexpectedtobemapped.GetSize(); i++)
 		{
@@ -149,6 +162,10 @@ void DX12FeedBackUnit::ProcessReadbackdata()
 		}*/
 		//map mips needed to be mapped
 		m_reservedresmemorymanager.BindMemory2(mostdetailedexpectedmip);
+		for (size_t i = 0; i < mipstoberesident.GetSize(); i++)
+		{
+			m_currentlymappedmips.PushUnique(mipstoberesident.GetDataptr()[i]);
+		}
 	}
 
 	
@@ -188,7 +205,20 @@ void DX12FeedBackUnit::ProcessReadbackdata()
 	mapparams.range.End = 0;
 	m_feedbackreadbackbuffer.UnMap(mapparams);
 }
+uint8_t DX12FeedBackUnit::GetMinimunMipValue(uint8_t* values,size_t nummipvalues)
+{
+	assert(nummipvalues != 0);
+	uint8_t minvalue = values[0];
 
+	for (size_t t= 1; t < nummipvalues; t++)
+	{
+		if (values[t] < minvalue)
+		{
+			minvalue = values[t];
+		}
+	}
+	return minvalue;
+}
 void DX12FeedBackUnit::TryUpdateLODClamp_MipLoaded(unsigned loadedlodidx)
 {
 	//special case where the current lod clamp is not bound(eg at starting) then bluindly update lodclamp to the new loaded mip level
