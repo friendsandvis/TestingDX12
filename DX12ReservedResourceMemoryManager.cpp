@@ -1,4 +1,5 @@
 #include"DX12ReservedResourceMemoryManager.h"
+#include<iostream>
 
 
 DX12ReservedResourceMemoryManager::DX12ReservedResourceMemoryManager()
@@ -170,6 +171,7 @@ void DX12ReservedResourceMemoryManager::Update(ComPtr<ID3D12CommandQueue>command
 	for (size_t i = 0; i < subrestounmap.size(); i++)
 	{
 		UINT targetsubresidx = subrestounmap[i];
+		cout << "unloading mip index:" << targetsubresidx << '\n';
 		SubResouceInfo& subresinfo = m_subresourceinfo[targetsubresidx];
 		
 		assert(subresinfo.isunmapable);
@@ -185,7 +187,9 @@ void DX12ReservedResourceMemoryManager::Update(ComPtr<ID3D12CommandQueue>command
 	//bind heaps needed
 	for (size_t i = 0; i < subrestomap.size(); i++)
 	{
+		
 		UINT targetsubresidx = subrestomap[i];
+		cout << "loading mip index:" << targetsubresidx<<'\n';
 		SubResouceInfo& subresinfo = m_subresourceinfo[targetsubresidx];
 		D3D12_TILE_RANGE_FLAGS rangeflag = D3D12_TILE_RANGE_FLAGS::D3D12_TILE_RANGE_FLAG_NONE;
 		UINT heapoffset = 0;
