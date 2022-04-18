@@ -39,6 +39,8 @@ public:
 	SamplerFeedbackTexture();
 	~SamplerFeedbackTexture();
 	UINT64 GetRequiredBufferSizeForTranscodeing();
+	UINT64 GetRequiredTextureWidthForTranscodeing();
+	UINT64 GetRequiredTextureHeightForTranscodeing();
 	void Init(ComPtr<ID3D12Device8> creationdevice, SamplerFeedbackTextureInitData initdata);
 	void Readback(ComPtr<ID3D12GraphicsCommandList1> commandlist,DX12ResourceBase* dstres);
 
@@ -88,6 +90,7 @@ private:
 	void VerifyLodClamp();
 	SamplerFeedbackTexture m_feedbacktex;
 	DX12Buffer m_feedbackreadbackbuffer;
+	DX12TextureSimple m_feedbackresolvedtex;
 	
 	
 	DX12ReservedResourceMemoryManager m_reservedresmemorymanager;

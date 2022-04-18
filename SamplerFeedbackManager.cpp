@@ -54,6 +54,18 @@ void DX12FeedBackUnit::Init(ComPtr<ID3D12Device8> creationdevice, samplerFeedbac
 	readbackbufferproperties.resheapprop.Type = D3D12_HEAP_TYPE_READBACK;
 	readbackbufferproperties.resdesc.Width = m_feedbacktex.GetRequiredBufferSizeForTranscodeing();
 	m_feedbackreadbackbuffer.Init(creationdevice1, readbackbufferproperties, ResourceCreationMode::COMMITED);
+	m_feedbackreadbackbuffer.SetName(L"ReadbackresolveBuffer");
+	{
+		DX12ResourceCreationProperties readbackresolvetexprops;
+		DX12TextureSimple::InitResourceCreationProperties(readbackresolvetexprops);
+		readbackresolvetexprops.resdesc.Format = DXGI_FORMAT_R8_UINT;
+		readbackresolvetexprops.resdesc.Height = m_feedbacktex.GetRequiredTextureHeightForTranscodeing();
+		readbackresolvetexprops.resdesc.Width = m_feedbacktex.GetRequiredTextureWidthForTranscodeing();
+
+		//init feedback resolve tex as well
+		m_feedbackresolvedtex.Init(creationdevice1, readbackresolvetexprops, ResourceCreationMode::COMMITED);
+		m_feedbackresolvedtex.SetName(L"ReadbackresolveTex");
+	}
 
 	//init physical memory manager
 	
@@ -309,6 +321,17 @@ UINT64 SamplerFeedbackTexture::GetRequiredBufferSizeForTranscodeing()
 	buffersize *= ((UINT64)ceil(m_resdesc.Width / (double)m_resdesc.SamplerFeedbackMipRegion.Width));
 	return buffersize;
 
+}
+
+UINT64 SamplerFeedbackTexture::GetRequiredTextureWidthForTranscodeing()
+{
+	UINT64 width = (UINT64)ceil(m_resdesc.Width / (double)m_resdesc.SamplerFeedbackMipRegion.Width);
+	return width;
+}
+UINT64 SamplerFeedbackTexture::GetRequiredTextureHeightForTranscodeing()
+{
+	UINT64 height = (UINT64)ceil(m_resdesc.Height / (double)m_resdesc.SamplerFeedbackMipRegion.Height);
+	return height;
 }
 
 void SamplerFeedbackTexture::Readback(ComPtr<ID3D12GraphicsCommandList1> commandlist, DX12ResourceBase* dstres)
