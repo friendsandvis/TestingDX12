@@ -99,7 +99,10 @@ void DX12FeedBackUnit::Init(ComPtr<ID3D12Device8> creationdevice, samplerFeedbac
 
 void DX12FeedBackUnit::Readback(ComPtr<ID3D12GraphicsCommandList1> commandlist)
 {
+	//first transcode in a buffer the feedback data
 	m_feedbacktex.Readback(commandlist, &m_feedbackreadbackbuffer);
+	//next transcode in a texture the feedback data
+	m_feedbacktex.Readback(commandlist, &m_feedbackresolvedtex);
 }
 
 void DX12FeedBackUnit::ProcessReadbackdata()
