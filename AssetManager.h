@@ -12,14 +12,7 @@
 	float V;
 };*/
 
-struct Vertex
-{
-	float X;
-	float Y;
-	float Z;
-	float U;
-	float V;
-};
+
 
 enum ModelDataUploadMode
 {
