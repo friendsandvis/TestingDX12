@@ -29,11 +29,10 @@ class AssimpManager
 public:
 	AssimpManager(std::string filename);
 	~AssimpManager();
-	static void LoadModelFromFile(std::string filename, AssimpLoadedModel& outmodel);
-
 private:
-	static void ProcessNode(aiNode* anode, AssimpLoadedModel& outmodel);
-
-	AssimpLoadedModel;
+	void ProcessNode(aiNode* annode);
+	void ProcessMesh(aiMesh* amesh);
+	const aiScene* m_scene;
+	AssimpLoadedModel m_processedmodel;
 };
 
