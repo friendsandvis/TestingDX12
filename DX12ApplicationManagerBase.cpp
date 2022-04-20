@@ -121,6 +121,5 @@ void DX12ApplicationManagerBase::BasicRender()
 	DXASSERT(m_swapchain.GetSwapchain()->Present(0, 0))
 		
 	m_swapchain.UpdatebackbufferIndex();
-	m_uploadcommandlist.Reset(true);
 }
 	

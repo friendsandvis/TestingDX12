@@ -7,6 +7,7 @@ void DX12Commandlist::Init(D3D12_COMMAND_LIST_TYPE type,ComPtr< ID3D12Device> cr
 		//list
 		DXASSERT(creationdevice->CreateCommandList(0, type, m_allocator.Get(), nullptr, IID_PPV_ARGS(m_list.GetAddressOf())))
 		DXASSERT(m_list->Close())
+		m_isclosed = true;
 }
 
 void DX12Commandlist::SetName(LPCWSTR name)
@@ -14,21 +15,38 @@ void DX12Commandlist::SetName(LPCWSTR name)
 	DXASSERT(m_list->SetName(name))
 }
 
-void DX12Commandlist::Reset(bool closeafterreset)
+void DX12Commandlist::Reset(bool closeafterreset,bool resetallocator)
 {
-	DXASSERT(m_list->Reset(m_allocator.Get(),nullptr))
+	if (resetallocator)
+	{
+		
+		DXASSERT(m_allocator->Reset());
+	}
+	DXASSERT(m_list->Reset(m_allocator.Get(), nullptr))
+		m_isclosed = false;
 
 		if (closeafterreset)
 		{
-			DXASSERT(m_list->Close())
+			
+			Close();
 	}
 }
 
 
 DX12Commandlist::DX12Commandlist()
+	:m_isclosed(true)
 {
 }
 
 DX12Commandlist::~DX12Commandlist()
 {
+}
+
+void DX12Commandlist::Close()
+{
+	//if (!m_isclosed)
+	{
+		DXASSERT(m_list->Close())
+			m_isclosed = true;
+	}
 }

@@ -32,10 +32,22 @@ void DX12Swapchain::InitBackBufferRTV(ComPtr< ID3D12Device> creationdevice, DX12
 	{
 		D3D12_CPU_DESCRIPTOR_HANDLE target = rtvdescheap.GetCPUHandleOffseted(i);
 
-		creationdevice->CreateRenderTargetView(m_backbuffers[i].Get(), nullptr, target);
+		creationdevice->CreateRenderTargetView(m_backbuffers[i].resource.Get(), nullptr, target);
 	
 	}
 
+}
+
+D3D12_RESOURCE_BARRIER DX12Swapchain::TransitionBackBuffer(UINT backbufferindex, D3D12_RESOURCE_STATES targetstate)
+{
+	D3D12_RESOURCE_BARRIER transitionbarrier = {};
+	transitionbarrier.Type = D3D12_RESOURCE_BARRIER_TYPE::D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	transitionbarrier.Flags = D3D12_RESOURCE_BARRIER_FLAGS::D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	transitionbarrier.Transition.pResource = m_backbuffers[backbufferindex].resource.Get();
+	transitionbarrier.Transition.StateAfter = targetstate;
+	transitionbarrier.Transition.StateBefore = m_backbuffers[backbufferindex].currentstate;
+	m_backbuffers[backbufferindex].currentstate = targetstate;
+	return transitionbarrier;
 }
 
 void DX12Swapchain::Init(ComPtr<IDXGIFactory2> factory, unsigned width, unsigned height, HWND hwnd, ComPtr<ID3D12CommandQueue> creationqueue)
@@ -66,7 +78,8 @@ void DX12Swapchain::RetiveBackBuffers()
 	
 	for (size_t i = 0; i < BACKBUFFERCOUNT; i++)
 	{
-		DXASSERT(m_swapchain->GetBuffer(i, IID_PPV_ARGS(m_backbuffers[i].GetAddressOf())))
+		DXASSERT(m_swapchain->GetBuffer(i, IID_PPV_ARGS(m_backbuffers[i].resource.GetAddressOf())))
+			m_backbuffers[i].currentstate = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PRESENT;
 			
 	}
 }

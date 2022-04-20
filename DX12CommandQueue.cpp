@@ -1,4 +1,5 @@
 #include"DX12CommandQueue.h"
+#define USESPINLOCKFORFENCEWAIT 1
 
 DX12CommandQueue::DX12CommandQueue()
 	
@@ -47,11 +48,19 @@ void SyncronizationUnit::SignalFence(ComPtr<ID3D12CommandQueue> queue, UINT64 si
 void SyncronizationUnit::WaitFence()
 
 {
+#if USESPINLOCKFORFENCEWAIT
+	while (m_fence->GetCompletedValue() != m_expectedvalue) {}
+#else
 	if (m_fence->GetCompletedValue() != m_expectedvalue)
 	{
 
-		DXASSERT(m_fence->SetEventOnCompletion(m_expectedvalue,m_event))
-		WaitForSingleObject(m_event, INFINITE);
+		DXASSERT(m_fence->SetEventOnCompletion(m_expectedvalue, m_event))
+			DWORD waitstatus = WaitForSingleObject(m_event, INFINITE);
+		assert(waitstatus == WAIT_OBJECT_0);
+
 	}
+#endif // USESPINLOCKFORFENCEWAIT
+
+	
 
 }
