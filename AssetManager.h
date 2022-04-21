@@ -13,14 +13,7 @@
 	float U;
 	float V;
 };*/
-struct Vertex
-{
-	float X;
-	float Y;
-	float Z;
-	float U;
-	float V;
-};
+
 
 
 enum ModelDataUploadMode
@@ -35,8 +28,10 @@ class DX12Commandlist;
 class Model
 {
 public:
+	
 	Model(ModelDataUploadMode uploadmode=NOCOPY);
 	~Model();
+	void Init(AssimpLoadedModel& assimpModel);
 	void InitVertexBuffer(ComPtr< ID3D12Device> creationdevice,vector<Vertex>& verticies);
 	void InitIndexBuffer(ComPtr< ID3D12Device> creationdevice,vector<unsigned>& indicies);
 	inline D3D12_INDEX_BUFFER_VIEW GetIBView() { return m_indexbufferview; }

@@ -158,6 +158,29 @@ void Model::InitIndexBuffer(ComPtr< ID3D12Device> creationdevice,vector<unsigned
 
 }
 
+void Model::Init(AssimpLoadedModel& assimpModel)
+{
+	assert(assimpModel.m_meshes.size() == 1);
+	AssimpLoadedMesh& amesh=assimpModel.m_meshes[0];
+	//form vector of verticies for local model
+	{
+		for (size_t i = 0; i < amesh.verticies.size(); i++)
+		{
+			const AssimpLoadedVertex& aprocessedvertex=amesh.verticies[i];
+			Vertex modelvert = {};
+			modelvert.X = aprocessedvertex.pos.x;
+			modelvert.Y = aprocessedvertex.pos.y;
+			modelvert.Z = aprocessedvertex.pos.z;
+			modelvert.U = aprocessedvertex.uv.x;
+			modelvert.V = aprocessedvertex.uv.y;
+		}
+	}
+	//form vector of indicies for local model
+	{
+
+	}
+}
+
 
 
 void Model::UploadModelDatatoBuffers()

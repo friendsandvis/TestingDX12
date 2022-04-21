@@ -7,6 +7,17 @@ using namespace DirectX;
 Define Various Vertex structures to be used in applications.
 
 */
+
+//most used simple position & uv vertex.
+struct Vertex
+{
+	float X;
+	float Y;
+	float Z;
+	float U;
+	float V;
+};
+
 enum VertexVersion
 {
 	UNKNOWN,
