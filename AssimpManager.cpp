@@ -1,5 +1,6 @@
 #include"AssimpManager.h"
 #include<assert.h>
+#pragma comment(lib,"assimp-vc140-mt.lib")
 
 
 
@@ -34,20 +35,40 @@ void AssimpManager::ProcessNode(aiNode* annode)
 
 void AssimpManager::ProcessMesh(aiMesh* amesh)
 {
-	AssimpLoadedMesh aprocessedmesh;
-	for (unsigned i = 0; i < amesh->mNumVertices; i++)
+	m_processedmodel.m_meshes.push_back(AssimpLoadedMesh());
+	AssimpLoadedMesh& aprocessedmesh=m_processedmodel.m_meshes[0];
+
+	for (unsigned i0 = 0; i0 < amesh->mNumVertices; i0++)
 	{
-		Vertex ameshvert = {};
-		aiVector3D apos=amesh->mVertices[i];
-		ameshvert.X = apos.x;
-		ameshvert.Y = apos.y;
-		ameshvert.Z = apos.z;
+		AssimpLoadedVertex ameshvert = {};
+		aiVector3D apos=amesh->mVertices[i0];
+		ameshvert.pos.x = apos.x;
+		ameshvert.pos.y = apos.y;
+		ameshvert.pos.z = apos.z;
 		if (amesh->HasTextureCoords(0))
 		{
-			aiVector3D auvw =amesh->mTextureCoords[0][i];
-			ameshvert.U = auvw.x;
-			ameshvert.V = auvw.y;
+			aiVector3D auvw =amesh->mTextureCoords[0][i0];
+			ameshvert.uv.x = auvw.x;
+			ameshvert.uv.y = auvw.y;
 		}
+		if (amesh->HasNormals())
+		{
+			aiVector3D anormal =amesh->mNormals[i0];
+			ameshvert.normal.x = anormal.x;
+			ameshvert.normal.y = anormal.y;
+			ameshvert.normal.z = anormal.z;
+		}
+		aprocessedmesh.verticies.push_back(ameshvert);
 
 	}
+	for (unsigned i1 = 0; i1 < amesh->mNumFaces; i1++)
+	{
+		aiFace face=amesh->mFaces[i1];
+		
+		for (unsigned i = 0; i < face.mNumIndices; i++)
+		{
+			aprocessedmesh.indicies.push_back(face.mIndices[i]);
+		}
+	}
+
 }

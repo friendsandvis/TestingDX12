@@ -1,7 +1,9 @@
 #pragma once
+#include"AssimpManager.h"
 #include"DXUtils.h"
 #include"DX12Buffer.h"
 #include"DXVertexManager.h"
+
 
 /*struct Vertex
 {
@@ -11,7 +13,14 @@
 	float U;
 	float V;
 };*/
-
+struct Vertex
+{
+	float X;
+	float Y;
+	float Z;
+	float U;
+	float V;
+};
 
 
 enum ModelDataUploadMode
@@ -54,6 +63,7 @@ class BasicModelManager
 public:
 	static void InitPlaneModel(ComPtr< ID3D12Device> creationdevice, Model& planemodel);
 	static void InitCubeModel(ComPtr< ID3D12Device> creationdevice, Model& cubemodel);
+	static void LoadModel(std::string modelfilepath);
 
 private:
 	static void InitCubeVerticiesV1(vector<VetexV1>& verticies);

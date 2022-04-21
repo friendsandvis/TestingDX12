@@ -1,23 +1,26 @@
 #pragma once
+#include<string.h>
+#include<vector>
 #include<assimp/Importer.hpp>
 #include<assimp/scene.h>
 #include<assimp/postprocess.h>
-#include<string.h>
-#include<vector>
-using namespace std;
+#include<dxmath/DirectXMath.h>
 
-struct Vertex
+using namespace std;
+using namespace DirectX;
+
+
+struct AssimpLoadedVertex
 {
-	float X;
-	float Y;
-	float Z;
-	float U;
-	float V;
+	XMFLOAT3 pos;
+	XMFLOAT2 uv;
+	XMFLOAT3 normal;
 };
 
 struct AssimpLoadedMesh
 {
-	vector<Vertex> verticies;
+	vector<AssimpLoadedVertex> verticies;
+	vector<unsigned> indicies;
 };
 struct AssimpLoadedModel
 {

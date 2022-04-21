@@ -238,11 +238,7 @@ void BasicModelManager::InitCubeModel(ComPtr< ID3D12Device> creationdevice, Mode
 	cubemodel.InitIndexBuffer(creationdevice,cubeindicies);
 	cubemodel.UploadModelDatatoBuffers();
 }
- void BasicModelManager::InitCubeVerticiesV1(vector<VetexV1>& verticies)
+void BasicModelManager::LoadModel(std::string modelfilepath)
 {
-
-}
- void BasicModelManager::InitCubeIndicies(vector<unsigned>& indicies)
-{
-
+	AssimpManager assimpmodel(modelfilepath);
 }
