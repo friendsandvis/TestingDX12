@@ -7,8 +7,13 @@
 AssimpManager::AssimpManager(std::string filename)
 {
 	Assimp::Importer animporter;
-	m_scene = animporter.ReadFile(filename, aiProcess_Triangulate);
-	assert(m_scene != nullptr);
+	m_scene = animporter.ReadFile(filename,0);
+	
+	if (m_scene == nullptr)
+	{
+		const char* errormsg = animporter.GetErrorString();
+		__debugbreak();
+	}
 	ProcessNode(m_scene->mRootNode);
 
 }

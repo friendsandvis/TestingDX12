@@ -158,26 +158,33 @@ void Model::InitIndexBuffer(ComPtr< ID3D12Device> creationdevice,vector<unsigned
 
 }
 
-void Model::Init(AssimpLoadedModel& assimpModel)
+void Model::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimpModel)
 {
-	assert(assimpModel.m_meshes.size() == 1);
-	AssimpLoadedMesh& amesh=assimpModel.m_meshes[0];
-	//form vector of verticies for local model
-	{
-		for (size_t i = 0; i < amesh.verticies.size(); i++)
-		{
-			const AssimpLoadedVertex& aprocessedvertex=amesh.verticies[i];
-			Vertex modelvert = {};
-			modelvert.X = aprocessedvertex.pos.x;
-			modelvert.Y = aprocessedvertex.pos.y;
-			modelvert.Z = aprocessedvertex.pos.z;
-			modelvert.U = aprocessedvertex.uv.x;
-			modelvert.V = aprocessedvertex.uv.y;
-		}
-	}
-	//form vector of indicies for local model
-	{
+	vector<Vertex> verticies;
+	vector<unsigned> indicies;
+	
+		AddMesh(verticies, indicies, assimpModel.m_meshes[0]);
+	InitVertexBuffer(creationdevice, verticies);
+	InitIndexBuffer(creationdevice, indicies);
+}
 
+void Model::AddMesh(vector<Vertex>& outverticies, vector<unsigned>& indicies, AssimpLoadedMesh& amesh)
+{
+	unsigned indexoffset = outverticies.size();
+	for (size_t i = 0; i < amesh.verticies.size(); i++)
+	{
+		const AssimpLoadedVertex& aprocessedvertex = amesh.verticies[i];
+		Vertex modelvert = {};
+		modelvert.X = aprocessedvertex.pos.x;
+		modelvert.Y = aprocessedvertex.pos.y;
+		modelvert.Z = aprocessedvertex.pos.z;
+		modelvert.U = aprocessedvertex.uv.x;
+		modelvert.V = aprocessedvertex.uv.y;
+		outverticies.push_back(modelvert);
+	}
+	for (size_t t = 0; t < amesh.indicies.size(); t++)
+	{
+		indicies.push_back(amesh.indicies[t] + indexoffset);
 	}
 }
 
@@ -261,7 +268,8 @@ void BasicModelManager::InitCubeModel(ComPtr< ID3D12Device> creationdevice, Mode
 	cubemodel.InitIndexBuffer(creationdevice,cubeindicies);
 	cubemodel.UploadModelDatatoBuffers();
 }
-void BasicModelManager::LoadModel(std::string modelfilepath)
+void BasicModelManager::LoadModel(ComPtr< ID3D12Device> creationdevice,std::string modelfilepath, Model& outmodel)
 {
 	AssimpManager assimpmodel(modelfilepath);
+	outmodel.Init(creationdevice,assimpmodel.GetProcessedModel());
 }

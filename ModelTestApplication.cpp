@@ -5,15 +5,18 @@
 
 ModelTestApplication::ModelTestApplication()
 	:m_planemodel(ModelDataUploadMode::COPY),
-	m_cubemodel(ModelDataUploadMode::COPY)
+	m_cubemodel(ModelDataUploadMode::COPY),
+	m_loadedmodel(ModelDataUploadMode::COPY)
 {
+	m_maincameracontroller.SetCameratoControl(&m_maincamera);
 }
 ModelTestApplication::~ModelTestApplication()
 {
+	
 }
 void ModelTestApplication::PreRenderUpdate()
 {
-	
+	m_maincameracontroller.Update();
 }
 
 void ModelTestApplication::Render()
@@ -31,9 +34,9 @@ void ModelTestApplication::Render()
 	m_primarycmdlist->ClearRenderTargetView(rtvhandle, clearvalue, 0, nullptr);
 	m_primarycmdlist->ClearDepthStencilView(dsvhandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	{
-		m_primarycmdlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		D3D12_INDEX_BUFFER_VIEW ibview=m_cubemodel.GetIBView();
-		D3D12_VERTEX_BUFFER_VIEW vbview = m_cubemodel.GetVBView();
+		m_primarycmdlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		D3D12_INDEX_BUFFER_VIEW ibview=m_loadedmodel.GetIBView();
+		D3D12_VERTEX_BUFFER_VIEW vbview = m_loadedmodel.GetVBView();
 		m_primarycmdlist->IASetVertexBuffers(0, 1, &vbview);
 		m_primarycmdlist->IASetIndexBuffer( &ibview);
 		
@@ -46,14 +49,14 @@ void ModelTestApplication::Render()
 		m_primarycmdlist->RSSetViewports(1, &aviewport);
 		m_primarycmdlist->RSSetScissorRects(1, &ascissorrect);
 	}
-	m_primarycmdlist->DrawIndexedInstanced(m_cubemodel.GetIndiciesCount(), 1, 0, 0, 0);
+	m_primarycmdlist->DrawIndexedInstanced(m_loadedmodel.GetIndiciesCount(), 1, 0, 0, 0);
 	DXASSERT(m_primarycmdlist->Close())
 	BasicRender();
 }
 
 void ModelTestApplication::InitExtras()
 {
-	BasicModelManager::LoadModel("models/cube.dae");
+	BasicModelManager::LoadModel(m_creationdevice,"models/cube.dae",m_loadedmodel);
 	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
 	m_maincamera.SetAspectRatio(aspectratio);
 	InitPSO();
@@ -61,9 +64,11 @@ void ModelTestApplication::InitExtras()
 	BasicModelManager::InitCubeModel(m_creationdevice, m_cubemodel);
 	m_planemodel.UploadModelDatatoBuffers();
 	m_cubemodel.UploadModelDatatoBuffers();
+	m_loadedmodel.UploadModelDatatoBuffers();
 
 	m_uploadcommandlist.Reset();
 	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
+	m_loadedmodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_cubemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	DXASSERT(m_uploadcommandlist->Close());
 }
@@ -123,17 +128,6 @@ void ModelTestApplication::InitPSO()
 void ModelTestApplication::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 
-	switch (uMsg)
-	{
-		
-	case WM_MOUSEWHEEL:
-	{
-		float wheeldelta =GET_WHEEL_DELTA_WPARAM(wParam)/30.0f;
-		float fovupdated=m_maincamera.GetFoV() - wheeldelta;
-		m_maincamera.SetFov(fovupdated);
-		
-	}
-	default:
-		break;
-	}
+	m_maincameracontroller.ProcessWindowProcEvent(hwnd, uMsg, wParam, lParam);
+	
 }

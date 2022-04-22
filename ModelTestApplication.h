@@ -5,6 +5,7 @@
 #include"DX12RootSignature.h"
 #include"AssetManager.h"
 #include"DXCamera.h"
+#include"CameraMovementManager.h"
 using namespace DirectX;
 class ModelTestApplication :public DX12ApplicationManagerBase
 {
@@ -23,5 +24,7 @@ private:
 	DX12RootSignature m_rootsignature;
 	Model m_planemodel;
 	Model m_cubemodel;
+	Model m_loadedmodel;
+	DXFPSCameraController m_maincameracontroller;
 	void InitPSO();
 };

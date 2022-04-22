@@ -30,6 +30,7 @@ struct AssimpLoadedModel
 class AssimpManager
 {
 public:
+	AssimpLoadedModel& GetProcessedModel() { return m_processedmodel; }
 	AssimpManager(std::string filename);
 	~AssimpManager();
 private:

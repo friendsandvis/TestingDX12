@@ -31,7 +31,7 @@ public:
 	
 	Model(ModelDataUploadMode uploadmode=NOCOPY);
 	~Model();
-	void Init(AssimpLoadedModel& assimpModel);
+	void Init(ComPtr< ID3D12Device> creationdevice,AssimpLoadedModel& assimpModel);
 	void InitVertexBuffer(ComPtr< ID3D12Device> creationdevice,vector<Vertex>& verticies);
 	void InitIndexBuffer(ComPtr< ID3D12Device> creationdevice,vector<unsigned>& indicies);
 	inline D3D12_INDEX_BUFFER_VIEW GetIBView() { return m_indexbufferview; }
@@ -51,6 +51,7 @@ private:
 	D3D12_INDEX_BUFFER_VIEW m_indexbufferview;
 	ModelDataUploadMode m_uploadmode;
 	VertexVersion m_vertexversionused;
+	void AddMesh(vector<Vertex>& outverticies, vector<unsigned>& indicies, AssimpLoadedMesh& ameshtoadd);
 };
 
 class BasicModelManager
@@ -58,7 +59,7 @@ class BasicModelManager
 public:
 	static void InitPlaneModel(ComPtr< ID3D12Device> creationdevice, Model& planemodel);
 	static void InitCubeModel(ComPtr< ID3D12Device> creationdevice, Model& cubemodel);
-	static void LoadModel(std::string modelfilepath);
+	static void LoadModel(ComPtr< ID3D12Device> creationdevice,std::string modelfilepath, Model& outmodel);
 
 private:
 	static void InitCubeVerticiesV1(vector<VetexV1>& verticies);
