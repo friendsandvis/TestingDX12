@@ -21,12 +21,19 @@ void RayTracingApplication::Render()
 {
 	m_primarycmdlist.Reset();
 	//set rtv
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
+	UINT currentbackbufferidx = m_swapchain.GetCurrentbackbufferIndex();
+
+		D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(currentbackbufferidx);
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
 	m_primarycmdlist->SetPipelineState(m_pso.GetPSO());
 	m_primarycmdlist->SetGraphicsRootSignature(m_rootsignature.GetRootSignature());
 	XMMATRIX mvp = m_maincamera.GetMVP();
 	m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvp, 0);
+	D3D12_RESOURCE_BARRIER barrier=m_swapchain.TransitionBackBuffer(currentbackbufferidx, D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET);
+	if (barrier.Transition.StateAfter != barrier.Transition.StateBefore)
+	{
+		m_primarycmdlist->ResourceBarrier(1, &barrier);
+	}
 	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, &dsvhandle);
 	float clearvalue[4] = { 1.0f,1.0f,1.0f,1.0f };
 	m_primarycmdlist->ClearRenderTargetView(rtvhandle, clearvalue, 0, nullptr);
@@ -48,6 +55,11 @@ void RayTracingApplication::Render()
 		m_primarycmdlist->RSSetScissorRects(1, &ascissorrect);
 	}
 	m_primarycmdlist->DrawIndexedInstanced(m_cubemodel.GetIndiciesCount(), 1, 0, 0, 0);
+	barrier= m_swapchain.TransitionBackBuffer(currentbackbufferidx, D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PRESENT);
+	if (barrier.Transition.StateAfter != barrier.Transition.StateBefore)
+	{
+		m_primarycmdlist->ResourceBarrier(1, &barrier);
+	}
 	DXASSERT(m_primarycmdlist->Close())
 		BasicRender();
 }
