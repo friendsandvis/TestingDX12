@@ -12,21 +12,21 @@ void DXVertexManager::BuildDefaultInputelementdesc(std::vector< D3D12_INPUT_ELEM
 		element1.InputSlot = 0;
 		element1.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
 		element1.AlignedByteOffset = 0;
-		element1.InstanceDataStepRate = 0;
-		element1.SemanticName = "POS";
-		element1.SemanticIndex = 0;
-		outinputelementdescs.push_back(element1);
+element1.InstanceDataStepRate = 0;
+element1.SemanticName = "POS";
+element1.SemanticIndex = 0;
+outinputelementdescs.push_back(element1);
 	}
 		{
-			D3D12_INPUT_ELEMENT_DESC element2 = {};
-			element2.Format = DXGI_FORMAT_R32G32_FLOAT;
-			element2.InputSlot = 0;
-			element2.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-			element2.AlignedByteOffset = 3* sizeof(float);
-			element2.InstanceDataStepRate = 0;
-			element2.SemanticName = "UV";
-			element2.SemanticIndex = 0;
-			outinputelementdescs.push_back(element2);
+		D3D12_INPUT_ELEMENT_DESC element2 = {};
+		element2.Format = DXGI_FORMAT_R32G32_FLOAT;
+		element2.InputSlot = 0;
+		element2.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+		element2.AlignedByteOffset = 3 * sizeof(float);
+		element2.InstanceDataStepRate = 0;
+		element2.SemanticName = "UV";
+		element2.SemanticIndex = 0;
+		outinputelementdescs.push_back(element2);
 		}
 	}
 	break;
@@ -96,4 +96,35 @@ void DXVertexManager::BuildDefaultInputelementdesc(std::vector< D3D12_INPUT_ELEM
 	default:
 		break;
 	}
+}
+
+unsigned DXVertexManager::GetVertexSize(VertexVersion vtype)
+{
+	switch (vtype)
+	{
+	case VERTEXVERSION0:
+		return(5 * sizeof(float)); break;
+	default:
+		return 0;
+	}
+}
+
+void DXVertexManager::RetriveRawVertexData(vector<float>& outverticiesrawdata, VertexBase* avertex)
+{
+	switch (avertex->m_vertversion)
+	{
+	case VERTEXVERSION0:
+	{
+		VetexV0* vert = static_cast<VetexV0*>(avertex);
+		outverticiesrawdata.push_back(vert->m_position.x);
+		outverticiesrawdata.push_back(vert->m_position.y);
+		outverticiesrawdata.push_back(vert->m_position.z);
+		outverticiesrawdata.push_back(vert->m_uv.x);
+		outverticiesrawdata.push_back(vert->m_uv.y);
+		break;
+	}
+	default:
+		break;
+	}
+
 }

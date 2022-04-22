@@ -32,7 +32,7 @@ public:
 	Model(ModelDataUploadMode uploadmode=NOCOPY);
 	~Model();
 	void Init(ComPtr< ID3D12Device> creationdevice,AssimpLoadedModel& assimpModel);
-	void InitVertexBuffer(ComPtr< ID3D12Device> creationdevice,vector<Vertex>& verticies);
+	void InitVertexBuffer(ComPtr< ID3D12Device> creationdevice,vector<VertexBase*>& verticies);
 	void InitIndexBuffer(ComPtr< ID3D12Device> creationdevice,vector<unsigned>& indicies);
 	inline D3D12_INDEX_BUFFER_VIEW GetIBView() { return m_indexbufferview; }
 	inline D3D12_VERTEX_BUFFER_VIEW GetVBView() { return m_vertexbufferview; }
@@ -40,18 +40,22 @@ public:
 	void UploadModelDatatoGPUBuffers(DX12Commandlist& copycmdlist);
 	inline size_t GetIndiciesCount() { return m_indicies.size(); }
 	inline ModelDataUploadMode GetUploadMode() { return m_uploadmode; }
-	inline VertexVersion GetVertexVersionUsed() { return m_vertexversionused; }
-	inline void SetVertexVersionUsed(VertexVersion vvused) { m_vertexversionused=vvused; }
+	inline VertexVersion GetVertexVersionUsed() { return m_vertexversion; }
+	inline void SetVertexVersionUsed(VertexVersion vvused) { m_vertexversion=vvused; }
 
 private:
 	DX12Buffer m_vertexbuffer, m_indexbuffer,m_vertexuploadbuffer,m_indexuploadbuffer;
-	vector<Vertex> m_verticies;
+	//verticies are all of a single specialized vertex type and they are all dynamically allocated.
+	VertexVersion m_vertexversion;
+	vector<VertexBase*> m_verticies;
+	//verticies laid down in the raw vertex data form(i.e. array of floats;this is needed because verticies can be of any specialized type hence cannot be copied directly to upload buffer.
+	vector<float> m_vertexdataraw;
 	vector<unsigned> m_indicies;
 	D3D12_VERTEX_BUFFER_VIEW m_vertexbufferview;
 	D3D12_INDEX_BUFFER_VIEW m_indexbufferview;
 	ModelDataUploadMode m_uploadmode;
-	VertexVersion m_vertexversionused;
 	void AddMesh(vector<Vertex>& outverticies, vector<unsigned>& indicies, AssimpLoadedMesh& ameshtoadd);
+	void BuildVertexRawData();
 };
 
 class BasicModelManager
@@ -62,7 +66,6 @@ public:
 	static void LoadModel(ComPtr< ID3D12Device> creationdevice,std::string modelfilepath, Model& outmodel);
 
 private:
-	static void InitCubeVerticiesV1(vector<VetexV1>& verticies);
-	static void InitCubeIndicies(vector<unsigned>& indicies);
+	static void GetPlaneVerticiesV0(vector<VertexBase*>& outverticies);
 };
 

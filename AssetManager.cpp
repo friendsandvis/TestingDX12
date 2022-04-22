@@ -1,14 +1,7 @@
 #include"AssetManager.h"
 #include"DX12CommandList.h"
 
-std::vector<Vertex> planeverticies =
-{
-	{-1.0f,1.0f,0.0f,0.0f,0.0f},	//0(left-top)
-	{-1.0f,-1.0f,0.0f,0.0f,1.0f},	//1(left-bottom)
-	{1.0f,-1.0f,0.0f,1.0f,1.0f},	//2(right-bottom)
-	{1.0f,1.0f,0.0f,1.0f,0.0f}	//3(right-top)
 
-};
 
 
 
@@ -55,18 +48,27 @@ std::vector<unsigned> planeindicies =
 
 Model::Model(ModelDataUploadMode uploadmode)
 	:m_uploadmode(uploadmode),
-	m_vertexversionused(VertexVersion::UNKNOWN)
+	m_vertexversion(UNKNOWN)
 {
 }
 
 Model::~Model()
 {
+	//verticies are dynamic allocations so delete
+	for (size_t i = 0; i < m_verticies.size(); i++)
+	{
+		if (m_verticies[i])
+		{
+			delete m_verticies[i];
+		}
+	}
 }
 
-void Model::InitVertexBuffer(ComPtr< ID3D12Device> creationdevice,vector<Vertex>& verticies)
+void Model::InitVertexBuffer(ComPtr< ID3D12Device> creationdevice, vector<VertexBase*>& verticies)
 {
 
 	m_verticies = verticies;
+	BuildVertexRawData();
 	DX12ResourceCreationProperties vbproperties;
 	vbproperties.resheapflags = D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE;
 	vbproperties.resinitialstate = D3D12_RESOURCE_STATE_GENERIC_READ;
@@ -80,7 +82,8 @@ void Model::InitVertexBuffer(ComPtr< ID3D12Device> creationdevice,vector<Vertex>
 	vbproperties.resdesc.DepthOrArraySize = 1;
 	vbproperties.resdesc.MipLevels = 1;
 	vbproperties.resdesc.Height = 1;
-	vbproperties.resdesc.Width = sizeof(verticies[0])*(UINT64)verticies.size();
+	unsigned vertexsize = DXVertexManager::GetVertexSize(m_vertexversion);
+	vbproperties.resdesc.Width = vertexsize *(UINT64)verticies.size();
 	vbproperties.resdesc.Format = DXGI_FORMAT_UNKNOWN;
 	vbproperties.resdesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 	vbproperties.resdesc.SampleDesc.Count = 1;
@@ -104,7 +107,7 @@ void Model::InitVertexBuffer(ComPtr< ID3D12Device> creationdevice,vector<Vertex>
 		m_vertexbufferview.BufferLocation = m_vertexuploadbuffer.GetResource()->GetGPUVirtualAddress();
 	}
 	m_vertexbufferview.SizeInBytes = m_vertexuploadbuffer.GetSize();
-	m_vertexbufferview.StrideInBytes=sizeof(Vertex);
+	m_vertexbufferview.StrideInBytes=DXVertexManager::GetVertexSize(m_vertexversion);
 
 	
 
@@ -160,12 +163,12 @@ void Model::InitIndexBuffer(ComPtr< ID3D12Device> creationdevice,vector<unsigned
 
 void Model::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimpModel)
 {
-	vector<Vertex> verticies;
+	/*vector<Vertex> verticies;
 	vector<unsigned> indicies;
 	
 		AddMesh(verticies, indicies, assimpModel.m_meshes[0]);
 	InitVertexBuffer(creationdevice, verticies);
-	InitIndexBuffer(creationdevice, indicies);
+	InitIndexBuffer(creationdevice, indicies);*/
 }
 
 void Model::AddMesh(vector<Vertex>& outverticies, vector<unsigned>& indicies, AssimpLoadedMesh& amesh)
@@ -188,6 +191,14 @@ void Model::AddMesh(vector<Vertex>& outverticies, vector<unsigned>& indicies, As
 	}
 }
 
+void Model::BuildVertexRawData()
+{
+	for (size_t i = 0; i < m_verticies.size(); i++)
+	{
+		DXVertexManager::RetriveRawVertexData(m_vertexdataraw, m_verticies[i]);
+	}
+}
+
 
 
 void Model::UploadModelDatatoBuffers()
@@ -201,7 +212,7 @@ void Model::UploadModelDatatoBuffers()
 	vbmapparams.range.End = 0;
 
 	void* vbmapped = m_vertexuploadbuffer.Map(vbmapparams);
-	memcpy(vbmapped, m_verticies.data(), m_vertexuploadbuffer.GetSize());
+	memcpy(vbmapped, m_vertexdataraw.data(), m_vertexuploadbuffer.GetSize());
 	//written to full range
 	vbmapparams.range.End = m_vertexuploadbuffer.GetSize();
 	m_vertexuploadbuffer.UnMap(vbmapparams);
@@ -256,20 +267,46 @@ void Model::UploadModelDatatoGPUBuffers(DX12Commandlist& copycmdlist)
 
 void BasicModelManager::InitPlaneModel(ComPtr< ID3D12Device> creationdevice, Model& planemodel)
 {
-	
-	planemodel.InitVertexBuffer(creationdevice, planeverticies);
+	vector<VertexBase*> verticies;
+	GetPlaneVerticiesV0(verticies);
+	planemodel.SetVertexVersionUsed(VertexVersion::VERTEXVERSION0);
+	planemodel.InitVertexBuffer(creationdevice, verticies);
 	planemodel.InitIndexBuffer(creationdevice, planeindicies);
 	planemodel.UploadModelDatatoBuffers();
 }
 void BasicModelManager::InitCubeModel(ComPtr< ID3D12Device> creationdevice, Model& cubemodel)
 {
 
-	cubemodel.InitVertexBuffer(creationdevice, cubeverticices);
+	/*cubemodel.InitVertexBuffer(creationdevice, cubeverticices);
 	cubemodel.InitIndexBuffer(creationdevice,cubeindicies);
-	cubemodel.UploadModelDatatoBuffers();
+	cubemodel.UploadModelDatatoBuffers();*/
 }
 void BasicModelManager::LoadModel(ComPtr< ID3D12Device> creationdevice,std::string modelfilepath, Model& outmodel)
 {
 	AssimpManager assimpmodel(modelfilepath);
 	outmodel.Init(creationdevice,assimpmodel.GetProcessedModel());
+}
+
+void BasicModelManager::GetPlaneVerticiesV0(vector<VertexBase*>& outverticies)
+{
+	//0(left-top)
+	VetexV0* vert = new VetexV0();
+	vert->m_position = { -1.0f, 1.0f, 0.0f };
+	vert->m_uv = { 0.0f,0.0f };
+	outverticies.push_back(vert);
+	//1(left-bottom)
+	vert = new VetexV0();
+	vert->m_position = { -1.0f,-1.0f,0.0f };
+	vert->m_uv = { 0.0f,1.0f };
+	outverticies.push_back(vert);
+	//2(right-bottom)
+	vert = new VetexV0();
+	vert->m_position = { 1.0f,-1.0f,0.0f };
+	vert->m_uv = { 1.0f,1.0f };
+	outverticies.push_back(vert);
+	//3(right-top)
+	vert = new VetexV0();
+	vert->m_position = { 1.0f,1.0f,0.0f };
+	vert->m_uv = { 1.0f,0.0f };
+	outverticies.push_back(vert);
 }
