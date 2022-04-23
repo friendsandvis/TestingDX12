@@ -10,9 +10,12 @@ void DX12Commandlist::Init(D3D12_COMMAND_LIST_TYPE type,ComPtr< ID3D12Device> cr
 		m_isclosed = true;
 }
 
-void DX12Commandlist::SetName(LPCWSTR name)
+void DX12Commandlist::SetName(wstring name)
 {
-	DXASSERT(m_list->SetName(name))
+	wstring listname = name + L"List";
+	wstring allocatorname = name + L"Allocator";
+	DXASSERT(m_list->SetName(listname.c_str()))
+		DXASSERT(m_allocator->SetName(allocatorname.c_str()))
 }
 
 void DX12Commandlist::Reset(bool closeafterreset,bool resetallocator)

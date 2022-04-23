@@ -6,7 +6,7 @@ class DX12Commandlist
 public:
 	DX12Commandlist();
 	~DX12Commandlist();
-	void SetName(LPCWSTR name);
+	void SetName(wstring name);
 	void Init(D3D12_COMMAND_LIST_TYPE type,ComPtr< ID3D12Device> creationdevice);
 	void Reset(bool closeafterreset=false, bool resetallocator=true);
 	inline ID3D12GraphicsCommandList* GetcmdList() { return m_list.Get(); }
