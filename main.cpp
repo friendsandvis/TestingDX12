@@ -7,7 +7,7 @@
 //#include"ModelTestApplication.h"
 //#include"MipTestApplication.h"
 //#include"DX12ComputeApplication.h"
-#include"RayTracingTestApplication.h"
+//#include"RayTracingTestApplication.h"
 #define ENABLEDEBUGLAYER true
 
 typedef HRESULT(__stdcall* fPtr)(const IID&, void**);
@@ -17,9 +17,9 @@ int main()
 {
 	//DX12ReservedResourceApplication appmanager;
 	//DX12ComputeApplication appmanager;
-	//DX12SamplerfeedbackApplication appmanager;
+	DX12SamplerfeedbackApplication appmanager;
 	//ModelTestApplication appmanager;
-	RayTracingApplication appmanager;
+	//RayTracingApplication appmanager;
 	//MipTestApplication appmanager;
 	//TexturedQuadApplication appmanager;
 	//SkyboxTestApplication appmanager;

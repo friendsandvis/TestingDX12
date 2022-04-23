@@ -36,6 +36,7 @@ void DX12SamplerfeedbackApplication::InitExtras()
 	//init pso
 	InitBasicPSO();
 	m_reservedresuploadcmdlist.Init(D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
+	m_reservedresuploadcmdlist.SetName(L"ReservedResUpload");
 
 	//init desc heaps
 	D3D12_DESCRIPTOR_HEAP_DESC heapdesc = {};
