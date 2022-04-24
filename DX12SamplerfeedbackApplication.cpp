@@ -4,7 +4,8 @@
 
 DX12SamplerfeedbackApplication::DX12SamplerfeedbackApplication()
 	:m_planemodel(ModelDataUploadMode::COPY),
-	m_sfsupported(false)
+	m_sfsupported(false),
+	m_reservedresuploadcmdlist(m_reservedresuploadcmdlists[0])
 {
 }
 
@@ -35,8 +36,12 @@ void DX12SamplerfeedbackApplication::InitExtras()
 
 	//init pso
 	InitBasicPSO();
-	m_reservedresuploadcmdlist.Init(D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
-	m_reservedresuploadcmdlist.SetName(L"ReservedResUpload");
+	for (unsigned i = 0; i < NUMCOMMANDLISTSTOCK; i++)
+	{
+		m_reservedresuploadcmdlists[i].Init(D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
+		m_reservedresuploadcmdlists[i].SetName(L"ReservedResUploadcmd");
+	}
+
 
 	//init desc heaps
 	D3D12_DESCRIPTOR_HEAP_DESC heapdesc = {};
@@ -107,7 +112,7 @@ void DX12SamplerfeedbackApplication::InitExtras()
 		}
 	}
 	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
-	m_redtexture.UploadTexture(m_uploadcommandlist);
+	//m_redtexture.UploadTexture(m_uploadcommandlist);
 	DXASSERT(m_uploadcommandlist->Close())
 
 }
@@ -376,6 +381,7 @@ void DX12SamplerfeedbackApplication::PostRenderUpdate()
 	//process the feedback data after renderend(i.e. feedback written by draw calls)
 	m_redtexfeedbackunit.ProcessReadbackdata();
 	m_redtexfeedbackunit.UpdateMemoryMappings(m_mainqueue.GetQueue(), m_creationdevice);
+	m_reservedresuploadcmdlist = m_reservedresuploadcmdlists[m_cmdlistidxinuse];
 	m_reservedresuploadcmdlist.Reset();
 	//m_redtexfeedbackunit.AllClearReservedResourceMip(m_reservedresuploadcmdlist);
 	m_redtexfeedbackunit.UploadTextureData(m_creationdevice, m_reservedresuploadcmdlist);

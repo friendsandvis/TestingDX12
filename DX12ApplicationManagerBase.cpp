@@ -3,6 +3,9 @@
 
 
 DX12ApplicationManagerBase::DX12ApplicationManagerBase()
+	:m_cmdlistidxinuse(0),
+	m_primarycmdlist(m_primarycmdlists[0]),
+	m_uploadcommandlist(m_uploadcommandlists[0])
 {
 }
 
@@ -91,10 +94,20 @@ void DX12ApplicationManagerBase::InitBase(ComPtr< ID3D12Device> creationdevice)
 	m_syncunitprime.Init(m_creationdevice, 0);
 
 	//commandlist init
-	m_primarycmdlist.Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
-	m_primarycmdlist.SetName(L"primarycmdlist");
-	m_uploadcommandlist.Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
-	m_uploadcommandlist.SetName(L"uploadcmdlist");
+	for (unsigned i = 0; i < NUMCOMMANDLISTSTOCK; i++)
+	{
+		m_primarycmdlists[i].Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
+		m_primarycmdlists[i].SetName(L"primarycmd");
+		
+		
+		m_uploadcommandlists[i].Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
+		m_uploadcommandlists[i].SetName(L"uploadcmd");
+		m_uploadcommandlist = m_uploadcommandlists[0];
+		
+	}
+	m_primarycmdlist = m_primarycmdlists[0];
+	m_uploadcommandlist = m_uploadcommandlists[0];
+	m_cmdlistidxinuse = 0;
 
 	//dsv heap
 	D3D12_DESCRIPTOR_HEAP_DESC dsvheapdesc = {};
@@ -121,5 +134,8 @@ void DX12ApplicationManagerBase::BasicRender()
 	DXASSERT(m_swapchain.GetSwapchain()->Present(0, 0))
 		
 	m_swapchain.UpdatebackbufferIndex();
+	m_cmdlistidxinuse = (m_cmdlistidxinuse + 1) % NUMCOMMANDLISTSTOCK;
+	m_primarycmdlist = m_primarycmdlists[m_cmdlistidxinuse];
+	m_uploadcommandlist = m_uploadcommandlists[m_cmdlistidxinuse];
 }
 	

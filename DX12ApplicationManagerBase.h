@@ -7,6 +7,7 @@
 #include"DX12Resource.h"
 #include"WindowProcHook.h"
 #include"DXCamera.h"
+#define NUMCOMMANDLISTSTOCK 2
 
 // interface for all dx12 applicationmanagers.Could help in creaing  speciialized dx12 applications
 class DX12ApplicationManagerBase:public WindowProcHook
@@ -39,7 +40,9 @@ protected:
 	DX12CommandQueue m_mainqueue;
 
 	// base app has 2 commandlists(1 for general render other for upload before render
-	DX12Commandlist m_primarycmdlist, m_uploadcommandlist;
+	DX12Commandlist& m_primarycmdlist, m_uploadcommandlist;
+	DX12Commandlist m_primarycmdlists[NUMCOMMANDLISTSTOCK], m_uploadcommandlists[NUMCOMMANDLISTSTOCK];
+	unsigned m_cmdlistidxinuse;
 
 	SyncronizationUnit m_syncunitprime;
 	DX12Swapchain m_swapchain;

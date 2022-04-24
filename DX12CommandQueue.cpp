@@ -1,5 +1,5 @@
 #include"DX12CommandQueue.h"
-#define USESPINLOCKFORFENCEWAIT 0
+#define USESPINLOCKFORFENCEWAIT 1
 
 DX12CommandQueue::DX12CommandQueue()
 	
