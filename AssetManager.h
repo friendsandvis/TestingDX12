@@ -67,5 +67,6 @@ public:
 
 private:
 	static void GetPlaneVerticiesV0(vector<VertexBase*>& outverticies);
+	static void GetCubeVerticiesV0(vector<VertexBase*>& outverticies);
 };
 

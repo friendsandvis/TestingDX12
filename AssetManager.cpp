@@ -276,10 +276,12 @@ void BasicModelManager::InitPlaneModel(ComPtr< ID3D12Device> creationdevice, Mod
 }
 void BasicModelManager::InitCubeModel(ComPtr< ID3D12Device> creationdevice, Model& cubemodel)
 {
-
-	/*cubemodel.InitVertexBuffer(creationdevice, cubeverticices);
+	vector<VertexBase*> verticies;
+	GetCubeVerticiesV0(verticies);
+	cubemodel.SetVertexVersionUsed(VERTEXVERSION0);
+	cubemodel.InitVertexBuffer(creationdevice, verticies);
 	cubemodel.InitIndexBuffer(creationdevice,cubeindicies);
-	cubemodel.UploadModelDatatoBuffers();*/
+	cubemodel.UploadModelDatatoBuffers();
 }
 void BasicModelManager::LoadModel(ComPtr< ID3D12Device> creationdevice,std::string modelfilepath, Model& outmodel)
 {
@@ -308,5 +310,51 @@ void BasicModelManager::GetPlaneVerticiesV0(vector<VertexBase*>& outverticies)
 	vert = new VetexV0();
 	vert->m_position = { 1.0f,1.0f,0.0f };
 	vert->m_uv = { 1.0f,0.0f };
+	outverticies.push_back(vert);
+}
+
+void BasicModelManager::GetCubeVerticiesV0(vector<VertexBase*>& outverticies)
+{
+	
+
+	//0
+	VetexV0* vert = new VetexV0();
+	vert->m_position = { -1.0f, -1.0f, -1.0f };
+	vert->m_uv = { 0.0,0.0f };
+	outverticies.push_back(vert);
+	//1
+	 vert = new VetexV0();
+	vert->m_position = { -1.0f,  1.0f, -1.0f };
+	vert->m_uv = { 0.0,0.0f };
+	outverticies.push_back(vert);
+	//2
+	 vert = new VetexV0();
+	vert->m_position = { 1.0f,  1.0f, -1.0f };
+	vert->m_uv = { 0.0,0.0f };
+	outverticies.push_back(vert);
+	//3
+	 vert = new VetexV0();
+	vert->m_position = { 1.0f, -1.0f, -1.0f };
+	vert->m_uv = { 0.0,0.0f };
+	outverticies.push_back(vert);
+	//4
+	 vert = new VetexV0();
+	vert->m_position = { -1.0f,-1.0f, 1.0f };
+	vert->m_uv = { 0.0,0.0f };
+	outverticies.push_back(vert);
+	//5
+	 vert = new VetexV0();
+	vert->m_position = { -1.0f, 1.0f, 1.0f };
+	vert->m_uv = { 0.0,0.0f };
+	outverticies.push_back(vert);
+	//6
+	vert = new VetexV0();
+	vert->m_position = { 1.0f, 1.0f, 1.0f };
+	vert->m_uv = { 0.0,0.0f };
+	outverticies.push_back(vert);
+	//7
+	vert = new VetexV0();
+	vert->m_position = { 1.0f,-1.0f, 1.0f };
+	vert->m_uv = { 0.0,0.0f };
 	outverticies.push_back(vert);
 }
