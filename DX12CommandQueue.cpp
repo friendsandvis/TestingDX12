@@ -1,5 +1,5 @@
 #include"DX12CommandQueue.h"
-#define USESPINLOCKFORFENCEWAIT 1
+#define USESPINLOCKFORFENCEWAIT 0
 
 DX12CommandQueue::DX12CommandQueue()
 	
@@ -35,7 +35,7 @@ void SyncronizationUnit::Init(ComPtr<ID3D12Device> creationdevice, UINT64 initva
 	m_currentvalue = initvalue;
 	m_expectedvalue = initvalue;
 	DXASSERT(creationdevice->CreateFence(m_currentvalue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_fence.GetAddressOf())))
-		m_event=CreateEvent(NULL, TRUE, FALSE, NULL);
+		m_event=CreateEvent(NULL,FALSE, FALSE, NULL);
 	assert(m_event != NULL);
 }
 
