@@ -107,13 +107,22 @@ void DX12FeedBackUnit::Readback(ComPtr<ID3D12GraphicsCommandList1> commandlist)
 	m_feedbacktex.Readback(commandlist, &m_feedbackreadbackbuffer);
 	//next transcode in a texture the feedback data
 	m_feedbacktex.Readback(commandlist, &m_feedbackresolvedtex);
+	D3D12_RESOURCE_BARRIER barrier = {};
 	//after transcoding in a texture copy it to the residency map as well for furthur processing of residency map.
-	D3D12_RESOURCE_BARRIER barrier=m_feedbackresolvedtex.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_SOURCE);
-	if (DXUtils::IsBarrierSafeToExecute(barrier))
+	if (m_feedbackresolvedtex.GetCurrentResourceState() != D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_SOURCE)
 	{
+		D3D12_RESOURCE_BARRIER barrier = m_feedbackresolvedtex.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_SOURCE);
 		commandlist->ResourceBarrier(1, &barrier);
 	}
-	barrier = m_residencymap.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST);
+	
+	
+		
+	
+	if (m_residencymap.GetCurrentResourceState() != D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST)
+	{
+		barrier = m_residencymap.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST);
+		commandlist->ResourceBarrier(1, &barrier);
+	}
 
 	commandlist->CopyResource(m_residencymap.GetResource().Get(), m_feedbackresolvedtex.GetResource().Get());
 }
