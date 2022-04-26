@@ -278,6 +278,13 @@ void DX12SamplerfeedbackApplication::InitBasicPSO()
 
 	m_basicpso.Init(m_creationdevice, basicpsodata);
 }
+void DX12SamplerfeedbackApplication::InitOverlayPSO()
+{
+	PSOInitData overlaypsodata;
+	DX12PSO::DefaultInitPSOData(overlaypsodata);
+	overlaypsodata.type = PSOType::GRAPHICS;
+}
+
 
 void DX12SamplerfeedbackApplication::PreRenderUpdate()
 {}

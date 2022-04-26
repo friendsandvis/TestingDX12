@@ -22,7 +22,7 @@ protected:
 	void InitExtras()override;
 
 private:
-	DX12PSO m_basicpso;
+	DX12PSO m_basicpso,m_overlaypso;
 	ComPtr<ID3DBlob> m_emptyrootsignatureblob, m_rootsignatureerrors;
 	ComPtr<ID3D12RootSignature> m_emptyrootsignature;
 	Model m_planemodel;
@@ -38,6 +38,7 @@ private:
 	
 
 	void InitBasicPSO();
+	void InitOverlayPSO();
 
 };
 
