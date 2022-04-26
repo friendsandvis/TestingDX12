@@ -22,11 +22,11 @@ DXCamera::~DXCamera()
 {
 }
 
-XMMATRIX DXCamera::GetMVP()
+XMMATRIX DXCamera::GetMVP(bool ortho)
 {
 	//update view matrix & projection matrix first
 	GetView();
-	GetProjection();
+	GetProjection(ortho);
 	XMMATRIX mvp = XMMatrixMultiply(m_model,m_view);
 	mvp = XMMatrixMultiply(mvp, m_projection);
 	return mvp;
@@ -41,12 +41,17 @@ XMMATRIX DXCamera::GetView(bool update)
 	return m_view;
 }
 
-XMMATRIX DXCamera::GetProjection(bool update)
+XMMATRIX DXCamera::GetProjection(bool ortho)
 {
 	assert(m_aspectratio != 0.0f);
-	if (update)
+	if (!ortho)
 	{
 		 m_projection= XMMatrixPerspectiveFovLH(XMConvertToRadians(m_fovdegree), m_aspectratio, m_near, m_far);
+		
+	}
+	else
+	{
+		m_projection = XMMatrixOrthographicLH(m_viewwidth, m_viewheight, m_near, m_far);
 	}
 	return m_projection;
 }
