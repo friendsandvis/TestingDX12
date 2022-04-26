@@ -91,6 +91,9 @@ private:
 	SamplerFeedbackTexture m_feedbacktex;
 	DX12Buffer m_feedbackreadbackbuffer;
 	DX12TextureSimple m_feedbackresolvedtex;
+	//residency map acts for holding lodclamp value for paired reserved texture.
+	DX12TextureSimple m_residencymap;
+	bool m_residencymapisuninitialized;
 	
 	
 	DX12ReservedResourceMemoryManager m_reservedresmemorymanager;

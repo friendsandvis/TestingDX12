@@ -65,6 +65,10 @@ void DX12FeedBackUnit::Init(ComPtr<ID3D12Device8> creationdevice, samplerFeedbac
 		//init feedback resolve tex as well
 		m_feedbackresolvedtex.Init(creationdevice1, readbackresolvetexprops, ResourceCreationMode::COMMITED);
 		m_feedbackresolvedtex.SetName(L"ReadbackresolveTex");
+
+		//init residency map it is similar in properties to resolved feedback texture;in here it's exactly same in props.
+		m_residencymap.Init(creationdevice, readbackresolvetexprops, ResourceCreationMode::COMMITED);
+		m_residencymap.SetName(L"ResidencyMap");
 	}
 
 	//init physical memory manager
@@ -103,6 +107,15 @@ void DX12FeedBackUnit::Readback(ComPtr<ID3D12GraphicsCommandList1> commandlist)
 	m_feedbacktex.Readback(commandlist, &m_feedbackreadbackbuffer);
 	//next transcode in a texture the feedback data
 	m_feedbacktex.Readback(commandlist, &m_feedbackresolvedtex);
+	//after transcoding in a texture copy it to the residency map as well for furthur processing of residency map.
+	D3D12_RESOURCE_BARRIER barrier=m_feedbackresolvedtex.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_SOURCE);
+	if (DXUtils::IsBarrierSafeToExecute(barrier))
+	{
+		commandlist->ResourceBarrier(1, &barrier);
+	}
+	barrier = m_residencymap.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST);
+
+	commandlist->CopyResource(m_residencymap.GetResource().Get(), m_feedbackresolvedtex.GetResource().Get());
 }
 
 void DX12FeedBackUnit::ProcessReadbackdata()

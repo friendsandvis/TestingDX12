@@ -18,5 +18,15 @@ using namespace Microsoft::WRL;
 using namespace std;
 #define DXASSERT(EXP)	{HRESULT res = EXP; assert(res == S_OK);}
 
+//class to hold frequently used and ease of life functions
+class DXUtils
+{
+public:
+	DXUtils();
+	~DXUtils();
+	static bool IsBarrierSafeToExecute(const D3D12_RESOURCE_BARRIER barrier);
+private:
+
+};
 
 
