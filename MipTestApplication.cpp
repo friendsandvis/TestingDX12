@@ -60,7 +60,7 @@ void MipTestApplication::Render()
 void MipTestApplication::InitExtras()
 {
 	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
-	m_maincamera.SetAspectRatio(aspectratio);
+	
 	InitPSO();
 	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
 	m_planemodel.UploadModelDatatoBuffers();

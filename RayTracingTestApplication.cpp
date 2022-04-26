@@ -68,7 +68,7 @@ void RayTracingApplication::InitExtras()
 {
 
 	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
-	m_maincamera.SetAspectRatio(aspectratio);
+	
 	InitPSO();
 
 	BasicModelManager::InitCubeModel(m_creationdevice, m_cubemodel);
