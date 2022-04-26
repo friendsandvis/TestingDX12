@@ -55,6 +55,9 @@ void DX12FeedBackUnit::Init(ComPtr<ID3D12Device8> creationdevice, samplerFeedbac
 	readbackbufferproperties.resdesc.Width = m_feedbacktex.GetRequiredBufferSizeForTranscodeing();
 	m_feedbackreadbackbuffer.Init(creationdevice1, readbackbufferproperties, ResourceCreationMode::COMMITED);
 	m_feedbackreadbackbuffer.SetName(L"ReadbackresolveBuffer");
+	//residency map intermidate buffer props are supposed  to be same as readback buffer for now.
+	intermidiateresidencymapbuffer.Init(creationdevice1, readbackbufferproperties, ResourceCreationMode::COMMITED);
+	intermidiateresidencymapbuffer.SetName(L"ResidencymapIntermidiateBuffer");
 	{
 		DX12ResourceCreationProperties readbackresolvetexprops;
 		DX12TextureSimple::InitResourceCreationProperties(readbackresolvetexprops);
@@ -125,6 +128,7 @@ void DX12FeedBackUnit::Readback(ComPtr<ID3D12GraphicsCommandList1> commandlist)
 	}
 
 	commandlist->CopyResource(m_residencymap.GetResource().Get(), m_feedbackresolvedtex.GetResource().Get());
+	
 }
 
 void DX12FeedBackUnit::ProcessReadbackdata()

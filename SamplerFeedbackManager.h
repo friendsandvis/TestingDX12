@@ -88,8 +88,9 @@ private:
 	void TryUpdateLODClamp_MipLoaded(unsigned loadedlodidx);
 	//ment to verify/find/set the correct lodclamp value for reserved res texture based on the residency of mips.(tipically used after updating memory mappings.
 	void VerifyLodClamp();
+	//copy the resovedfeedbacktextureto an intermidiate buffer used to process the readback texture datsa before furthur using it(for residency map)
 	SamplerFeedbackTexture m_feedbacktex;
-	DX12Buffer m_feedbackreadbackbuffer;
+	DX12Buffer m_feedbackreadbackbuffer,intermidiateresidencymapbuffer;
 	DX12TextureSimple m_feedbackresolvedtex;
 	//residency map acts for holding lodclamp value for paired reserved texture.
 	DX12TextureSimple m_residencymap;
@@ -103,6 +104,7 @@ private:
 	DX12DESCHEAP m_uavheapupload, m_uavheap;
 	//lod clamp value is used to clamp the mip level access of the managed reserved resource texture to prevent it from accessing non resident mips.
 	unsigned m_lodclampvalue=0;
+	
 	
 	
 	
