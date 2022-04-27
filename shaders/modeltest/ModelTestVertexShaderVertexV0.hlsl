@@ -1,7 +1,7 @@
 struct VSIn
 {
     float3 vpos:POS;
-	float3 normal:NORMAL;
+	float3 vcol:POSCOL;
 };
 
 struct VSConstants
@@ -14,7 +14,7 @@ ConstantBuffer<VSConstants> vertexconsts:register(b0);
 struct VSOut
 {
     float4 pos : SV_Position;
-	float3 normal: NORM;
+	float3 col: COL;
 };
 
 VSOut main(VSIn input)
@@ -24,7 +24,7 @@ VSOut main(VSIn input)
 		
 		
 		output.pos =mul(vertexconsts.mvp,float4(input.vpos,1.0f));
-		output.normal=input.normal;
+		output.col=input.vcol;
 
     return output;
 }

@@ -104,6 +104,8 @@ unsigned DXVertexManager::GetVertexSize(VertexVersion vtype)
 	{
 	case VERTEXVERSION0:
 		return(5 * sizeof(float)); break;
+	case VERTEXVERSION2:
+		return(6 * sizeof(float)); break;
 	default:
 		return 0;
 	}
@@ -121,6 +123,17 @@ void DXVertexManager::RetriveRawVertexData(vector<float>& outverticiesrawdata, V
 		outverticiesrawdata.push_back(vert->m_position.z);
 		outverticiesrawdata.push_back(vert->m_uv.x);
 		outverticiesrawdata.push_back(vert->m_uv.y);
+		break;
+	}
+	case VERTEXVERSION2:
+	{
+		VetexV2* vert = static_cast<VetexV2*>(avertex);
+		outverticiesrawdata.push_back(vert->m_position.x);
+		outverticiesrawdata.push_back(vert->m_position.y);
+		outverticiesrawdata.push_back(vert->m_position.z);
+		outverticiesrawdata.push_back(vert->m_normal.x);
+		outverticiesrawdata.push_back(vert->m_normal.y);
+		outverticiesrawdata.push_back(vert->m_normal.z);
 		break;
 	}
 	default:

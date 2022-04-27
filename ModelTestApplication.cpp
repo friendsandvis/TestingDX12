@@ -56,7 +56,7 @@ void ModelTestApplication::Render()
 
 void ModelTestApplication::InitExtras()
 {
-	BasicModelManager::LoadModel(m_creationdevice,"models/cube.dae",m_loadedmodel,VERTEXVERSION0);
+	BasicModelManager::LoadModel(m_creationdevice,"models/cube.dae",m_loadedmodel,VERTEXVERSION2);
 	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
 	
 	InitPSO();
@@ -110,11 +110,11 @@ void ModelTestApplication::InitPSO()
 		inputelements[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
 		inputelements[0].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
 		inputelements[0].InputSlot = 0;
-		inputelements[1].SemanticName = "POSCOL";
+		inputelements[1].SemanticName = "NORMAL";
 		inputelements[1].Format = DXGI_FORMAT_R32G32B32_FLOAT;
 		inputelements[1].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
 		inputelements[1].InputSlot = 0;
-		inputelements[1].AlignedByteOffset = sizeof(float)*3;//after three floats is colour
+		inputelements[1].AlignedByteOffset = sizeof(float)*3;//after three floats is normal
 		
 		psoinitdata.psodesc.graphicspsodesc.InputLayout.NumElements = 2;
 		psoinitdata.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = inputelements;
