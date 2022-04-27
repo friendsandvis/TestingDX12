@@ -62,14 +62,11 @@ class VetexV2 :public VertexBase
 {
 public:
 	XMFLOAT3 m_position;
-	XMFLOAT3 m_vertexcolour;
-	XMFLOAT2 m_uv;
-	unsigned GetSize() { return (sizeof(float) * 8); }
+	XMFLOAT3 m_normal;
 	VetexV2()
 	{
 		m_vertversion = VertexVersion::VERTEXVERSION2;
 	}
-	void Set(XMFLOAT3 pos, XMFLOAT3 col, XMFLOAT2 uv) { m_position = pos; m_vertexcolour = col; m_uv = uv; }
 };
 
 

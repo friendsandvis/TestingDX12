@@ -56,7 +56,7 @@ void ModelTestApplication::Render()
 
 void ModelTestApplication::InitExtras()
 {
-	BasicModelManager::LoadModel(m_creationdevice,"models/cube.dae",m_loadedmodel);
+	BasicModelManager::LoadModel(m_creationdevice,"models/cube.dae",m_loadedmodel,VERTEXVERSION0);
 	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
 	
 	InitPSO();

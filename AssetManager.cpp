@@ -161,35 +161,52 @@ void Model::InitIndexBuffer(ComPtr< ID3D12Device> creationdevice,vector<unsigned
 
 }
 
-void Model::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimpModel)
+void Model::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimpModel, VertexVersion modelvertexversion)
 {
-	/*vector<Vertex> verticies;
-	vector<unsigned> indicies;
-	
-		AddMesh(verticies, indicies, assimpModel.m_meshes[0]);
+	SetVertexVersionUsed(modelvertexversion);
+	vector<VertexBase*> verticies;
+	GetVertexArray(verticies, assimpModel.m_meshes[0], modelvertexversion);
+	//currently taking in first mesh alone
+	InitIndexBuffer(creationdevice, assimpModel.m_meshes[0].indicies);
 	InitVertexBuffer(creationdevice, verticies);
-	InitIndexBuffer(creationdevice, indicies);*/
+
 }
 
-void Model::AddMesh(vector<Vertex>& outverticies, vector<unsigned>& indicies, AssimpLoadedMesh& amesh)
+void Model::GetVertexArray(vector<VertexBase*>& outverticies, AssimpLoadedMesh& ameshtoadd, VertexVersion vertversion)
 {
 	unsigned indexoffset = outverticies.size();
-	for (size_t i = 0; i < amesh.verticies.size(); i++)
+	for (size_t i = 0; i < ameshtoadd.verticies.size(); i++)
 	{
-		const AssimpLoadedVertex& aprocessedvertex = amesh.verticies[i];
-		Vertex modelvert = {};
-		modelvert.X = aprocessedvertex.pos.x;
-		modelvert.Y = aprocessedvertex.pos.y;
-		modelvert.Z = aprocessedvertex.pos.z;
-		modelvert.U = aprocessedvertex.uv.x;
-		modelvert.V = aprocessedvertex.uv.y;
-		outverticies.push_back(modelvert);
+
+		const AssimpLoadedVertex& aprocessedvertex = ameshtoadd.verticies[i];
+		switch (vertversion)
+		{
+		case VERTEXVERSION0:
+		{VetexV0* vert = new VetexV0();
+		vert->m_position.x = aprocessedvertex.pos.x;
+		vert->m_position.y = aprocessedvertex.pos.y;
+		vert->m_position.z = aprocessedvertex.pos.z;
+		vert->m_uv.x = aprocessedvertex.uv.x;
+		vert->m_uv.y = aprocessedvertex.uv.y;
+		outverticies.push_back(vert);
+		break;
+		}
+		
+		case VERTEXVERSION2:
+		{VetexV2* vert = new VetexV2();
+		vert->m_position.x = aprocessedvertex.pos.x;
+		vert->m_position.y = aprocessedvertex.pos.y;
+		vert->m_position.z = aprocessedvertex.pos.z;
+		vert->m_normal.x = aprocessedvertex.normal.x;
+		vert->m_normal.y = aprocessedvertex.normal.y;
+		vert->m_normal.z = aprocessedvertex.normal.z;
+		outverticies.push_back(vert);
+		break;
+		}
 	}
-	for (size_t t = 0; t < amesh.indicies.size(); t++)
-	{
-		indicies.push_back(amesh.indicies[t] + indexoffset);
 	}
 }
+
 
 void Model::BuildVertexRawData()
 {
@@ -283,10 +300,10 @@ void BasicModelManager::InitCubeModel(ComPtr< ID3D12Device> creationdevice, Mode
 	cubemodel.InitIndexBuffer(creationdevice,cubeindicies);
 	cubemodel.UploadModelDatatoBuffers();
 }
-void BasicModelManager::LoadModel(ComPtr< ID3D12Device> creationdevice,std::string modelfilepath, Model& outmodel)
+void BasicModelManager::LoadModel(ComPtr< ID3D12Device> creationdevice,std::string modelfilepath, Model& outmodel,VertexVersion requiredvertexversion)
 {
 	AssimpManager assimpmodel(modelfilepath);
-	outmodel.Init(creationdevice,assimpmodel.GetProcessedModel());
+	outmodel.Init(creationdevice,assimpmodel.GetProcessedModel(), requiredvertexversion);
 }
 
 void BasicModelManager::GetPlaneVerticiesV0(vector<VertexBase*>& outverticies)
