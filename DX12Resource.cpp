@@ -17,6 +17,10 @@ void DX12Resource::CreateDSV(ComPtr< ID3D12Device> creationdevice, D3D12_DEPTH_S
 {
 	creationdevice->CreateDepthStencilView(m_resource.Get(),&dsvdesc,dsvhandle);
 }
+void DX12Resource::CreateRTV(ComPtr< ID3D12Device> creationdevice, D3D12_RENDER_TARGET_VIEW_DESC rtvdesc, D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle)
+{
+	creationdevice->CreateRenderTargetView(m_resource.Get(), &rtvdesc, rtvhandle);
+}
 
 void DX12Resource::Init(ComPtr< ID3D12Device> creationdevice, DX12ResourceCreationProperties resprops, ResourceCreationMode creationmode)
 {

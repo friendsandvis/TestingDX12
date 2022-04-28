@@ -15,6 +15,7 @@ public:
 	void CreateSRV(ComPtr< ID3D12Device> creationdevice, D3D12_SHADER_RESOURCE_VIEW_DESC srvdesc, D3D12_CPU_DESCRIPTOR_HANDLE srvhandle);
 	void CreateUAV(ComPtr< ID3D12Device> creationdevice,D3D12_UNORDERED_ACCESS_VIEW_DESC uavdesc, D3D12_CPU_DESCRIPTOR_HANDLE uavhandle);
 	void CreateDSV(ComPtr< ID3D12Device> creationdevice, D3D12_DEPTH_STENCIL_VIEW_DESC dsvdesc, D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle);
+	void CreateRTV(ComPtr< ID3D12Device> creationdevice, D3D12_RENDER_TARGET_VIEW_DESC rtvdesc, D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle);
 	//initialize the resource creation properties with defaults to prevent missing any params while manual init
 	static void InitResourceCreationProperties(DX12ResourceCreationProperties& rescreationprops);
 

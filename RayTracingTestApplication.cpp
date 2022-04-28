@@ -59,7 +59,35 @@ void RayTracingApplication::InitExtras()
 	BasicModelManager::LoadModel(m_creationdevice, "models/cube.dae", m_loadedmodel, VERTEXVERSION2);
 	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
 
+	//init gbuffer textures
+	DX12ResourceCreationProperties gbuffertextureprops;
+	DX12TextureSimple::InitResourceCreationProperties(gbuffertextureprops);
+	gbuffertextureprops.resdesc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	gbuffertextureprops.resdesc.Width = m_swapchain.GetSwapchainWidth();
+	gbuffertextureprops.resdesc.Height = m_swapchain.GetSwapchainHeight();
+	gbuffertextureprops.useclearvalue = true;
+	gbuffertextureprops.optimizedclearvalue.Format = gbuffertextureprops.resdesc.Format;
+	
+	gbuffertextureprops.optimizedclearvalue.Color[0] = 0.0f;
+	gbuffertextureprops.optimizedclearvalue.Color[1] = 0.0f;
+	gbuffertextureprops.optimizedclearvalue.Color[2] = 0.0f;
+	gbuffertextureprops.optimizedclearvalue.Color[3] = 0.0f;
+	m_gbuffernormal.Init(m_creationdevice, gbuffertextureprops, ResourceCreationMode::COMMITED);
+	D3D12_RENDER_TARGET_VIEW_DESC gbufferrtvdesc = {};
+	gbufferrtvdesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+	gbufferrtvdesc.Texture2D.MipSlice = 0;
+	gbufferrtvdesc.Texture2D.PlaneSlice = 0;
+	m_gbuffernormal.CreateRTV(m_creationdevice, gbufferrtvdesc, m_gbufferrtvheaps.GetCPUHandleOffseted(0));
+	
+
 	InitPSO();
+	//gbuffer rtv heap
+	{
+		D3D12_DESCRIPTOR_HEAP_DESC gbufferrtvheapdesc = {};
+		gbufferrtvheapdesc.NumDescriptors = 1;
+		gbufferrtvheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+		m_gbufferrtvheaps.Init(gbufferrtvheapdesc, m_creationdevice);
+	}
 	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
 	BasicModelManager::InitCubeModel(m_creationdevice, m_cubemodel);
 	m_planemodel.UploadModelDatatoBuffers();
