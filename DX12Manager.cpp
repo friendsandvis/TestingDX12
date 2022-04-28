@@ -33,7 +33,7 @@ DX12Manager::~DX12Manager()
 {
 }
 
-void DX12Manager::Init(bool enabledebuglayer, DX12ApplicationManagerBase* targetappmanager)
+void DX12Manager::Init(unsigned swapchainwidth, unsigned swapchainheight, HWND hwnd, bool enabledebuglayer, DX12ApplicationManagerBase* targetappmanager)
 {
 	m_appmanager = targetappmanager;
 	
@@ -59,8 +59,9 @@ void DX12Manager::Init(bool enabledebuglayer, DX12ApplicationManagerBase* target
 		//initialize app manager
 		if (targetappmanager)
 		{
-			
-			m_appmanager->Init(m_maindevice);
+			//first swap chain then app init.
+			//m_appmanager->Initswapchain(m_dxgifactory, swapchainwidth, swapchainheight, hwnd);
+			m_appmanager->Init(m_maindevice,m_dxgifactory,swapchainwidth,swapchainheight,hwnd);
 		}
 }
 

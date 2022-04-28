@@ -73,10 +73,11 @@ void DX12ApplicationManagerBase::Initswapchain(ComPtr<IDXGIFactory2> factory, un
 	m_swapchain.InitBackBufferRTV(m_creationdevice, m_rtvdescheap);
 }
 
-void DX12ApplicationManagerBase::Init(ComPtr< ID3D12Device> creationdevice)
+void DX12ApplicationManagerBase::Init(ComPtr< ID3D12Device> creationdevice, ComPtr<IDXGIFactory2> factory, unsigned swapchainwidth, unsigned swapchainheight, HWND hwnd)
 {
-	//basic initialization
+	//basic initialization first
 	InitBase(creationdevice);
+	Initswapchain(factory, swapchainwidth, swapchainheight, hwnd);
 	//extra init maybe specialized by specialized classes
 	InitExtras();
 }

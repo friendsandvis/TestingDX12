@@ -60,12 +60,20 @@ void RayTracingApplication::InitExtras()
 	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
 
 	//init gbuffer textures
+	//gbuffer rtv heap
+	{
+		D3D12_DESCRIPTOR_HEAP_DESC gbufferrtvheapdesc = {};
+		gbufferrtvheapdesc.NumDescriptors = 1;
+		gbufferrtvheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+		m_gbufferrtvheaps.Init(gbufferrtvheapdesc, m_creationdevice);
+	}
 	DX12ResourceCreationProperties gbuffertextureprops;
 	DX12TextureSimple::InitResourceCreationProperties(gbuffertextureprops);
-	gbuffertextureprops.resdesc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	gbuffertextureprops.resdesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	gbuffertextureprops.resdesc.Width = m_swapchain.GetSwapchainWidth();
 	gbuffertextureprops.resdesc.Height = m_swapchain.GetSwapchainHeight();
 	gbuffertextureprops.useclearvalue = true;
+	gbuffertextureprops.resdesc.Flags |= D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 	gbuffertextureprops.optimizedclearvalue.Format = gbuffertextureprops.resdesc.Format;
 	
 	gbuffertextureprops.optimizedclearvalue.Color[0] = 0.0f;
@@ -81,13 +89,7 @@ void RayTracingApplication::InitExtras()
 	
 
 	InitPSO();
-	//gbuffer rtv heap
-	{
-		D3D12_DESCRIPTOR_HEAP_DESC gbufferrtvheapdesc = {};
-		gbufferrtvheapdesc.NumDescriptors = 1;
-		gbufferrtvheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-		m_gbufferrtvheaps.Init(gbufferrtvheapdesc, m_creationdevice);
-	}
+	
 	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
 	BasicModelManager::InitCubeModel(m_creationdevice, m_cubemodel);
 	m_planemodel.UploadModelDatatoBuffers();

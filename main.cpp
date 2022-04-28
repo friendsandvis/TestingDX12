@@ -24,14 +24,18 @@ int main()
 	//TexturedQuadApplication appmanager;
 	//SkyboxTestApplication appmanager;
 	WindowProcHook* windhook = dynamic_cast<WindowProcHook*>(&appmanager);
-	assert(windhook != nullptr);//because all applicationd derive from base app which is derived from interface 
-	
 	WindMaker winmaker;
 	DX12Manager dxmanager;
-	dxmanager.Init(ENABLEDEBUGLAYER,&appmanager);
-	WindProcManager::SetProcHook(windhook);
 	winmaker.CreateWind(1920, 1080, L"DXTest");
-	appmanager.Initswapchain(dxmanager.GetDXGIFactory(), winmaker.GetWidth(), winmaker.GetHeight(), winmaker.Gethwnd());
+	assert(windhook != nullptr);//because all applicationd derive from base app which is derived from interface
+	WindProcManager::SetProcHook(windhook);
+	
+	
+	
+	
+	
+	
+	dxmanager.Init(winmaker.GetWidth(), winmaker.GetHeight(), winmaker.Gethwnd(), ENABLEDEBUGLAYER, &appmanager);
 	winmaker.RunMessageloop(&dxmanager);
 
 	

@@ -13,7 +13,7 @@
 class DX12ApplicationManagerBase:public WindowProcHook
 {
 public:
-	void Init(ComPtr< ID3D12Device> creationdevice);
+	void Init(ComPtr< ID3D12Device> creationdevice, ComPtr<IDXGIFactory2> factory, unsigned swapchainwidth, unsigned swapchainheight, HWND hwnd);
 	//basic necessary initialization of 
 	void InitBase(ComPtr< ID3D12Device> creationdevice);
 	void Initswapchain(ComPtr<IDXGIFactory2> factory, unsigned width, unsigned height, HWND hwnd);

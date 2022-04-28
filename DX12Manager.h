@@ -13,7 +13,7 @@ public:
 	DX12Manager();
 	~DX12Manager();
 
-	void Init(bool enabledebuglayer = true, DX12ApplicationManagerBase* targetappmanager=nullptr);
+	void Init(unsigned swapchainwidth, unsigned swapchainheight, HWND hwnd, bool enabledebuglayer = true, DX12ApplicationManagerBase* targetappmanager = nullptr);
 	void Render()override;
 	inline ComPtr<IDXGIFactory2> GetDXGIFactory() { return m_dxgifactory; }
 	inline ComPtr<ID3D12Device> GetDevice() { return m_maindevice; }
