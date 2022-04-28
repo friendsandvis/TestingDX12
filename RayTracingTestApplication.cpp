@@ -4,7 +4,9 @@
 
 
 RayTracingApplication::RayTracingApplication()
-	:m_cubemodel(ModelDataUploadMode::COPY)
+	:m_planemodel(ModelDataUploadMode::COPY),
+	m_cubemodel(ModelDataUploadMode::COPY),
+	m_loadedmodel(ModelDataUploadMode::COPY)
 {
 	m_maincameracontroller.SetCameratoControl(&m_maincamera);
 }
@@ -21,27 +23,20 @@ void RayTracingApplication::Render()
 {
 	m_primarycmdlist.Reset();
 	//set rtv
-	UINT currentbackbufferidx = m_swapchain.GetCurrentbackbufferIndex();
-
-		D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(currentbackbufferidx);
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
 	m_primarycmdlist->SetPipelineState(m_pso.GetPSO());
 	m_primarycmdlist->SetGraphicsRootSignature(m_rootsignature.GetRootSignature());
 	XMMATRIX mvp = m_maincamera.GetMVP();
 	m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvp, 0);
-	D3D12_RESOURCE_BARRIER barrier=m_swapchain.TransitionBackBuffer(currentbackbufferidx, D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET);
-	if (barrier.Transition.StateAfter != barrier.Transition.StateBefore)
-	{
-		m_primarycmdlist->ResourceBarrier(1, &barrier);
-	}
 	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, &dsvhandle);
 	float clearvalue[4] = { 1.0f,1.0f,1.0f,1.0f };
 	m_primarycmdlist->ClearRenderTargetView(rtvhandle, clearvalue, 0, nullptr);
 	m_primarycmdlist->ClearDepthStencilView(dsvhandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	{
 		m_primarycmdlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		D3D12_INDEX_BUFFER_VIEW ibview = m_cubemodel.GetIBView();
-		D3D12_VERTEX_BUFFER_VIEW vbview = m_cubemodel.GetVBView();
+		D3D12_INDEX_BUFFER_VIEW ibview = m_loadedmodel.GetIBView();
+		D3D12_VERTEX_BUFFER_VIEW vbview = m_loadedmodel.GetVBView();
 		m_primarycmdlist->IASetVertexBuffers(0, 1, &vbview);
 		m_primarycmdlist->IASetIndexBuffer(&ibview);
 
@@ -54,27 +49,26 @@ void RayTracingApplication::Render()
 		m_primarycmdlist->RSSetViewports(1, &aviewport);
 		m_primarycmdlist->RSSetScissorRects(1, &ascissorrect);
 	}
-	m_primarycmdlist->DrawIndexedInstanced(m_cubemodel.GetIndiciesCount(), 1, 0, 0, 0);
-	barrier= m_swapchain.TransitionBackBuffer(currentbackbufferidx, D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PRESENT);
-	if (barrier.Transition.StateAfter != barrier.Transition.StateBefore)
-	{
-		m_primarycmdlist->ResourceBarrier(1, &barrier);
-	}
+	m_primarycmdlist->DrawIndexedInstanced(m_loadedmodel.GetIndiciesCount(), 1, 0, 0, 0);
 	DXASSERT(m_primarycmdlist->Close())
 		BasicRender();
 }
 
 void RayTracingApplication::InitExtras()
 {
-
+	BasicModelManager::LoadModel(m_creationdevice, "models/cube.dae", m_loadedmodel, VERTEXVERSION2);
 	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
-	
-	InitPSO();
 
+	InitPSO();
+	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
 	BasicModelManager::InitCubeModel(m_creationdevice, m_cubemodel);
-	
+	m_planemodel.UploadModelDatatoBuffers();
+	m_cubemodel.UploadModelDatatoBuffers();
+	m_loadedmodel.UploadModelDatatoBuffers();
 
 	m_uploadcommandlist.Reset();
+	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
+	m_loadedmodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_cubemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	DXASSERT(m_uploadcommandlist->Close());
 }
@@ -116,11 +110,11 @@ void RayTracingApplication::InitPSO()
 		inputelements[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
 		inputelements[0].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
 		inputelements[0].InputSlot = 0;
-		inputelements[1].SemanticName = "POSCOL";
+		inputelements[1].SemanticName = "NORMAL";
 		inputelements[1].Format = DXGI_FORMAT_R32G32B32_FLOAT;
 		inputelements[1].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
 		inputelements[1].InputSlot = 0;
-		inputelements[1].AlignedByteOffset = sizeof(float) * 3;//after three floats is colour
+		inputelements[1].AlignedByteOffset = sizeof(float) * 3;//after three floats is normal
 
 		psoinitdata.psodesc.graphicspsodesc.InputLayout.NumElements = 2;
 		psoinitdata.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = inputelements;
