@@ -16,6 +16,6 @@ PSOut main(VSOut psin)
 {
 	PSOut psout;
 	psout.maincolour=float4(psin.normal,1.0f);
-	psout.normals=float4(1.0f,1.0f,1.0f,1.0f);
+	psout.normals=float4(psin.normal,1.0f);
 	return psout;
 }
