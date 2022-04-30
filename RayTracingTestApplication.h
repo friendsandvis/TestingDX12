@@ -28,7 +28,7 @@ protected:
 
 private:
 	DX12DESCHEAP m_gbufferrtvheaps;
-	DX12TextureSimple m_gbuffernormal;
+	DX12TextureSimple m_gbuffernormal,m_gbufferposition;
 	DX12PSO m_pso;
 	DX12RootSignature m_rootsignature;
 	Model m_planemodel;
