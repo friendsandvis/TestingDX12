@@ -9,6 +9,11 @@
 #include"DX12DESCHEAP.h"
 #include"DX12Texture.h"
 using namespace DirectX;
+struct RTVEntry
+{
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle;
+	unsigned rtvidex;
+};
 class RayTracingApplication :public DX12ApplicationManagerBase
 {
 public:

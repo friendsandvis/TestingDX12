@@ -29,8 +29,15 @@ void RayTracingApplication::Render()
 	m_primarycmdlist->SetGraphicsRootSignature(m_rootsignature.GetRootSignature());
 	XMMATRIX mvp = m_maincamera.GetMVP();
 	m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvp, 0);
-	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, &dsvhandle);
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandlestoset[2] =
+	{
+		rtvhandle,
+		m_gbufferrtvheaps.GetCPUHandleOffseted(0)
+	};
+	m_primarycmdlist->OMSetRenderTargets(2, rtvhandlestoset, FALSE, &dsvhandle);
 	float clearvalue[4] = { 1.0f,1.0f,1.0f,1.0f };
+	float blackclearvalue[4] = { 0.0f,0.0f,0.0f,1.0f };
+	m_primarycmdlist->ClearRenderTargetView(m_gbufferrtvheaps.GetCPUHandleOffseted(0), blackclearvalue, 0, nullptr);
 	m_primarycmdlist->ClearRenderTargetView(rtvhandle, clearvalue, 0, nullptr);
 	m_primarycmdlist->ClearDepthStencilView(dsvhandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	{
@@ -44,10 +51,13 @@ void RayTracingApplication::Render()
 
 	{
 		D3D12_VIEWPORT aviewport = GetViewport();
-
+		D3D12_VIEWPORT viewportstoset[2] =
+		{aviewport,aviewport};
 		D3D12_RECT ascissorrect = GetScissorRect();
-		m_primarycmdlist->RSSetViewports(1, &aviewport);
-		m_primarycmdlist->RSSetScissorRects(1, &ascissorrect);
+		D3D12_RECT scissorrectstoset[2] =
+		{ ascissorrect,ascissorrect };
+		m_primarycmdlist->RSSetViewports(2, viewportstoset);
+		m_primarycmdlist->RSSetScissorRects(2,scissorrectstoset);
 	}
 	m_primarycmdlist->DrawIndexedInstanced(m_loadedmodel.GetIndiciesCount(), 1, 0, 0, 0);
 	DXASSERT(m_primarycmdlist->Close())
@@ -75,12 +85,14 @@ void RayTracingApplication::InitExtras()
 	gbuffertextureprops.useclearvalue = true;
 	gbuffertextureprops.resdesc.Flags |= D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 	gbuffertextureprops.optimizedclearvalue.Format = gbuffertextureprops.resdesc.Format;
+	gbuffertextureprops.resinitialstate = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET;
 	
 	gbuffertextureprops.optimizedclearvalue.Color[0] = 0.0f;
 	gbuffertextureprops.optimizedclearvalue.Color[1] = 0.0f;
 	gbuffertextureprops.optimizedclearvalue.Color[2] = 0.0f;
 	gbuffertextureprops.optimizedclearvalue.Color[3] = 0.0f;
 	m_gbuffernormal.Init(m_creationdevice, gbuffertextureprops, ResourceCreationMode::COMMITED);
+	m_gbuffernormal.SetName(L"GBUFFER_NORMAL");
 	D3D12_RENDER_TARGET_VIEW_DESC gbufferrtvdesc = {};
 	gbufferrtvdesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 	gbufferrtvdesc.Texture2D.MipSlice = 0;
@@ -110,14 +122,18 @@ void RayTracingApplication::InitPSO()
 
 	DX12Shader* vs = new DX12Shader();
 	DX12Shader* ps = new DX12Shader();
-	vs->Init(L"shaders/modeltest/ModelTestVertexShader.hlsl", DX12Shader::ShaderType::VS);
-	ps->Init(L"shaders/modeltest/ModelTestPixelShader.hlsl", DX12Shader::ShaderType::PS);
+	vs->Init(L"shaders/raytracing/GeneralRenderVertexShader.hlsl", DX12Shader::ShaderType::VS);
+	ps->Init(L"shaders/raytracing/GeneralRenderTestPixelShader.hlsl", DX12Shader::ShaderType::PS);
 	psoinitdata.m_shaderstouse.push_back(vs); psoinitdata.m_shaderstouse.push_back(ps);
 	DX12PSO::DefaultInitPSOData(psoinitdata);
 	psoinitdata.psodesc.graphicspsodesc.PS.BytecodeLength = ps->GetCompiledCodeSize();
 	psoinitdata.psodesc.graphicspsodesc.PS.pShaderBytecode = ps->GetCompiledCode();
 	psoinitdata.psodesc.graphicspsodesc.VS.BytecodeLength = vs->GetCompiledCodeSize();
 	psoinitdata.psodesc.graphicspsodesc.VS.pShaderBytecode = vs->GetCompiledCode();
+	//rtv setup
+	psoinitdata.psodesc.graphicspsodesc.NumRenderTargets = 2;
+	psoinitdata.psodesc.graphicspsodesc.RTVFormats[1] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+
 	//root signature setup
 	{
 		{
