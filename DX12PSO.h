@@ -1,6 +1,7 @@
 #pragma once
 #include"DXUtils.h"
 #include"ShaderManager.h"
+#include"DX12RootSignature.h"
 
 enum PSOType
 {
@@ -19,6 +20,8 @@ union PSODESC
 		PSOType type;
 		PSODESC psodesc;
 		std::vector<DX12Shader*> m_shaderstouse;
+		DX12RootSignature rootsignature;
+		
 
 		
 };
@@ -30,7 +33,7 @@ public:
 	~DX12PSO();
 
 	inline ID3D12PipelineState* GetPSO() { return m_pso.Get(); }
-
+	ID3D12RootSignature* GetRootSignature() { return m_initdata.rootsignature.GetRootSignature(); }
 	void Init(ComPtr< ID3D12Device> creationdevice,PSOInitData initdata);
 	static void DefaultInitPSOData(PSOInitData& initdata);
 private:

@@ -25,10 +25,20 @@ void DX12PSO::Init(ComPtr< ID3D12Device> creationdevice, PSOInitData initdata)
 	switch (m_initdata.type)
 	{
 	case COMPUTE:
+		if (initdata.psodesc.computepsodesc.pRootSignature == nullptr)
+		{
+			m_initdata.rootsignature.Init(creationdevice);
+			initdata.psodesc.computepsodesc.pRootSignature = m_initdata.rootsignature.GetRootSignature();
+	}
 		DXASSERT(creationdevice->CreateComputePipelineState(&initdata.psodesc.computepsodesc, IID_PPV_ARGS(m_pso.GetAddressOf())))
 			break;
 
 	case GRAPHICS:
+		if (initdata.psodesc.graphicspsodesc.pRootSignature == nullptr)
+		{
+			m_initdata.rootsignature.Init(creationdevice);
+			initdata.psodesc.graphicspsodesc.pRootSignature = m_initdata.rootsignature.GetRootSignature();
+		}
 	{DXASSERT(creationdevice->CreateGraphicsPipelineState(&initdata.psodesc.graphicspsodesc, IID_PPV_ARGS(m_pso.GetAddressOf())))
 	
 	break;

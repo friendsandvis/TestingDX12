@@ -24,7 +24,7 @@ void SkyboxTestApplication::Render()
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
 	m_primarycmdlist->SetPipelineState(m_pso.GetPSO());
-	m_primarycmdlist->SetGraphicsRootSignature(m_rootsignature.GetRootSignature());
+	m_primarycmdlist->SetGraphicsRootSignature(m_pso.GetRootSignature());
 	CameraConstants camconst;
 	camconst.mvp = m_maincamera.GetMVP();
 	camconst.campos = m_maincamera.GetCamPos();
@@ -140,7 +140,7 @@ void SkyboxTestApplication::InitPSO()
 			vector< D3D12_STATIC_SAMPLER_DESC> samplerdescvector;
 			samplerdescvector.push_back(asamplerdesc);
 			m_rootsignature.BuidDesc(rootparamsvector, samplerdescvector);
-
+			psoinitdata.rootsignature = m_rootsignature;
 		}
 
 		//input assembler setup
@@ -157,9 +157,9 @@ void SkyboxTestApplication::InitPSO()
 
 		psoinitdata.psodesc.graphicspsodesc.InputLayout.NumElements = 2;
 		psoinitdata.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = inputelements;
-
-		m_rootsignature.Init(m_creationdevice, D3D_ROOT_SIGNATURE_VERSION_1);
-		psoinitdata.psodesc.graphicspsodesc.pRootSignature = m_rootsignature.GetRootSignature();
+		
+		//m_rootsignature.Init(m_creationdevice, D3D_ROOT_SIGNATURE_VERSION_1);
+		//psoinitdata.psodesc.graphicspsodesc.pRootSignature = m_rootsignature.GetRootSignature();
 	}
 	m_pso.Init(m_creationdevice, psoinitdata);
 }
