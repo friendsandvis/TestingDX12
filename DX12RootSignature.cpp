@@ -13,6 +13,16 @@ DX12RootSignature::DX12RootSignature()
 DX12RootSignature::~DX12RootSignature()
 {
 }
+void DX12RootSignature::BuidDesc(vector<D3D12_ROOT_PARAMETER>& rootparams, vector<D3D12_STATIC_SAMPLER_DESC>staticsamplers)
+{
+	m_rootparams = rootparams;
+	m_staticsamplerdescs = staticsamplers;
+	m_desc.NumParameters = (UINT)m_rootparams.size();
+	m_desc.pParameters = m_rootparams.data();
+	m_desc.NumStaticSamplers = (UINT)m_staticsamplerdescs.size();
+	m_desc.pStaticSamplers = m_staticsamplerdescs.data();
+
+}
 
 void DX12RootSignature::Init(ComPtr< ID3D12Device> creationdevice,D3D_ROOT_SIGNATURE_VERSION rootsigversion)
 {

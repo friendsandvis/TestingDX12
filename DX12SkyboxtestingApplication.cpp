@@ -118,7 +118,7 @@ void SkyboxTestApplication::InitPSO()
 			cubetexsrvrange.BaseShaderRegister = 0;
 			cubetexsrvrange.NumDescriptors = 1;
 			cubetexsrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-			D3D12_ROOT_SIGNATURE_DESC& rootsigdesc = m_rootsignature.getSignatureDescforModification();
+			//D3D12_ROOT_SIGNATURE_DESC& rootsigdesc = m_rootsignature.getSignatureDescforModification();
 			
 
 			rootparams[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
@@ -130,10 +130,16 @@ void SkyboxTestApplication::InitPSO()
 			rootparams[1].ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_PIXEL;
 			rootparams[1].DescriptorTable.NumDescriptorRanges = 1;
 			rootparams[1].DescriptorTable.pDescriptorRanges = &cubetexsrvrange;
-			rootsigdesc.NumParameters = 2;
+			/*rootsigdesc.NumParameters = 2;
 			rootsigdesc.pParameters = rootparams;
 			rootsigdesc.NumStaticSamplers = 1;
-			rootsigdesc.pStaticSamplers = &asamplerdesc;
+			rootsigdesc.pStaticSamplers = &asamplerdesc;*/
+			vector<D3D12_ROOT_PARAMETER> rootparamsvector;
+			rootparamsvector.push_back(rootparams[0]);
+			rootparamsvector.push_back(rootparams[1]);
+			vector< D3D12_STATIC_SAMPLER_DESC> samplerdescvector;
+			samplerdescvector.push_back(asamplerdesc);
+			m_rootsignature.BuidDesc(rootparamsvector, samplerdescvector);
 
 		}
 
@@ -157,6 +163,13 @@ void SkyboxTestApplication::InitPSO()
 	}
 	m_pso.Init(m_creationdevice, psoinitdata);
 }
+void SkyboxTestApplication::InitOverlayPSO()
+{
+	PSOInitData overlaypsoinitdata;
+
+	m_overlaypso.Init(m_creationdevice, overlaypsoinitdata);
+}
+
 
 void SkyboxTestApplication::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
