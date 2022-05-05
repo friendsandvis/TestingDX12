@@ -22,12 +22,16 @@ DXCamera::~DXCamera()
 {
 }
 
-XMMATRIX DXCamera::GetMVP(bool ortho)
+XMMATRIX DXCamera::GetMVP(bool ortho, bool skipview)
 {
 	//update view matrix & projection matrix first
 	GetView();
 	GetProjection(ortho);
-	XMMATRIX mvp = XMMatrixMultiply(m_model,m_view);
+	XMMATRIX mvp=m_model;
+	if (!skipview)
+	{
+		mvp= XMMatrixMultiply(m_model, m_view);
+	}
 	mvp = XMMatrixMultiply(mvp, m_projection);
 	return mvp;
 }

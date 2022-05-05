@@ -26,6 +26,9 @@ void SkyboxTestApplication::Render()
 	m_primarycmdlist->SetPipelineState(m_pso.GetPSO());
 	m_primarycmdlist->SetGraphicsRootSignature(m_pso.GetRootSignature());
 	CameraConstants camconst;
+	
+	XMMATRIX modelmat = XMMatrixIdentity();
+	m_maincamera.SetModel(modelmat);
 	camconst.mvp = m_maincamera.GetMVP();
 	camconst.campos = m_maincamera.GetCamPos();
 	m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(CameraConstants) / 4, &camconst, 0);
@@ -55,6 +58,25 @@ void SkyboxTestApplication::Render()
 		m_primarycmdlist->RSSetScissorRects(1, &ascissorrect);
 	}
 	m_primarycmdlist->DrawIndexedInstanced(m_cubemodel.GetIndiciesCount(), 1, 0, 0, 0);
+	{
+		m_primarycmdlist->SetPipelineState(m_overlaypso.GetPSO());
+		m_primarycmdlist->SetGraphicsRootSignature(m_overlaypso.GetRootSignature());
+		D3D12_INDEX_BUFFER_VIEW ibview = m_planemodel.GetIBView();
+		D3D12_VERTEX_BUFFER_VIEW vbview = m_planemodel.GetVBView();
+		m_primarycmdlist->IASetVertexBuffers(0, 1, &vbview);
+		m_primarycmdlist->IASetIndexBuffer(&ibview);
+		
+		XMVECTOR scalevec = XMVectorSet(324.0f, 216.0f, 1.0f, 1.0f);
+		modelmat=XMMatrixScalingFromVector(scalevec);
+		XMMATRIX translatemat=XMMatrixTranslation(-500.0f, 200.0f, 0.0f);
+		modelmat = XMMatrixMultiply(modelmat, translatemat);
+		m_maincamera.SetModel(modelmat);
+		camconst.mvp = m_maincamera.GetMVP(true,true);
+		m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(CameraConstants) / 4, &camconst, 0);
+		m_primarycmdlist->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
+
+
+	}
 	DXASSERT(m_primarycmdlist->Close())
 		BasicRender();
 }
@@ -79,6 +101,7 @@ void SkyboxTestApplication::InitExtras()
 	skyboxsrvdesc.TextureCube.ResourceMinLODClamp = 0.0f;
 	m_skyboxtex.CreateSRV(m_creationdevice, skyboxsrvdesc, m_resourceaccessheap.GetCPUHandlefromstart());
 	InitPSO();
+	InitOverlayPSO();
 	BasicModelManager::InitCubeModel(m_creationdevice, m_cubemodel);
 	m_cubemodel.UploadModelDatatoBuffers();
 	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
@@ -166,7 +189,71 @@ void SkyboxTestApplication::InitPSO()
 void SkyboxTestApplication::InitOverlayPSO()
 {
 	PSOInitData overlaypsoinitdata;
+	overlaypsoinitdata.type = PSOType::GRAPHICS;
 
+	DX12Shader* vs = new DX12Shader();
+	DX12Shader* ps = new DX12Shader();
+	vs->Init(L"shaders/overlay/VS.hlsl", DX12Shader::ShaderType::VS);
+	ps->Init(L"shaders/overlay/PS.hlsl", DX12Shader::ShaderType::PS);
+	overlaypsoinitdata.m_shaderstouse.push_back(vs); overlaypsoinitdata.m_shaderstouse.push_back(ps);
+	DX12PSO::DefaultInitPSOData(overlaypsoinitdata);
+	overlaypsoinitdata.psodesc.graphicspsodesc.DepthStencilState.DepthEnable = false;
+	overlaypsoinitdata.psodesc.graphicspsodesc.PS.BytecodeLength = ps->GetCompiledCodeSize();
+	overlaypsoinitdata.psodesc.graphicspsodesc.PS.pShaderBytecode = ps->GetCompiledCode();
+	overlaypsoinitdata.psodesc.graphicspsodesc.VS.BytecodeLength = vs->GetCompiledCodeSize();
+	overlaypsoinitdata.psodesc.graphicspsodesc.VS.pShaderBytecode = vs->GetCompiledCode();
+	//root signature setup
+	{
+		{
+			D3D12_STATIC_SAMPLER_DESC asamplerdesc = StaticSamplerManager::GetDefaultStaticSamplerDesc();
+			asamplerdesc.Filter = D3D12_FILTER::D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+			D3D12_ROOT_PARAMETER rootparams[2] = {};
+			D3D12_DESCRIPTOR_RANGE cubetexsrvrange = {};
+			cubetexsrvrange.BaseShaderRegister = 0;
+			cubetexsrvrange.NumDescriptors = 1;
+			cubetexsrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+			//D3D12_ROOT_SIGNATURE_DESC& rootsigdesc = m_rootsignature.getSignatureDescforModification();
+
+
+			rootparams[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+			rootparams[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+			rootparams[0].Constants.Num32BitValues = sizeof(CameraConstants) / 4;
+			rootparams[0].Constants.RegisterSpace = 0;
+			rootparams[0].Constants.ShaderRegister = 0;
+			rootparams[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			rootparams[1].ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_PIXEL;
+			rootparams[1].DescriptorTable.NumDescriptorRanges = 1;
+			rootparams[1].DescriptorTable.pDescriptorRanges = &cubetexsrvrange;
+			/*rootsigdesc.NumParameters = 2;
+			rootsigdesc.pParameters = rootparams;
+			rootsigdesc.NumStaticSamplers = 1;
+			rootsigdesc.pStaticSamplers = &asamplerdesc;*/
+			vector<D3D12_ROOT_PARAMETER> rootparamsvector;
+			rootparamsvector.push_back(rootparams[0]);
+			vector< D3D12_STATIC_SAMPLER_DESC> samplerdescvector;
+			samplerdescvector.push_back(asamplerdesc);
+			m_rootsignature.BuidDesc(rootparamsvector, samplerdescvector);
+			overlaypsoinitdata.rootsignature = m_rootsignature;
+		}
+
+		//input assembler setup
+		D3D12_INPUT_ELEMENT_DESC inputelements[2] = { 0 };
+		inputelements[0].SemanticName = "POS";
+		inputelements[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+		inputelements[0].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+		inputelements[0].InputSlot = 0;
+		inputelements[1].SemanticName = "VUV";
+		inputelements[1].Format = DXGI_FORMAT_R32G32_FLOAT;
+		inputelements[1].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+		inputelements[1].InputSlot = 0;
+		inputelements[1].AlignedByteOffset = sizeof(float) * 3;//after three floats is uv
+
+		overlaypsoinitdata.psodesc.graphicspsodesc.InputLayout.NumElements = 2;
+		overlaypsoinitdata.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = inputelements;
+
+		//m_rootsignature.Init(m_creationdevice, D3D_ROOT_SIGNATURE_VERSION_1);
+		//overlaypsoinitdata.psodesc.graphicspsodesc.pRootSignature = m_rootsignature.GetRootSignature();
+	}
 	m_overlaypso.Init(m_creationdevice, overlaypsoinitdata);
 }
 

@@ -23,7 +23,7 @@ private:
 	DXFPSCameraController m_maincameracontroller;
 	DXTexture m_skyboxtex;
 	DX12PSO m_pso,m_overlaypso;
-	DX12RootSignature m_rootsignature,m_overlayrootsignature;
+	DX12RootSignature m_rootsignature;
 	Model m_planemodel;
 	Model m_cubemodel;
 	void InitPSO();
