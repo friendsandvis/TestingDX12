@@ -25,6 +25,7 @@ private:
 	Model m_planemodel;
 	Model m_cubemodel;
 	Model m_loadedmodel;
+	CompoundModel m_loadedcommodel;
 	DXFPSCameraController m_maincameracontroller;
 	void InitPSO();
 };

@@ -41,7 +41,7 @@ void AssimpManager::ProcessNode(aiNode* annode)
 void AssimpManager::ProcessMesh(aiMesh* amesh)
 {
 	m_processedmodel.m_meshes.push_back(AssimpLoadedMesh());
-	AssimpLoadedMesh& aprocessedmesh=m_processedmodel.m_meshes[0];
+	AssimpLoadedMesh& aprocessedmesh=m_processedmodel.m_meshes[m_processedmodel.m_meshes.size()-1];
 
 	for (unsigned i0 = 0; i0 < amesh->mNumVertices; i0++)
 	{

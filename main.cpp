@@ -3,8 +3,8 @@
 //#include"DX12SimpleTexturedQuadApplication.h"
 //#include"DX12SamplerfeedbackApplication.h"
 //#include"DX12ReservedResourceApplication.h"
-#include"DX12SkyboxtestingApplication.h"
-//#include"ModelTestApplication.h"
+//#include"DX12SkyboxtestingApplication.h"
+#include"ModelTestApplication.h"
 //#include"MipTestApplication.h"
 //#include"DX12ComputeApplication.h"
 //#include"RayTracingTestApplication.h"
@@ -18,11 +18,11 @@ int main()
 	//DX12ReservedResourceApplication appmanager;
 	//DX12ComputeApplication appmanager;
 	//DX12SamplerfeedbackApplication appmanager;
-	//ModelTestApplication appmanager;
+	ModelTestApplication appmanager;
 	//RayTracingApplication appmanager;
 	//MipTestApplication appmanager;
 	//TexturedQuadApplication appmanager;
-	SkyboxTestApplication appmanager;
+	//SkyboxTestApplication appmanager;
 	WindowProcHook* windhook = dynamic_cast<WindowProcHook*>(&appmanager);
 	WindMaker winmaker;
 	DX12Manager dxmanager;

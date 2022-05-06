@@ -63,6 +63,12 @@ Model::~Model()
 		}
 	}
 }
+void Model::Draw(DX12Commandlist& renderingcmdlist)
+{
+	renderingcmdlist->IASetVertexBuffers(0, 1, &m_vertexbufferview);
+	renderingcmdlist->IASetIndexBuffer(&m_indexbufferview);
+	renderingcmdlist->DrawIndexedInstanced(GetIndiciesCount(), 1, 0, 0, 0);
+}
 
 void Model::InitVertexBuffer(ComPtr< ID3D12Device> creationdevice, vector<VertexBase*>& verticies)
 {
@@ -161,13 +167,14 @@ void Model::InitIndexBuffer(ComPtr< ID3D12Device> creationdevice,vector<unsigned
 
 }
 
-void Model::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimpModel, VertexVersion modelvertexversion)
+void Model::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimpModel, UINT meshindexinassimpmodeltoload, VertexVersion modelvertexversion)
 {
 	SetVertexVersionUsed(modelvertexversion);
 	vector<VertexBase*> verticies;
-	GetVertexArray(verticies, assimpModel.m_meshes[0], modelvertexversion);
+	AssimpLoadedMesh& meshtoload = assimpModel.m_meshes[meshindexinassimpmodeltoload];
+	GetVertexArray(verticies,meshtoload, modelvertexversion);
 	//currently taking in first mesh alone
-	InitIndexBuffer(creationdevice, assimpModel.m_meshes[0].indicies);
+	InitIndexBuffer(creationdevice, meshtoload.indicies);
 	InitVertexBuffer(creationdevice, verticies);
 
 }
@@ -277,6 +284,37 @@ void Model::UploadModelDatatoGPUBuffers(DX12Commandlist& copycmdlist)
 
 }
 
+CompoundModel::CompoundModel(ModelDataUploadMode uploadmode)
+	:m_datauploadmode(uploadmode)
+{
+
+}
+CompoundModel::~CompoundModel()
+{
+	for (size_t i = 0; i < m_models.size(); i++)
+	{
+		delete m_models[i];
+	}
+}
+void CompoundModel::Draw(DX12Commandlist& renderingcmdlist)
+{
+	for (size_t i = 0; i < m_models.size(); i++)
+	{
+		m_models[i]->Draw(renderingcmdlist);
+	}
+}
+
+void CompoundModel::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimpModel, VertexVersion modelvertexversion)
+{
+	for (size_t i = 0; i < assimpModel.m_meshes.size(); i++)
+	{
+		Model* amodel = new Model(m_datauploadmode);
+		amodel->Init(creationdevice, assimpModel, (UINT)i, modelvertexversion);
+		AddModel(amodel);
+	}
+}
+
+
 
 
 
@@ -303,7 +341,12 @@ void BasicModelManager::InitCubeModel(ComPtr< ID3D12Device> creationdevice, Mode
 void BasicModelManager::LoadModel(ComPtr< ID3D12Device> creationdevice,std::string modelfilepath, Model& outmodel,VertexVersion requiredvertexversion)
 {
 	AssimpManager assimpmodel(modelfilepath);
-	outmodel.Init(creationdevice,assimpmodel.GetProcessedModel(), requiredvertexversion);
+	outmodel.Init(creationdevice,assimpmodel.GetProcessedModel(),0, requiredvertexversion);
+}
+void BasicModelManager::LoadModel(ComPtr< ID3D12Device> creationdevice, std::string modelfilepath, CompoundModel& outmodel, VertexVersion requiredvertexversion)
+{
+	AssimpManager assimpmodel(modelfilepath);
+	outmodel.Init(creationdevice, assimpmodel.GetProcessedModel(), requiredvertexversion);
 }
 
 void BasicModelManager::GetPlaneVerticiesV0(vector<VertexBase*>& outverticies)

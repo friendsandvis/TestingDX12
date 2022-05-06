@@ -28,10 +28,11 @@ class DX12Commandlist;
 class Model
 {
 public:
-	
+	//set ib & vb and issue draw command.
+	void Draw(DX12Commandlist& renderingcmdlist);
 	Model(ModelDataUploadMode uploadmode=NOCOPY);
 	~Model();
-	void Init(ComPtr< ID3D12Device> creationdevice,AssimpLoadedModel& assimpModel,VertexVersion modelvertexversion);
+	void Init(ComPtr< ID3D12Device> creationdevice,AssimpLoadedModel& assimpModel,UINT meshindexinassimpmodeltoload,VertexVersion modelvertexversion);
 	void InitVertexBuffer(ComPtr< ID3D12Device> creationdevice,vector<VertexBase*>& verticies);
 	void InitIndexBuffer(ComPtr< ID3D12Device> creationdevice,vector<unsigned>& indicies);
 	inline D3D12_INDEX_BUFFER_VIEW GetIBView() { return m_indexbufferview; }
@@ -57,6 +58,20 @@ private:
 	void GetVertexArray(vector<VertexBase*>& outverticies, AssimpLoadedMesh& ameshtoadd,VertexVersion vertversion);
 	void BuildVertexRawData();
 };
+//contains various basic models
+class CompoundModel
+{
+public:
+	//set ib & vb and issue draw command.
+	void Draw(DX12Commandlist& renderingcmdlist);
+	CompoundModel(ModelDataUploadMode uploadmode = NOCOPY);
+	~CompoundModel();
+	void Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimpModel, VertexVersion modelvertexversion);
+	void AddModel(Model* abasicModel) { m_models.push_back(abasicModel); }
+	ModelDataUploadMode m_datauploadmode;
+	VertexVersion m_vertexversion;
+	vector<Model*> m_models;
+};
 
 class BasicModelManager
 {
@@ -64,6 +79,7 @@ public:
 	static void InitPlaneModel(ComPtr< ID3D12Device> creationdevice, Model& planemodel);
 	static void InitCubeModel(ComPtr< ID3D12Device> creationdevice, Model& cubemodel);
 	static void LoadModel(ComPtr< ID3D12Device> creationdevice,std::string modelfilepath, Model& outmodel, VertexVersion requiredvertexversion);
+	static void LoadModel(ComPtr< ID3D12Device> creationdevice, std::string modelfilepath, CompoundModel& outmodel, VertexVersion requiredvertexversion);
 
 private:
 	static void GetPlaneVerticiesV0(vector<VertexBase*>& outverticies);

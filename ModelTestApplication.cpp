@@ -6,7 +6,8 @@
 ModelTestApplication::ModelTestApplication()
 	:m_planemodel(ModelDataUploadMode::COPY),
 	m_cubemodel(ModelDataUploadMode::COPY),
-	m_loadedmodel(ModelDataUploadMode::COPY)
+	m_loadedmodel(ModelDataUploadMode::COPY),
+	m_loadedcommodel(ModelDataUploadMode::COPY)
 {
 	m_maincameracontroller.SetCameratoControl(&m_maincamera);
 }
@@ -35,10 +36,7 @@ void ModelTestApplication::Render()
 	m_primarycmdlist->ClearDepthStencilView(dsvhandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	{
 		m_primarycmdlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		D3D12_INDEX_BUFFER_VIEW ibview=m_loadedmodel.GetIBView();
-		D3D12_VERTEX_BUFFER_VIEW vbview = m_loadedmodel.GetVBView();
-		m_primarycmdlist->IASetVertexBuffers(0, 1, &vbview);
-		m_primarycmdlist->IASetIndexBuffer( &ibview);
+		
 		
 	}
 	
@@ -49,7 +47,7 @@ void ModelTestApplication::Render()
 		m_primarycmdlist->RSSetViewports(1, &aviewport);
 		m_primarycmdlist->RSSetScissorRects(1, &ascissorrect);
 	}
-	m_primarycmdlist->DrawIndexedInstanced(m_loadedmodel.GetIndiciesCount(), 1, 0, 0, 0);
+	m_loadedmodel.Draw(m_primarycmdlist);
 	DXASSERT(m_primarycmdlist->Close())
 	BasicRender();
 }
@@ -57,6 +55,7 @@ void ModelTestApplication::Render()
 void ModelTestApplication::InitExtras()
 {
 	BasicModelManager::LoadModel(m_creationdevice,"models/cube.dae",m_loadedmodel,VERTEXVERSION2);
+	BasicModelManager::LoadModel(m_creationdevice, "models/cubes.dae", m_loadedcommodel, VERTEXVERSION2);
 	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
 	
 	InitPSO();
