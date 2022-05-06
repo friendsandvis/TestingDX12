@@ -47,7 +47,8 @@ void ModelTestApplication::Render()
 		m_primarycmdlist->RSSetViewports(1, &aviewport);
 		m_primarycmdlist->RSSetScissorRects(1, &ascissorrect);
 	}
-	m_loadedmodel.Draw(m_primarycmdlist);
+	//m_loadedmodel.Draw(m_primarycmdlist);
+	m_loadedcommodel.Draw(m_primarycmdlist);
 	DXASSERT(m_primarycmdlist->Close())
 	BasicRender();
 }
@@ -64,10 +65,12 @@ void ModelTestApplication::InitExtras()
 	m_planemodel.UploadModelDatatoBuffers();
 	m_cubemodel.UploadModelDatatoBuffers();
 	m_loadedmodel.UploadModelDatatoBuffers();
+	m_loadedcommodel.UploadModelDatatoBuffers();
 
 	m_uploadcommandlist.Reset();
 	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_loadedmodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
+	m_loadedcommodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_cubemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	DXASSERT(m_uploadcommandlist->Close());
 }

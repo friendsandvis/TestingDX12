@@ -64,6 +64,8 @@ class CompoundModel
 public:
 	//set ib & vb and issue draw command.
 	void Draw(DX12Commandlist& renderingcmdlist);
+	void UploadModelDatatoBuffers();
+	void UploadModelDatatoGPUBuffers(DX12Commandlist& copycmdlist);
 	CompoundModel(ModelDataUploadMode uploadmode = NOCOPY);
 	~CompoundModel();
 	void Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimpModel, VertexVersion modelvertexversion);

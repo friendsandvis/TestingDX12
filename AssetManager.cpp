@@ -304,6 +304,21 @@ void CompoundModel::Draw(DX12Commandlist& renderingcmdlist)
 	}
 }
 
+void CompoundModel::UploadModelDatatoBuffers()
+{
+	for (size_t i = 0; i < m_models.size(); i++)
+	{
+		m_models[i]->UploadModelDatatoBuffers();
+	}
+}
+void CompoundModel::UploadModelDatatoGPUBuffers(DX12Commandlist& copycmdlist)
+{
+	for (size_t i = 0; i < m_models.size(); i++)
+	{
+		m_models[i]->UploadModelDatatoGPUBuffers(copycmdlist);
+	}
+}
+
 void CompoundModel::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimpModel, VertexVersion modelvertexversion)
 {
 	for (size_t i = 0; i < assimpModel.m_meshes.size(); i++)
