@@ -6,7 +6,8 @@
 RayTracingApplication::RayTracingApplication()
 	:m_planemodel(ModelDataUploadMode::COPY),
 	m_cubemodel(ModelDataUploadMode::COPY),
-	m_loadedmodel(ModelDataUploadMode::COPY)
+	m_loadedmodel(ModelDataUploadMode::COPY),
+	m_raytracingsupported(false)
 {
 	m_maincameracontroller.SetCameratoControl(&m_maincamera);
 }
@@ -67,6 +68,13 @@ void RayTracingApplication::Render()
 
 void RayTracingApplication::InitExtras()
 {
+	{
+		
+	}
+	//check ray tracing  support
+	D3D12_FEATURE_DATA_D3D12_OPTIONS5 option5features = {};
+	DXASSERT(m_creationdevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &option5features, sizeof(option5features)))
+		m_raytracingsupported = (option5features.RaytracingTier != D3D12_RAYTRACING_TIER_NOT_SUPPORTED);
 	BasicModelManager::LoadModel(m_creationdevice, "models/cube.dae", m_loadedmodel, VERTEXVERSION2);
 	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
 
