@@ -33,6 +33,7 @@ public:
 	void Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix);
 	Model(ModelDataUploadMode uploadmode=NOCOPY);
 	~Model();
+	
 	void Init(ComPtr< ID3D12Device> creationdevice,AssimpLoadedModel& assimpModel,UINT meshindexinassimpmodeltoload,VertexVersion modelvertexversion);
 	void InitVertexBuffer(ComPtr< ID3D12Device> creationdevice,vector<VertexBase*>& verticies);
 	void InitIndexBuffer(ComPtr< ID3D12Device> creationdevice,vector<unsigned>& indicies);

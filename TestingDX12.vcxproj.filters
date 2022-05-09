@@ -129,6 +129,9 @@
     <ClCompile Include="RayTracingTestApplication.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RaytracingUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="windmaker.h">
@@ -240,6 +243,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RayTracingTestApplication.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RaytracingUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
