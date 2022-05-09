@@ -35,6 +35,15 @@ XMMATRIX DXCamera::GetMVP(bool ortho, bool skipview)
 	mvp = XMMatrixMultiply(mvp, m_projection);
 	return mvp;
 }
+XMMATRIX DXCamera::GetVP(bool ortho)
+{
+	//update view matrix & projection matrix first
+	GetView();
+	GetProjection(ortho);
+	XMMATRIX mvp = m_view;
+	mvp = XMMatrixMultiply(mvp, m_projection);
+	return mvp;
+}
 
 XMMATRIX DXCamera::GetView(bool update)
 {

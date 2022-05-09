@@ -21,6 +21,7 @@ struct AssimpLoadedMesh
 {
 	vector<AssimpLoadedVertex> verticies;
 	vector<unsigned> indicies;
+	aiMatrix4x4 transform;
 };
 struct AssimpLoadedModel
 {
@@ -33,9 +34,11 @@ public:
 	AssimpLoadedModel& GetProcessedModel() { return m_processedmodel; }
 	AssimpManager(std::string filename);
 	~AssimpManager();
+	static XMMATRIX ToXMMatrix(aiMatrix4x4 assimpmatrix);
 private:
 	void ProcessNode(aiNode* annode);
-	void ProcessMesh(aiMesh* amesh);
+	void ProcessMesh(aiMesh* amesh,aiMatrix4x4 trasform);
+	
 	const aiScene* m_scene;
 	AssimpLoadedModel m_processedmodel;
 };

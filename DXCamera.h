@@ -8,6 +8,7 @@ public:
 	DXCamera();
 	~DXCamera();
 	XMMATRIX GetMVP(bool ortho=false,bool skipview=false);
+	XMMATRIX GetVP(bool ortho = false);
 	void SetProjection(XMMATRIX& aprojectionmat) { m_projection=aprojectionmat; }
 	void SetModel(XMMATRIX& amodelmat) { m_model = amodelmat; }
 	inline const XMMATRIX& GetModel() { return m_model; }

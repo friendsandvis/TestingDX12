@@ -7,7 +7,7 @@
 AssimpManager::AssimpManager(std::string filename)
 {
 	Assimp::Importer animporter;
-	m_scene = animporter.ReadFile(filename,0);
+	m_scene = animporter.ReadFile(filename,aiProcess_MakeLeftHanded);
 	
 	if (m_scene == nullptr)
 	{
@@ -26,11 +26,17 @@ AssimpManager::~AssimpManager()
 
 void AssimpManager::ProcessNode(aiNode* annode)
 {
+	aiMatrix4x4 finaltransform=annode->mTransformation;
+	if (annode->mParent)
+	{
+		finaltransform=finaltransform*annode->mTransformation;
+	}
+
 	for (unsigned i = 0; i < annode->mNumMeshes;i++)
 	{
 		unsigned scenemeshidx = annode->mMeshes[i];
 		aiMesh* scenemesh=m_scene->mMeshes[scenemeshidx];
-		ProcessMesh(scenemesh);
+		ProcessMesh(scenemesh,finaltransform);
 	}
 	for (unsigned i = 0; i < annode->mNumChildren;i++)
 	{
@@ -38,10 +44,11 @@ void AssimpManager::ProcessNode(aiNode* annode)
 	}
 }
 
-void AssimpManager::ProcessMesh(aiMesh* amesh)
+void AssimpManager::ProcessMesh(aiMesh* amesh, aiMatrix4x4 finaltrasform)
 {
 	m_processedmodel.m_meshes.push_back(AssimpLoadedMesh());
 	AssimpLoadedMesh& aprocessedmesh=m_processedmodel.m_meshes[m_processedmodel.m_meshes.size()-1];
+	aprocessedmesh.transform = finaltrasform;
 
 	for (unsigned i0 = 0; i0 < amesh->mNumVertices; i0++)
 	{
@@ -75,5 +82,14 @@ void AssimpManager::ProcessMesh(aiMesh* amesh)
 			aprocessedmesh.indicies.push_back(face.mIndices[i]);
 		}
 	}
+
+}
+
+XMMATRIX AssimpManager::ToXMMatrix(aiMatrix4x4 assimpmatrix)
+{
+	float* matdata=(float*)&assimpmatrix;
+	XMMATRIX outmat(matdata);
+	outmat = XMMatrixTranspose(outmat);
+	return outmat;
 
 }

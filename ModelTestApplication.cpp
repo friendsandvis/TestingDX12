@@ -47,8 +47,9 @@ void ModelTestApplication::Render()
 		m_primarycmdlist->RSSetViewports(1, &aviewport);
 		m_primarycmdlist->RSSetScissorRects(1, &ascissorrect);
 	}
-	//m_loadedmodel.Draw(m_primarycmdlist);
-	m_loadedcommodel.Draw(m_primarycmdlist);
+	XMMATRIX vpmat = m_maincamera.GetVP();
+	//m_loadedmodel.Draw(m_primarycmdlist,vpmat);
+	m_loadedcommodel.Draw(m_primarycmdlist,vpmat);
 	DXASSERT(m_primarycmdlist->Close())
 	BasicRender();
 }
@@ -56,7 +57,7 @@ void ModelTestApplication::Render()
 void ModelTestApplication::InitExtras()
 {
 	BasicModelManager::LoadModel(m_creationdevice,"models/cube.dae",m_loadedmodel,VERTEXVERSION2);
-	BasicModelManager::LoadModel(m_creationdevice, "models/cubes.dae", m_loadedcommodel, VERTEXVERSION2);
+	BasicModelManager::LoadModel(m_creationdevice, "models/fireplace_room.obj", m_loadedcommodel, VERTEXVERSION2);
 	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
 	
 	InitPSO();
@@ -90,6 +91,7 @@ void ModelTestApplication::InitPSO()
 	psoinitdata.psodesc.graphicspsodesc.PS.pShaderBytecode = ps->GetCompiledCode();
 	psoinitdata.psodesc.graphicspsodesc.VS.BytecodeLength = vs->GetCompiledCodeSize();
 	psoinitdata.psodesc.graphicspsodesc.VS.pShaderBytecode = vs->GetCompiledCode();
+	//psoinitdata.psodesc.graphicspsodesc.RasterizerState.CullMode = D3D12_CULL_MODE_FRONT;
 	//root signature setup
 	{
 		 {

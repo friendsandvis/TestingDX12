@@ -29,7 +29,8 @@ class Model
 {
 public:
 	//set ib & vb and issue draw command.
-	void Draw(DX12Commandlist& renderingcmdlist);
+	
+	void Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix);
 	Model(ModelDataUploadMode uploadmode=NOCOPY);
 	~Model();
 	void Init(ComPtr< ID3D12Device> creationdevice,AssimpLoadedModel& assimpModel,UINT meshindexinassimpmodeltoload,VertexVersion modelvertexversion);
@@ -45,6 +46,7 @@ public:
 	inline void SetVertexVersionUsed(VertexVersion vvused) { m_vertexversion=vvused; }
 
 private:
+	XMMATRIX m_transform;
 	DX12Buffer m_vertexbuffer, m_indexbuffer,m_vertexuploadbuffer,m_indexuploadbuffer;
 	//verticies are all of a single specialized vertex type and they are all dynamically allocated.
 	VertexVersion m_vertexversion;
@@ -63,7 +65,7 @@ class CompoundModel
 {
 public:
 	//set ib & vb and issue draw command.
-	void Draw(DX12Commandlist& renderingcmdlist);
+	void Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix);
 	void UploadModelDatatoBuffers();
 	void UploadModelDatatoGPUBuffers(DX12Commandlist& copycmdlist);
 	CompoundModel(ModelDataUploadMode uploadmode = NOCOPY);
