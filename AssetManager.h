@@ -34,6 +34,9 @@ public:
 	Model(ModelDataUploadMode uploadmode=NOCOPY);
 	~Model();
 	
+	
+	D3D12_GPU_VIRTUAL_ADDRESS GetVertexBufferGPUVirtualAddress();
+	D3D12_GPU_VIRTUAL_ADDRESS GetIertexBufferGPUVirtualAddress();
 	void Init(ComPtr< ID3D12Device> creationdevice,AssimpLoadedModel& assimpModel,UINT meshindexinassimpmodeltoload,VertexVersion modelvertexversion);
 	void InitVertexBuffer(ComPtr< ID3D12Device> creationdevice,vector<VertexBase*>& verticies);
 	void InitIndexBuffer(ComPtr< ID3D12Device> creationdevice,vector<unsigned>& indicies);
@@ -42,6 +45,7 @@ public:
 	void UploadModelDatatoBuffers();
 	void UploadModelDatatoGPUBuffers(DX12Commandlist& copycmdlist);
 	inline size_t GetIndiciesCount() { return m_indicies.size(); }
+	inline size_t GetVerticiesCount() { return m_verticies.size(); }
 	inline ModelDataUploadMode GetUploadMode() { return m_uploadmode; }
 	inline VertexVersion GetVertexVersionUsed() { return m_vertexversion; }
 	inline void SetVertexVersionUsed(VertexVersion vvused) { m_vertexversion=vvused; }
