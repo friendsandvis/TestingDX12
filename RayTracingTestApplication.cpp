@@ -119,10 +119,17 @@ void RayTracingApplication::InitExtras()
 		DXASSERT(m_creationdevice.As(&device5))
 		m_loadedmodelas.Init(m_loadedmodel);
 		m_loadedmodelas.Build(device5);
+		
 	}
 
 	m_uploadcommandlist.Reset();
 	m_loadedmodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
+	if (m_raytracingsupported)
+	{
+		ComPtr<ID3D12GraphicsCommandList4> cmdlist4;
+		DXASSERT(m_uploadcommandlist.GetcmdListComPtr().As(&cmdlist4))
+		m_loadedmodelas.IssueBuild(cmdlist4);
+	}
 	DXASSERT(m_uploadcommandlist->Close());
 }
 

@@ -13,11 +13,13 @@ private:
 class ModelAccelerationStructure
 {
 public:
+	ModelAccelerationStructure();
 	void Init(Model& modeltoprocess);
 	//setup all the needful for building the as
 	void Build(ComPtr< ID3D12Device5> device);
 	void IssueBuild(ComPtr<ID3D12GraphicsCommandList4>buildcmdlist);
 private:
+	bool m_buildcmdissued;
 	D3D12_RAYTRACING_GEOMETRY_DESC m_rtgeometrydesc;
 	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO m_prebuildinfo;
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS m_asinputs;

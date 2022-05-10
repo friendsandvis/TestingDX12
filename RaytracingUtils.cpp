@@ -1,5 +1,10 @@
 #include"RaytracingUtils.h"
 
+ModelAccelerationStructure::ModelAccelerationStructure()
+	:m_buildcmdissued(false)
+{
+
+}
 void ModelAccelerationStructure::Init(Model& modeltoprocess)
 {
 	//we need ib &vb in gpu memory.
@@ -38,18 +43,26 @@ void ModelAccelerationStructure::Build(ComPtr< ID3D12Device5> device)
 	
 	device->GetRaytracingAccelerationStructurePrebuildInfo(&m_asinputs, &m_prebuildinfo);
 	m_accelerationstucturescratch.Init(device, m_prebuildinfo.ScratchDataSizeInBytes, true);
+	m_accelerationstucturescratch.SetName(L"AccelerationScratch");
 	m_accelerationstructure.Init(device, m_prebuildinfo.ResultDataMaxSizeInBytes);
+	m_accelerationstructure.SetName(L"AccelerationStructure");
 	
 
 	
 }
 void ModelAccelerationStructure::IssueBuild(ComPtr<ID3D12GraphicsCommandList4>buildcmdlist)
 {
+	//build cmd should be issued once
+	if (m_buildcmdissued)
+	{
+		return;
+	}
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC builddesc = {};
 	builddesc.DestAccelerationStructureData = m_accelerationstructure.GetResource()->GetGPUVirtualAddress();
 	builddesc.ScratchAccelerationStructureData = m_accelerationstucturescratch.GetResource()->GetGPUVirtualAddress();
 	builddesc.Inputs = m_asinputs;
 	buildcmdlist->BuildRaytracingAccelerationStructure(&builddesc, 0, nullptr);
+	m_buildcmdissued = true;
 }
 
 void AccelerationStructureResource::Init(ComPtr< ID3D12Device5> device, UINT64 size,bool isscratch)
@@ -63,6 +76,8 @@ void AccelerationStructureResource::Init(ComPtr< ID3D12Device5> device, UINT64 s
 	m_resdesc.Width = size;
 	m_resdesc.Layout = D3D12_TEXTURE_LAYOUT::D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 	m_resdesc.Flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	m_resdesc.SampleDesc.Count = 1;
+	m_resdesc.SampleDesc.Quality = 0;
 	
 	D3D12_HEAP_PROPERTIES defaultheapprops = {};
 	defaultheapprops.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
