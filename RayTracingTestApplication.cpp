@@ -8,6 +8,7 @@ RayTracingApplication::RayTracingApplication()
 	m_raytracingsupported(false)
 {
 	m_maincameracontroller.SetCameratoControl(&m_maincamera);
+	
 }
 RayTracingApplication::~RayTracingApplication()
 {
@@ -66,9 +67,7 @@ void RayTracingApplication::Render()
 
 void RayTracingApplication::InitExtras()
 {
-	{
-		
-	}
+	
 	//check ray tracing  support
 	D3D12_FEATURE_DATA_D3D12_OPTIONS5 option5features = {};
 	DXASSERT(m_creationdevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &option5features, sizeof(option5features)))
@@ -113,6 +112,14 @@ void RayTracingApplication::InitExtras()
 	InitPSO();
 	
 	m_loadedmodel.UploadModelDatatoBuffers();
+	//ray tracing inits
+	if(m_raytracingsupported)
+	{
+		ComPtr<ID3D12Device5> device5;
+		DXASSERT(m_creationdevice.As(&device5))
+		m_loadedmodelas.Init(m_loadedmodel);
+		m_loadedmodelas.Build(device5);
+	}
 
 	m_uploadcommandlist.Reset();
 	m_loadedmodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);

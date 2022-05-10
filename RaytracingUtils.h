@@ -12,6 +12,7 @@ private:
 //represents a BLAS
 class ModelAccelerationStructure
 {
+public:
 	void Init(Model& modeltoprocess);
 	//setup all the needful for building the as
 	void Build(ComPtr< ID3D12Device5> device);
