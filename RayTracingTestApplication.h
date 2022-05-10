@@ -8,6 +8,7 @@
 #include"CameraMovementManager.h"
 #include"DX12DESCHEAP.h"
 #include"DX12Texture.h"
+#include"RaytracingUtils.h"
 using namespace DirectX;
 struct RTVEntry
 {
@@ -31,10 +32,10 @@ private:
 	DX12TextureSimple m_gbuffernormal,m_gbufferposition;
 	DX12PSO m_pso;
 	DX12RootSignature m_rootsignature;
-	Model m_planemodel;
-	Model m_cubemodel;
+	
 	Model m_loadedmodel;
 	bool m_raytracingsupported;
 	DXFPSCameraController m_maincameracontroller;
+	ModelAccelerationStructure m_loadedmodelas;
 	void InitPSO();
 };

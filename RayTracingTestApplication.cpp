@@ -4,9 +4,7 @@
 
 
 RayTracingApplication::RayTracingApplication()
-	:m_planemodel(ModelDataUploadMode::COPY),
-	m_cubemodel(ModelDataUploadMode::COPY),
-	m_loadedmodel(ModelDataUploadMode::COPY),
+	:m_loadedmodel(ModelDataUploadMode::COPY),
 	m_raytracingsupported(false)
 {
 	m_maincameracontroller.SetCameratoControl(&m_maincamera);
@@ -114,16 +112,10 @@ void RayTracingApplication::InitExtras()
 
 	InitPSO();
 	
-	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
-	BasicModelManager::InitCubeModel(m_creationdevice, m_cubemodel);
-	m_planemodel.UploadModelDatatoBuffers();
-	m_cubemodel.UploadModelDatatoBuffers();
 	m_loadedmodel.UploadModelDatatoBuffers();
 
 	m_uploadcommandlist.Reset();
-	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_loadedmodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
-	m_cubemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	DXASSERT(m_uploadcommandlist->Close());
 }
 
