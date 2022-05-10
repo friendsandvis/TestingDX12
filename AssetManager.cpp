@@ -189,6 +189,7 @@ D3D12_GPU_VIRTUAL_ADDRESS Model::GetVertexBufferGPUVirtualAddress()
 	{
 		return m_vertexbuffer.GetResource()->GetGPUVirtualAddress();
 	}
+	return NULL;
 }
 D3D12_GPU_VIRTUAL_ADDRESS Model::GetIertexBufferGPUVirtualAddress()
 {
@@ -196,6 +197,7 @@ D3D12_GPU_VIRTUAL_ADDRESS Model::GetIertexBufferGPUVirtualAddress()
 	{
 		return m_indexbuffer.GetResource()->GetGPUVirtualAddress();
 	}
+	return NULL;
 }
 
 void Model::GetVertexArray(vector<VertexBase*>& outverticies, AssimpLoadedMesh& ameshtoadd, VertexVersion vertversion)
