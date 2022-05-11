@@ -126,6 +126,7 @@ void ModelAccelerationStructureTLAS::Init(ComPtr< ID3D12Device> creationdevice,v
 		void* srcptr = reinterpret_cast<void*>(m_instancedescs.data());
 		size_t copysize = sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * m_instancedescs.size();
 		memcpy(bufferptr, srcptr,copysize );
+		m_instancedescbuffer.UnMap(mapparams);
 	}
 
 }
