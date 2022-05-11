@@ -14,6 +14,7 @@ private:
 class ModelAccelerationStructureBLAS
 {
 public:
+	AccelerationStructureResource& GetBLAS() { return m_accelerationstructure; }
 	ModelAccelerationStructureBLAS();
 	void Init(Model& modeltoprocess);
 	//setup all the needful for building the as
@@ -42,4 +43,10 @@ private:
 	AccelerationStructureResource m_accelerationstucturescratch, m_accelerationstructure;
 	vector<D3D12_RAYTRACING_INSTANCE_DESC> m_instancedescs;
 	DX12Buffer m_instancedescbuffer;
+};
+
+class RaytracingCommon
+{
+public:
+	static void InitAsIdentityMatrix(FLOAT arr[3][4]);
 };

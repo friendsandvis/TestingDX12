@@ -153,3 +153,15 @@ void ModelAccelerationStructureTLAS::IssueBuild(ComPtr<ID3D12GraphicsCommandList
 	buildcmdlist->BuildRaytracingAccelerationStructure(&builddesc, 0, nullptr);
 	m_buildcmdissued = true;
 }
+
+void RaytracingCommon::InitAsIdentityMatrix(FLOAT arr[3][4])
+{
+	for (unsigned r = 0; r < 3; r++)
+	{
+		for (unsigned c = 0; c < 4; c++)
+		{
+			arr[r][c] = 0.0f;
+		}
+	}
+	arr[0][0] = arr[1][1]= arr[2][2]= 1.0f;
+}

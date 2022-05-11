@@ -37,5 +37,6 @@ private:
 	bool m_raytracingsupported;
 	DXFPSCameraController m_maincameracontroller;
 	ModelAccelerationStructureBLAS loadedmodelasblas;
+	ModelAccelerationStructureTLAS loadedmodelastlas;
 	void InitPSO();
 };

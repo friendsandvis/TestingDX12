@@ -118,7 +118,20 @@ void RayTracingApplication::InitExtras()
 		ComPtr<ID3D12Device5> device5;
 		DXASSERT(m_creationdevice.As(&device5))
 		loadedmodelasblas.Init(m_loadedmodel);
-		loadedmodelasblas.Build(device5);
+		loadedmodelasblas.Build(device5); 
+
+		{
+			D3D12_RAYTRACING_INSTANCE_DESC aninstancedesc = {};
+			aninstancedesc.Flags = D3D12_RAYTRACING_INSTANCE_FLAGS::D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+			aninstancedesc.AccelerationStructure = loadedmodelasblas.GetBLAS().GetResource()->GetGPUVirtualAddress();
+			aninstancedesc.InstanceID = 0;
+			aninstancedesc.InstanceMask = 1;
+			aninstancedesc.InstanceContributionToHitGroupIndex = 0;
+			RaytracingCommon::InitAsIdentityMatrix(aninstancedesc.Transform);
+			vector< D3D12_RAYTRACING_INSTANCE_DESC> instancedescs;
+			instancedescs.push_back(aninstancedesc);
+			loadedmodelastlas.Init(m_creationdevice, instancedescs);
+		}
 		
 	}
 
