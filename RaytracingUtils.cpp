@@ -1,11 +1,11 @@
 #include"RaytracingUtils.h"
 
-ModelAccelerationStructure::ModelAccelerationStructure()
+ModelAccelerationStructureBLAS::ModelAccelerationStructureBLAS()
 	:m_buildcmdissued(false)
 {
 
 }
-void ModelAccelerationStructure::Init(Model& modeltoprocess)
+void ModelAccelerationStructureBLAS::Init(Model& modeltoprocess)
 {
 	//we need ib &vb in gpu memory.
 	assert(modeltoprocess.GetUploadMode() == ModelDataUploadMode::COPY);
@@ -27,7 +27,7 @@ void ModelAccelerationStructure::Init(Model& modeltoprocess)
 	
 }
 
-void ModelAccelerationStructure::Build(ComPtr< ID3D12Device5> device)
+void ModelAccelerationStructureBLAS::Build(ComPtr< ID3D12Device5> device)
 {
 	 
 	{
@@ -50,7 +50,7 @@ void ModelAccelerationStructure::Build(ComPtr< ID3D12Device5> device)
 
 	
 }
-void ModelAccelerationStructure::IssueBuild(ComPtr<ID3D12GraphicsCommandList4>buildcmdlist)
+void ModelAccelerationStructureBLAS::IssueBuild(ComPtr<ID3D12GraphicsCommandList4>buildcmdlist)
 {
 	//build cmd should be issued once
 	if (m_buildcmdissued)
