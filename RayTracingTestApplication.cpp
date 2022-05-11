@@ -117,8 +117,8 @@ void RayTracingApplication::InitExtras()
 	{
 		ComPtr<ID3D12Device5> device5;
 		DXASSERT(m_creationdevice.As(&device5))
-		m_loadedmodelas.Init(m_loadedmodel);
-		m_loadedmodelas.Build(device5);
+		loadedmodelasblas.Init(m_loadedmodel);
+		loadedmodelasblas.Build(device5);
 		
 	}
 
@@ -128,7 +128,7 @@ void RayTracingApplication::InitExtras()
 	{
 		ComPtr<ID3D12GraphicsCommandList4> cmdlist4;
 		DXASSERT(m_uploadcommandlist.GetcmdListComPtr().As(&cmdlist4))
-		m_loadedmodelas.IssueBuild(cmdlist4);
+		loadedmodelasblas.IssueBuild(cmdlist4);
 	}
 	DXASSERT(m_uploadcommandlist->Close());
 }
