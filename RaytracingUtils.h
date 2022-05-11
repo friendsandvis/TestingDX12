@@ -1,5 +1,6 @@
 #pragma once
 #include"AssetManager.h"
+#include"DX12Buffer.h"
 
 class AccelerationStructureResource :public DX12ResourceBase
 {
@@ -25,4 +26,20 @@ private:
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS m_asinputs;
 	AccelerationStructureResource m_accelerationstucturescratch,m_accelerationstructure;
 
+};
+
+class ModelAccelerationStructureTLAS
+{
+	public:
+		ModelAccelerationStructureTLAS();
+		void Init(ComPtr< ID3D12Device> creationdevice,vector<D3D12_RAYTRACING_INSTANCE_DESC> instancedescs);
+		void Build(ComPtr< ID3D12Device5> device);
+		void IssueBuild(ComPtr<ID3D12GraphicsCommandList4>buildcmdlist);
+private:
+	bool m_buildcmdissued;
+	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO m_prebuildinfo;
+	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS m_asinputs;
+	AccelerationStructureResource m_accelerationstucturescratch, m_accelerationstructure;
+	vector<D3D12_RAYTRACING_INSTANCE_DESC> m_instancedescs;
+	DX12Buffer m_instancedescbuffer;
 };
