@@ -187,6 +187,7 @@
     <ClCompile Include="ModelTestApplication.cpp" />
     <ClCompile Include="RayTracingTestApplication.cpp" />
     <ClCompile Include="RaytracingUtils.cpp" />
+    <ClCompile Include="RTPSO.cpp" />
     <ClCompile Include="SamplerFeedbackManager.cpp" />
     <ClCompile Include="ShaderManager.cpp" />
     <ClCompile Include="windmaker.cpp" />
@@ -227,6 +228,7 @@
     <ClInclude Include="RayTracingTestApplication.h" />
     <ClInclude Include="RaytracingUtils.h" />
     <ClInclude Include="Renderable.h" />
+    <ClInclude Include="RTPSO.h" />
     <ClInclude Include="SamplerFeedbackManager.h" />
     <ClInclude Include="ShaderManager.h" />
     <ClInclude Include="windmaker.h" />
