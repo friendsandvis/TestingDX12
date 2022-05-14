@@ -131,6 +131,7 @@ void RayTracingApplication::InitExtras()
 			vector< D3D12_RAYTRACING_INSTANCE_DESC> instancedescs;
 			instancedescs.push_back(aninstancedesc);
 			loadedmodelastlas.Init(m_creationdevice, instancedescs);
+			loadedmodelastlas.Build(device5);
 		}
 		
 	}
@@ -142,6 +143,7 @@ void RayTracingApplication::InitExtras()
 		ComPtr<ID3D12GraphicsCommandList4> cmdlist4;
 		DXASSERT(m_uploadcommandlist.GetcmdListComPtr().As(&cmdlist4))
 		loadedmodelasblas.IssueBuild(cmdlist4);
+		loadedmodelastlas.IssueBuild(cmdlist4);
 	}
 	DXASSERT(m_uploadcommandlist->Close());
 }
