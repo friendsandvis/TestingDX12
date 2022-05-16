@@ -28,3 +28,41 @@ void RTPSO::SetPipelineConfig(UINT maxtracerecursiondepth)
 	subobj.pDesc = &m_rtconfig;
 	m_statesubobjects.push_back(subobj);
 }
+void RTPSO::SetShader(DX12Shader* shader, wstring hlslentry, wstring uniquename)
+{
+	m_shaderstouse.push_back(RTPSOShader());
+	RTPSOShader& rtshaderunit = m_shaderstouse[(m_shaderstouse.size()-1)];
+	rtshaderunit.Init(shader, hlslentry, uniquename);
+	D3D12_STATE_SUBOBJECT shadersubobj = {};
+	shadersubobj.Type = D3D12_STATE_SUBOBJECT_TYPE::D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY;
+	shadersubobj.pDesc = &rtshaderunit.GetDXILLIBDESC();
+	m_statesubobjects.push_back(shadersubobj);
+
+}
+RTPSOShader::RTPSOShader()
+	:m_shader(nullptr)
+{
+
+}
+RTPSOShader::~RTPSOShader()
+{
+	//shader is dynamically allocated.
+	if (m_shader)
+	{
+		delete m_shader;
+	}
+}
+
+void RTPSOShader::Init(DX12Shader* shader, wstring hlslentry, wstring uniquename)
+{
+	m_uniquename = uniquename;
+	m_hlslentrypoint = hlslentry;
+	m_exportdesc.Flags = D3D12_EXPORT_FLAGS::D3D12_EXPORT_FLAG_NONE;
+	m_exportdesc.Name = m_uniquename.c_str();
+	m_exportdesc.ExportToRename = m_hlslentrypoint.c_str();
+
+	m_dxillibdesc.NumExports = 1;
+	m_dxillibdesc.pExports = &m_exportdesc;
+	m_dxillibdesc.DXILLibrary.BytecodeLength = shader->GetCompiledCodeSize();
+	m_dxillibdesc.DXILLibrary.pShaderBytecode = shader->GetCompiledCode();
+}

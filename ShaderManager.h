@@ -33,7 +33,8 @@ public:
 	{
 		VS,
 		PS,
-		CS
+		CS,
+		RT
 	};
 
 	struct ShaderDefine
