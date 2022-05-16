@@ -62,6 +62,11 @@ void ModelAccelerationStructureBLAS::IssueBuild(ComPtr<ID3D12GraphicsCommandList
 	builddesc.ScratchAccelerationStructureData = m_accelerationstucturescratch.GetResource()->GetGPUVirtualAddress();
 	builddesc.Inputs = m_asinputs;
 	buildcmdlist->BuildRaytracingAccelerationStructure(&builddesc, 0, nullptr);
+	//issue a uav barrier for it as well.
+	D3D12_RESOURCE_BARRIER uavbarrier = {};
+	uavbarrier.Type =D3D12_RESOURCE_BARRIER_TYPE::D3D12_RESOURCE_BARRIER_TYPE_UAV;
+	uavbarrier.UAV.pResource = m_accelerationstructure.GetResource().Get();
+	buildcmdlist->ResourceBarrier(1, &uavbarrier);
 	m_buildcmdissued = true;
 }
 
@@ -152,6 +157,10 @@ void ModelAccelerationStructureTLAS::IssueBuild(ComPtr<ID3D12GraphicsCommandList
 	builddesc.Inputs = m_asinputs;
 	buildcmdlist->BuildRaytracingAccelerationStructure(&builddesc, 0, nullptr);
 	m_buildcmdissued = true;
+	D3D12_RESOURCE_BARRIER uavbarrier = {};
+	uavbarrier.Type = D3D12_RESOURCE_BARRIER_TYPE::D3D12_RESOURCE_BARRIER_TYPE_UAV;
+	uavbarrier.UAV.pResource = m_accelerationstructure.GetResource().Get();
+	buildcmdlist->ResourceBarrier(1, &uavbarrier);
 }
 
 void RaytracingCommon::InitAsIdentityMatrix(FLOAT arr[3][4])
