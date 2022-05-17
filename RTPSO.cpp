@@ -17,7 +17,11 @@ void RTPSO::Init(ComPtr<ID3D12Device5> creationdevice)
 	m_desc.NumSubobjects = static_cast<UINT>(m_statesubobjects.size());
 	m_desc.pSubobjects = m_statesubobjects.data();
 	DXASSERT(creationdevice->CreateStateObject(&m_desc, IID_PPV_ARGS(m_stateobject.GetAddressOf())))
-	
+	DXASSERT(m_stateobject->QueryInterface(IID_PPV_ARGS(m_stateobjectprops.GetAddressOf())))
+}
+void RTPSO::AddHitGroup(D3D12_HIT_GROUP_DESC& desc)
+{
+
 }
 
 void RTPSO::SetPipelineConfig(UINT maxtracerecursiondepth)
@@ -28,7 +32,7 @@ void RTPSO::SetPipelineConfig(UINT maxtracerecursiondepth)
 	subobj.pDesc = &m_rtconfig;
 	m_statesubobjects.push_back(subobj);
 }
-void RTPSO::SetShader(DX12Shader* shader, wstring hlslentry, wstring uniquename)
+void RTPSO::AddShader(DX12Shader* shader, wstring hlslentry, wstring uniquename)
 {
 	m_shaderstouse.push_back(RTPSOShader());
 	RTPSOShader& rtshaderunit = m_shaderstouse[(m_shaderstouse.size()-1)];

@@ -9,6 +9,7 @@ public:
 
 	RTPSOShader();
 	~RTPSOShader();
+	
 	void Init(DX12Shader* shader, wstring hlslentry, wstring uniquename);
 	D3D12_DXIL_LIBRARY_DESC& GetDXILLIBDESC() { return m_dxillibdesc; }
 
@@ -18,17 +19,19 @@ private:
 	DX12Shader* m_shader;
 	wstring m_hlslentrypoint, m_uniquename;
 };
+
 class RTPSO
 {
 public:
 	RTPSO();
 	~RTPSO();
-
+	void AddHitGroup(D3D12_HIT_GROUP_DESC& desc);
 	void Init(ComPtr<ID3D12Device5> creationdevice);
 	void SetPipelineConfig(UINT maxtracerecursiondepth=1);
-	void SetShader(DX12Shader* shader, wstring hlslentry, wstring uniquename);
+	void AddShader(DX12Shader* shader, wstring hlslentry, wstring uniquename);
 private:
 	ComPtr<ID3D12StateObject> m_stateobject;
+	ComPtr<ID3D12StateObjectProperties> m_stateobjectprops;
 	D3D12_STATE_OBJECT_DESC m_desc;
 	vector<D3D12_STATE_SUBOBJECT> m_statesubobjects;
 	//only 1 rt config for a pipeline(many does not makes any sense so keep this desc a direct member variable.
