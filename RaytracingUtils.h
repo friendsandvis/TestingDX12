@@ -36,6 +36,7 @@ class ModelAccelerationStructureTLAS
 		void Init(ComPtr< ID3D12Device> creationdevice,vector<D3D12_RAYTRACING_INSTANCE_DESC> instancedescs);
 		void Build(ComPtr< ID3D12Device5> device);
 		void IssueBuild(ComPtr<ID3D12GraphicsCommandList4>buildcmdlist);
+		void CreateSRV(ComPtr< ID3D12Device> creationdevice, D3D12_CPU_DESCRIPTOR_HANDLE srvhandle);
 private:
 	bool m_buildcmdissued;
 	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO m_prebuildinfo;

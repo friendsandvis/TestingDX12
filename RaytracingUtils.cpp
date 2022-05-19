@@ -174,3 +174,11 @@ void RaytracingCommon::InitAsIdentityMatrix(FLOAT arr[3][4])
 	}
 	arr[0][0] = arr[1][1]= arr[2][2]= 1.0f;
 }
+
+void ModelAccelerationStructureTLAS::CreateSRV(ComPtr< ID3D12Device> creationdevice, D3D12_CPU_DESCRIPTOR_HANDLE srvhandle)
+{
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvdesc = {};
+	srvdesc.RaytracingAccelerationStructure.Location = m_accelerationstructure.GetResource()->GetGPUVirtualAddress();
+	srvdesc.ViewDimension = D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
+	creationdevice->CreateShaderResourceView(m_accelerationstructure.GetResource().Get(), &srvdesc, srvhandle);
+}
