@@ -1,6 +1,7 @@
 #pragma once
 #include"DXUtils.h"
 #include"ShaderManager.h"
+#include<map>
 
 //a collective unit to repesent a shader used in rtpso as a dxil lib.
 class RTPSOShader
@@ -12,6 +13,7 @@ public:
 	
 	void Init(DX12Shader* shader, wstring hlslentry, wstring uniquename);
 	D3D12_DXIL_LIBRARY_DESC& GetDXILLIBDESC() { return m_dxillibdesc; }
+	wstring GetUniqueName() { return m_uniquename; }
 
 private:
 	D3D12_DXIL_LIBRARY_DESC m_dxillibdesc;
@@ -37,6 +39,10 @@ private:
 	//only 1 rt config for a pipeline(many does not makes any sense so keep this desc a direct member variable.
 	D3D12_RAYTRACING_PIPELINE_CONFIG m_rtconfig;
 	vector< RTPSOShader> m_shaderstouse;
+	//descs needed for diffrent subobjects e diffrent so we dynamically allocate them(as byte array)
+	vector< uint8_t*> m_subobjectdescs;
+	map<wstring, void*> m_shaderidentifiermap;
+
 	//kee
 };
 

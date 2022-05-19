@@ -7,6 +7,11 @@ RTPSO::RTPSO()
 
 RTPSO::~RTPSO()
 {
+	//delete subobject descs if any
+	for (size_t i = 0; i < m_subobjectdescs.size(); i++)
+	{
+		delete[] m_subobjectdescs[i];
+	}
 }
 
 void RTPSO::Init(ComPtr<ID3D12Device5> creationdevice)
@@ -18,10 +23,24 @@ void RTPSO::Init(ComPtr<ID3D12Device5> creationdevice)
 	m_desc.pSubobjects = m_statesubobjects.data();
 	DXASSERT(creationdevice->CreateStateObject(&m_desc, IID_PPV_ARGS(m_stateobject.GetAddressOf())))
 	DXASSERT(m_stateobject->QueryInterface(IID_PPV_ARGS(m_stateobjectprops.GetAddressOf())))
+	
+		//retrive shader identifiers for all shaders in state object.
+		for (size_t i = 0; i < m_shaderstouse.size(); i++)
+		{
+			wstring shadername=m_shaderstouse[i].GetUniqueName();
+			m_shaderidentifiermap[shadername] = m_stateobjectprops->GetShaderIdentifier(shadername.c_str());
+	}
 }
 void RTPSO::AddHitGroup(D3D12_HIT_GROUP_DESC& desc)
 {
-
+	uint8_t* descdata = new uint8_t[sizeof(D3D12_HIT_GROUP_DESC)];
+	m_subobjectdescs.push_back(descdata);
+	D3D12_HIT_GROUP_DESC * hitgroupdesc=reinterpret_cast<D3D12_HIT_GROUP_DESC*>(descdata);
+	(*hitgroupdesc) = desc;
+	D3D12_STATE_SUBOBJECT hitgroupobj = {};
+	hitgroupobj.pDesc = hitgroupdesc;
+	hitgroupobj.Type = D3D12_STATE_SUBOBJECT_TYPE::D3D12_STATE_SUBOBJECT_TYPE_HIT_GROUP;
+	m_statesubobjects.push_back(hitgroupobj);
 }
 
 void RTPSO::SetPipelineConfig(UINT maxtracerecursiondepth)
