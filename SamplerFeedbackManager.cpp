@@ -64,6 +64,7 @@ void DX12FeedBackUnit::Init(ComPtr<ID3D12Device8> creationdevice, samplerFeedbac
 		readbackresolvetexprops.resdesc.Format = DXGI_FORMAT_R8_UINT;
 		readbackresolvetexprops.resdesc.Height = m_feedbacktex.GetRequiredTextureHeightForTranscodeing();
 		readbackresolvetexprops.resdesc.Width = m_feedbacktex.GetRequiredTextureWidthForTranscodeing();
+		readbackresolvetexprops.resdesc.Flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 
 		//init feedback resolve tex as well
 		m_feedbackresolvedtex.Init(creationdevice1, readbackresolvetexprops, ResourceCreationMode::COMMITED);
@@ -102,6 +103,15 @@ void DX12FeedBackUnit::Init(ComPtr<ID3D12Device8> creationdevice, samplerFeedbac
 		creationdevice->CopyDescriptorsSimple(uavheapdesc.NumDescriptors, m_uavheap.GetCPUHandlefromstart(), m_uavheapupload.GetCPUHandlefromstart(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	}
 	
+}
+void DX12FeedBackUnit::CreateFeedbackResolveTexUAV(ComPtr< ID3D12Device> creationdevice,D3D12_CPU_DESCRIPTOR_HANDLE cpudeschandle)
+{
+	
+	D3D12_UNORDERED_ACCESS_VIEW_DESC uavdesc = {};
+	uavdesc.Texture2D.MipSlice = 0;
+	uavdesc.Texture2D.PlaneSlice = 0;
+	uavdesc.ViewDimension = D3D12_UAV_DIMENSION::D3D12_UAV_DIMENSION_TEXTURE2D;
+	m_feedbackresolvedtex.CreateUAV(creationdevice, uavdesc, cpudeschandle);
 }
 
 void DX12FeedBackUnit::Readback(ComPtr<ID3D12GraphicsCommandList1> commandlist)

@@ -36,6 +36,7 @@ void DX12SamplerfeedbackApplication::InitExtras()
 
 	//init pso
 	InitBasicPSO();
+	InitOverlayPSO();
 	for (unsigned i = 0; i < NUMCOMMANDLISTSTOCK; i++)
 	{
 		m_reservedresuploadcmdlists[i].Init(D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
@@ -50,7 +51,15 @@ void DX12SamplerfeedbackApplication::InitExtras()
 	heapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
 	m_resaccessviewdescheap.Init(heapdesc, m_creationdevice);
+	{
+		//init overlay desc heap
+		D3D12_DESCRIPTOR_HEAP_DESC overlayheapdesc = {};
+		overlayheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		overlayheapdesc.NumDescriptors =1;	//just creating for 1 uav
+		overlayheapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		m_overlayresheap.Init(overlayheapdesc, m_creationdevice);
 
+	}
 	D3D12_DESCRIPTOR_HEAP_DESC heapdescsrc = {};
 	heapdescsrc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	heapdescsrc.NumDescriptors = 1;	//just creating for a uav staging
@@ -88,6 +97,9 @@ void DX12SamplerfeedbackApplication::InitExtras()
 				m_redtexfeedbackunit.UpdateMemoryMappings(m_mainqueue.GetQueue(), m_creationdevice);
 				//copy feedbacktex uav heap to gpu descriptor(we need both cpu & gpu one for clearuav call).
 				m_creationdevice->CopyDescriptorsSimple(1, m_resaccessviewdescheap.GetCPUHandleOffseted(1), m_resaccessviewdescheapsrc.GetCPUHandleOffseted(0), D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+				//create srv for feedbackresolve tex in overlay heap
+				m_redtexfeedbackunit.CreateFeedbackResolveTexUAV(m_creationdevice, m_overlayresheap.GetCPUHandleOffseted(0));
+				
 			}
 	}
 
@@ -280,9 +292,77 @@ void DX12SamplerfeedbackApplication::InitBasicPSO()
 }
 void DX12SamplerfeedbackApplication::InitOverlayPSO()
 {
-	PSOInitData overlaypsodata;
-	DX12PSO::DefaultInitPSOData(overlaypsodata);
-	overlaypsodata.type = PSOType::GRAPHICS;
+	PSOInitData overlaypsoinitdata;
+	overlaypsoinitdata.type = PSOType::GRAPHICS;
+
+	DX12Shader* vs = new DX12Shader();
+	DX12Shader* ps = new DX12Shader();
+	vs->Init(L"shaders/overlaySF/VS.hlsl", DX12Shader::ShaderType::VS);
+	ps->Init(L"shaders/overlaySF/PS.hlsl", DX12Shader::ShaderType::PS);
+	overlaypsoinitdata.m_shaderstouse.push_back(vs); overlaypsoinitdata.m_shaderstouse.push_back(ps);
+	DX12PSO::DefaultInitPSOData(overlaypsoinitdata);
+	overlaypsoinitdata.psodesc.graphicspsodesc.DepthStencilState.DepthEnable = false;
+	overlaypsoinitdata.psodesc.graphicspsodesc.PS.BytecodeLength = ps->GetCompiledCodeSize();
+	overlaypsoinitdata.psodesc.graphicspsodesc.PS.pShaderBytecode = ps->GetCompiledCode();
+	overlaypsoinitdata.psodesc.graphicspsodesc.VS.BytecodeLength = vs->GetCompiledCodeSize();
+	overlaypsoinitdata.psodesc.graphicspsodesc.VS.pShaderBytecode = vs->GetCompiledCode();
+	//root signature setup
+	{
+		{
+			D3D12_STATIC_SAMPLER_DESC asamplerdesc = StaticSamplerManager::GetDefaultStaticSamplerDesc();
+			//asamplerdesc.Filter = D3D12_FILTER::D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+			D3D12_ROOT_PARAMETER rootparams[2] = {};
+			D3D12_DESCRIPTOR_RANGE overlaytexuavrange = {};
+			overlaytexuavrange.BaseShaderRegister = 0;
+			overlaytexuavrange.RegisterSpace = 0;
+			overlaytexuavrange.OffsetInDescriptorsFromTableStart = 0;
+			overlaytexuavrange.NumDescriptors = 1;
+			overlaytexuavrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+			//D3D12_ROOT_SIGNATURE_DESC& rootsigdesc = m_rootsignature.getSignatureDescforModification();
+
+
+			rootparams[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+			rootparams[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+			rootparams[0].Constants.Num32BitValues = sizeof(CameraConstants) / 4;
+			rootparams[0].Constants.RegisterSpace = 0;
+			rootparams[0].Constants.ShaderRegister = 0;
+			rootparams[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			rootparams[1].ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_PIXEL;
+			rootparams[1].DescriptorTable.NumDescriptorRanges = 1;
+			rootparams[1].DescriptorTable.pDescriptorRanges = &overlaytexuavrange;
+			/*rootsigdesc.NumParameters = 2;
+			rootsigdesc.pParameters = rootparams;
+			rootsigdesc.NumStaticSamplers = 1;
+			rootsigdesc.pStaticSamplers = &asamplerdesc;*/
+			vector<D3D12_ROOT_PARAMETER> rootparamsvector;
+			rootparamsvector.push_back(rootparams[0]);
+			rootparamsvector.push_back(rootparams[1]);
+			vector< D3D12_STATIC_SAMPLER_DESC> samplerdescvector;
+			samplerdescvector.push_back(asamplerdesc);
+			
+			m_rootsignature.BuidDesc(rootparamsvector, samplerdescvector);
+			overlaypsoinitdata.rootsignature = m_rootsignature;
+		}
+
+		//input assembler setup
+		D3D12_INPUT_ELEMENT_DESC inputelements[2] = { 0 };
+		inputelements[0].SemanticName = "POS";
+		inputelements[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+		inputelements[0].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+		inputelements[0].InputSlot = 0;
+		inputelements[1].SemanticName = "VUV";
+		inputelements[1].Format = DXGI_FORMAT_R32G32_FLOAT;
+		inputelements[1].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+		inputelements[1].InputSlot = 0;
+		inputelements[1].AlignedByteOffset = sizeof(float) * 3;//after three floats is uv
+
+		overlaypsoinitdata.psodesc.graphicspsodesc.InputLayout.NumElements = 2;
+		overlaypsoinitdata.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = inputelements;
+
+		//m_rootsignature.Init(m_creationdevice, D3D_ROOT_SIGNATURE_VERSION_1);
+		//overlaypsoinitdata.psodesc.graphicspsodesc.pRootSignature = m_rootsignature.GetRootSignature();
+	}
+	m_overlaypso.Init(m_creationdevice, overlaypsoinitdata);
 }
 
 
@@ -357,12 +437,40 @@ void DX12SamplerfeedbackApplication::Render()
 		m_primarycmdlist->ClearUnorderedAccessViewUint(feedbackgpuhandle, feedbackcpuhandle,feedbacktex.GetResource().Get() ,clearcolour , 0, nullptr);
 	}
 	m_primarycmdlist->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
+	
 	if (m_sfsupported)
 	{
 		//issue the feedbackunit readback(i.e. after the draw command that actually writes the feeedback)
 		ComPtr<ID3D12GraphicsCommandList1> primerycommandlist1;
 		DXASSERT(m_primarycmdlist.GetcmdListComPtr().As(&primerycommandlist1))
 			m_redtexfeedbackunit.Readback(primerycommandlist1);
+	}
+	{
+		//draw overlay too
+		DX12TextureSimple& feedbackresolvetex=m_redtexfeedbackunit.GetFeedbackResolveTex();
+		if(feedbackresolvetex.GetCurrentResourceState()!=D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+		{
+			D3D12_RESOURCE_BARRIER resbarrier = feedbackresolvetex.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+			m_primarycmdlist->ResourceBarrier(1, &resbarrier);
+		}
+		m_primarycmdlist->SetPipelineState(m_overlaypso.GetPSO());
+		m_primarycmdlist->SetGraphicsRootSignature(m_overlaypso.GetRootSignature());
+
+		descheapstoset[0] = m_overlayresheap.GetDescHeap();
+		m_primarycmdlist->SetDescriptorHeaps(1, descheapstoset);
+		m_primarycmdlist->SetGraphicsRootDescriptorTable(1, m_overlayresheap.GetGPUHandleOffseted(0));
+		XMVECTOR scalevec = XMVectorSet(162.0f, 108.0f, 1.0f, 1.0f);
+		XMMATRIX modelmat = XMMatrixScalingFromVector(scalevec);
+		XMMATRIX translatemat = XMMatrixTranslation(600.0f, 200.0f, 0.0f);
+		modelmat = XMMatrixMultiply(modelmat, translatemat);
+		m_maincamera.SetModel(modelmat);
+		XMMATRIX mvp = m_maincamera.GetMVP(true);
+		//revert the model matrix for main camera to identity
+		modelmat = XMMatrixIdentity();
+		m_maincamera.SetModel(modelmat);
+		m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvp, 0);
+		m_primarycmdlist->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
+
 	}
 	backbufferbarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	backbufferbarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;

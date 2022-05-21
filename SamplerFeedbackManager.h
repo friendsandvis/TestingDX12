@@ -56,6 +56,8 @@ private:
 class DX12FeedBackUnit
 {
 public:
+	void CreateFeedbackResolveTexUAV(ComPtr< ID3D12Device> creationdevice, D3D12_CPU_DESCRIPTOR_HANDLE cpudeschandle);
+	DX12TextureSimple& GetFeedbackResolveTex() { return m_feedbackresolvedtex; }
 	DX12FeedBackUnit();
 	~DX12FeedBackUnit();
 	void InitReedbackBuffer();
