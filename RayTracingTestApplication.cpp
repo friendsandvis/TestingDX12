@@ -74,6 +74,7 @@ void RayTracingApplication::InitExtras()
 		m_raytracingsupported = (option5features.RaytracingTier != D3D12_RAYTRACING_TIER_NOT_SUPPORTED);
 	BasicModelManager::LoadModel(m_creationdevice, "models/cube.dae", m_loadedmodel, VERTEXVERSION2);
 	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
+	
 
 	//init gbuffer textures
 	//gbuffer rtv heap
@@ -115,10 +116,10 @@ void RayTracingApplication::InitExtras()
 	//ray tracing inits
 	if(m_raytracingsupported)
 	{
-		ComPtr<ID3D12Device5> device5;
-		DXASSERT(m_creationdevice.As(&device5))
+		
+		DXASSERT(m_creationdevice.As(&m_device5))
 		loadedmodelasblas.Init(m_loadedmodel);
-		loadedmodelasblas.Build(device5); 
+		loadedmodelasblas.Build(m_device5); 
 
 		{
 			D3D12_RAYTRACING_INSTANCE_DESC aninstancedesc = {};
@@ -131,7 +132,7 @@ void RayTracingApplication::InitExtras()
 			vector< D3D12_RAYTRACING_INSTANCE_DESC> instancedescs;
 			instancedescs.push_back(aninstancedesc);
 			loadedmodelastlas.Init(m_creationdevice, instancedescs);
-			loadedmodelastlas.Build(device5);
+			loadedmodelastlas.Build(m_device5);
 		}
 		
 	}
@@ -204,6 +205,17 @@ void RayTracingApplication::InitPSO()
 	}
 	m_pso.Init(m_creationdevice, psoinitdata);
 }
+void RayTracingApplication::InitRTPSO()
+{
+	DX12Shader* rgs = new DX12Shader();
+	rgs->Init(L"shaders/raytracing/RT/simplergs.hlsl", DX12Shader::ShaderType::RT);
+	m_simplertpso.AddShader(rgs, L"rgsmain", L"SimpleRGS");
+	DX12Shader* simplemiss = new DX12Shader();
+	simplemiss->Init(L"shaders/raytracing/RT/simplemiss.hlsl", DX12Shader::ShaderType::RT);
+	m_simplertpso.AddShader(simplemiss, L"missmain", L"SimpleMISS");
+	m_simplertpso.Init(m_device5);
+}
+
 
 void RayTracingApplication::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {

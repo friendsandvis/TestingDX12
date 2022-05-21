@@ -9,6 +9,7 @@
 #include"DX12DESCHEAP.h"
 #include"DX12Texture.h"
 #include"RaytracingUtils.h"
+#include"RTPSO.h"
 
 using namespace DirectX;
 
@@ -28,12 +29,15 @@ private:
 	DX12DESCHEAP m_gbufferrtvheaps;
 	DX12TextureSimple m_gbuffernormal,m_gbufferposition;
 	DX12PSO m_pso;
+	RTPSO m_simplertpso;
 	DX12RootSignature m_rootsignature;
-	
+	//device5 is often used in raytracing so retrive it once and keep troughout app lifetime.
+	ComPtr<ID3D12Device5> m_device5;
 	Model m_loadedmodel;
 	bool m_raytracingsupported;
 	DXFPSCameraController m_maincameracontroller;
 	ModelAccelerationStructureBLAS loadedmodelasblas;
 	ModelAccelerationStructureTLAS loadedmodelastlas;
 	void InitPSO();
+	void InitRTPSO();
 };

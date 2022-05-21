@@ -1,0 +1,6 @@
+
+[shader("raygeneration")]
+void rgsmain()
+{
+
+}
