@@ -112,6 +112,7 @@ void RayTracingApplication::InitExtras()
 
 	InitPSO();
 	
+	
 	m_loadedmodel.UploadModelDatatoBuffers();
 	//ray tracing inits
 	if(m_raytracingsupported)
@@ -120,6 +121,7 @@ void RayTracingApplication::InitExtras()
 		DXASSERT(m_creationdevice.As(&m_device5))
 		loadedmodelasblas.Init(m_loadedmodel);
 		loadedmodelasblas.Build(m_device5); 
+		InitRTPSO();
 
 		{
 			D3D12_RAYTRACING_INSTANCE_DESC aninstancedesc = {};
@@ -209,10 +211,11 @@ void RayTracingApplication::InitRTPSO()
 {
 	DX12Shader* rgs = new DX12Shader();
 	rgs->Init(L"shaders/raytracing/RT/simplergs.hlsl", DX12Shader::ShaderType::RT);
-	m_simplertpso.AddShader(rgs, L"rgsmain", L"SimpleRGS");
+	//m_simplertpso.AddShader(rgs, L"rgsmain", L"SimpleRGS");
 	DX12Shader* simplemiss = new DX12Shader();
 	simplemiss->Init(L"shaders/raytracing/RT/simplemiss.hlsl", DX12Shader::ShaderType::RT);
 	m_simplertpso.AddShader(simplemiss, L"missmain", L"SimpleMISS");
+	m_simplertpso.SetPipelineConfig();
 	m_simplertpso.Init(m_device5);
 }
 

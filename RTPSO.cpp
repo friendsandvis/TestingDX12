@@ -78,14 +78,17 @@ RTPSOShader::~RTPSOShader()
 
 void RTPSOShader::Init(DX12Shader* shader, wstring hlslentry, wstring uniquename)
 {
+	m_shader = shader;
 	m_uniquename = uniquename;
 	m_hlslentrypoint = hlslentry;
 	m_exportdesc.Flags = D3D12_EXPORT_FLAGS::D3D12_EXPORT_FLAG_NONE;
 	m_exportdesc.Name = m_uniquename.c_str();
 	m_exportdesc.ExportToRename = m_hlslentrypoint.c_str();
+	//m_exportdesc.Flags = D3D12_EXPORT_FLAGS::D3D12_EXPORT_FLAG_NONE;
 
 	m_dxillibdesc.NumExports = 1;
 	m_dxillibdesc.pExports = &m_exportdesc;
-	m_dxillibdesc.DXILLibrary.BytecodeLength = shader->GetCompiledCodeSize();
-	m_dxillibdesc.DXILLibrary.pShaderBytecode = shader->GetCompiledCode();
+	m_dxillibdesc.DXILLibrary.BytecodeLength = m_shader->GetCompiledCodeSize();
+	m_dxillibdesc.DXILLibrary.pShaderBytecode = m_shader->GetCompiledCode();
+	
 }
