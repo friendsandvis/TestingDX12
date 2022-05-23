@@ -42,6 +42,21 @@ void RTPSO::AddHitGroup(D3D12_HIT_GROUP_DESC& desc)
 	hitgroupobj.Type = D3D12_STATE_SUBOBJECT_TYPE::D3D12_STATE_SUBOBJECT_TYPE_HIT_GROUP;
 	m_statesubobjects.push_back(hitgroupobj);
 }
+void RTPSO::AddShaderConfig(D3D12_RAYTRACING_SHADER_CONFIG shaderconfigdesc, string name)
+{
+	uint8_t* descdata = new uint8_t[sizeof(D3D12_RAYTRACING_SHADER_CONFIG)];
+	m_subobjectdescs.push_back(descdata);
+	D3D12_RAYTRACING_SHADER_CONFIG* shaderconfig = reinterpret_cast<D3D12_RAYTRACING_SHADER_CONFIG*>(descdata);
+	(*shaderconfig) = shaderconfigdesc;
+	D3D12_STATE_SUBOBJECT shaderconfigsubobj = {};
+	shaderconfigsubobj.Type = D3D12_STATE_SUBOBJECT_TYPE::D3D12_STATE_SUBOBJECT_TYPE_RAYTRACING_SHADER_CONFIG;
+	shaderconfigsubobj.pDesc = shaderconfig;
+	m_statesubobjects.push_back(shaderconfigsubobj);
+	m_shaderconfigmap[name] = static_cast<UINT>(m_statesubobjects.size() - 1);
+
+
+	
+}
 
 void RTPSO::SetPipelineConfig(UINT maxtracerecursiondepth)
 {

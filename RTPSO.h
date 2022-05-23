@@ -27,6 +27,7 @@ class RTPSO
 public:
 	RTPSO();
 	~RTPSO();
+	void AddShaderConfig(D3D12_RAYTRACING_SHADER_CONFIG shaderconfigdesc, string name);
 	void AddHitGroup(D3D12_HIT_GROUP_DESC& desc);
 	void Init(ComPtr<ID3D12Device5> creationdevice);
 	void SetPipelineConfig(UINT maxtracerecursiondepth=1);
@@ -42,6 +43,8 @@ private:
 	//descs needed for diffrent subobjects e diffrent so we dynamically allocate them(as byte array)
 	vector< uint8_t*> m_subobjectdescs;
 	map<wstring, void*> m_shaderidentifiermap;
+	//map for easily finding shader config subobj in the subobject vector by index(map pairs shaderconfig name to the congig's subobject index in the vector
+	map<std::string, UINT> m_shaderconfigmap;
 
 	//kee
 };
