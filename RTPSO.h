@@ -21,12 +21,29 @@ private:
 	DX12Shader* m_shader;
 	wstring m_hlslentrypoint, m_uniquename;
 };
+//incapsulates all the needful for representing subobject to exports association.
+class ExportAssociation
+{
+public:
+	ExportAssociation();
+	~ExportAssociation();
+	//warning:this class is not responsible for mentaining the lifecycle of subobjectt to associate obj.
+	void Init(vector<LPCWSTR> exportstoassociateto,const D3D12_STATE_SUBOBJECT* subobjecttoassociate);
+	void PrepareSubObject(D3D12_STATE_SUBOBJECT& outassociationsubobject);
+
+private:
+	vector<LPCWSTR> m_exportstoassociateto;
+	D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION m_desc;
+};
+
+
 
 class RTPSO
 {
 public:
 	RTPSO();
 	~RTPSO();
+	void AddShaderConfigAssociation(vector<LPCWSTR> exportstoassociateto, string shaderconfigtoassociate);
 	void AddShaderConfig(D3D12_RAYTRACING_SHADER_CONFIG shaderconfigdesc, string name);
 	void AddHitGroup(D3D12_HIT_GROUP_DESC& desc);
 	void Init(ComPtr<ID3D12Device5> creationdevice);
@@ -40,12 +57,11 @@ private:
 	//only 1 rt config for a pipeline(many does not makes any sense so keep this desc a direct member variable.
 	D3D12_RAYTRACING_PIPELINE_CONFIG m_rtconfig;
 	vector< RTPSOShader> m_shaderstouse;
+	vector< ExportAssociation> m_associationsused;
 	//descs needed for diffrent subobjects e diffrent so we dynamically allocate them(as byte array)
 	vector< uint8_t*> m_subobjectdescs;
 	map<wstring, void*> m_shaderidentifiermap;
 	//map for easily finding shader config subobj in the subobject vector by index(map pairs shaderconfig name to the congig's subobject index in the vector
 	map<std::string, UINT> m_shaderconfigmap;
-
-	//kee
 };
 

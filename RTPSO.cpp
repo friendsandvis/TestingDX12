@@ -57,6 +57,22 @@ void RTPSO::AddShaderConfig(D3D12_RAYTRACING_SHADER_CONFIG shaderconfigdesc, str
 
 	
 }
+void RTPSO::AddShaderConfigAssociation(vector<LPCWSTR> exportstoassociateto,string shaderconfigtoassociate)
+{
+	const UINT configsubobjectidx = m_shaderconfigmap[shaderconfigtoassociate];
+	m_associationsused.push_back(ExportAssociation());
+	ExportAssociation& exportassociation = m_associationsused[(m_associationsused.size()-1)];
+	
+	D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION associationdesc = {};
+	associationdesc.NumExports = (UINT)exportstoassociateto.size();
+	associationdesc.pExports = exportstoassociateto.data();
+	
+	exportassociation.Init(exportstoassociateto, &m_statesubobjects[configsubobjectidx]);
+	D3D12_STATE_SUBOBJECT associationsubobject = {};
+	exportassociation.PrepareSubObject(associationsubobject);
+	m_statesubobjects.push_back(associationsubobject);
+	
+}
 
 void RTPSO::SetPipelineConfig(UINT maxtracerecursiondepth)
 {
@@ -89,6 +105,25 @@ RTPSOShader::~RTPSOShader()
 	{
 		delete m_shader;
 	}
+}
+ExportAssociation::ExportAssociation()
+{
+}
+
+ExportAssociation::~ExportAssociation()
+{
+}
+void ExportAssociation::Init(vector<LPCWSTR> exportstoassociateto, const D3D12_STATE_SUBOBJECT* subobjecttoassociate)
+{
+	m_exportstoassociateto = exportstoassociateto;
+	m_desc.NumExports = static_cast<UINT>(m_exportstoassociateto.size());
+	m_desc.pExports = m_exportstoassociateto.data();
+	m_desc.pSubobjectToAssociate = subobjecttoassociate;
+}
+void ExportAssociation::PrepareSubObject(D3D12_STATE_SUBOBJECT& outassociationsubobject)
+{
+	outassociationsubobject.Type = D3D12_STATE_SUBOBJECT_TYPE::D3D12_STATE_SUBOBJECT_TYPE_DXIL_SUBOBJECT_TO_EXPORTS_ASSOCIATION;
+	outassociationsubobject.pDesc = &m_desc;
 }
 
 void RTPSOShader::Init(DX12Shader* shader, wstring hlslentry, wstring uniquename)
