@@ -209,6 +209,10 @@ void RayTracingApplication::InitPSO()
 }
 void RayTracingApplication::InitRTPSO()
 {
+	D3D12_RAYTRACING_SHADER_CONFIG simplertshaderconfig = {};
+	simplertshaderconfig.MaxPayloadSizeInBytes = sizeof(XMMATRIX);
+	simplertshaderconfig.MaxAttributeSizeInBytes = D3D12_RAYTRACING_MAX_ATTRIBUTE_SIZE_IN_BYTES;
+	m_simplertpso.AddShaderConfig(simplertshaderconfig, "simpleshaderconfig");
 	DX12Shader* rgs = new DX12Shader();
 	rgs->Init(L"shaders/raytracing/RT/simplergs.hlsl", DX12Shader::ShaderType::RT);
 	//m_simplertpso.AddShader(rgs, L"rgsmain", L"SimpleRGS");
