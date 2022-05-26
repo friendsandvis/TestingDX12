@@ -7,6 +7,11 @@ RTPSO::RTPSO()
 
 RTPSO::~RTPSO()
 {
+	//delete rtpso shaders if any.
+	for (size_t i = 0; i < m_shaderstouse.size(); i++)
+	{
+		delete m_shaderstouse[i];
+	}
 	//delete subobject descs if any
 	for (size_t i = 0; i < m_subobjectdescs.size(); i++)
 	{
@@ -27,7 +32,7 @@ void RTPSO::Init(ComPtr<ID3D12Device5> creationdevice)
 		//retrive shader identifiers for all shaders in state object.
 		for (size_t i = 0; i < m_shaderstouse.size(); i++)
 		{
-			wstring shadername=m_shaderstouse[i].GetUniqueName();
+			wstring shadername=m_shaderstouse[i]->GetUniqueName();
 			m_shaderidentifiermap[shadername] = m_stateobjectprops->GetShaderIdentifier(shadername.c_str());
 	}
 }
@@ -84,12 +89,13 @@ void RTPSO::SetPipelineConfig(UINT maxtracerecursiondepth)
 }
 void RTPSO::AddShader(DX12Shader* shader, wstring hlslentry, wstring uniquename)
 {
-	m_shaderstouse.push_back(RTPSOShader());
-	RTPSOShader& rtshaderunit = m_shaderstouse[(m_shaderstouse.size()-1)];
-	rtshaderunit.Init(shader, hlslentry, uniquename);
+	RTPSOShader* rtshaderunit = new RTPSOShader();
+	m_shaderstouse.push_back(rtshaderunit);
+	
+	rtshaderunit->Init(shader, hlslentry, uniquename);
 	D3D12_STATE_SUBOBJECT shadersubobj = {};
 	shadersubobj.Type = D3D12_STATE_SUBOBJECT_TYPE::D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY;
-	shadersubobj.pDesc = &rtshaderunit.GetDXILLIBDESC();
+	shadersubobj.pDesc = &rtshaderunit->GetDXILLIBDESC();
 	m_statesubobjects.push_back(shadersubobj);
 
 }
@@ -100,7 +106,7 @@ RTPSOShader::RTPSOShader()
 }
 RTPSOShader::~RTPSOShader()
 {
-	//shader is dynamically allocated.
+	//shader is dynamically allocated(externally).
 	if (m_shader)
 	{
 		delete m_shader;

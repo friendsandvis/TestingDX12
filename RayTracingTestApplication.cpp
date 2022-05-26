@@ -215,7 +215,7 @@ void RayTracingApplication::InitRTPSO()
 	m_simplertpso.AddShaderConfig(simplertshaderconfig, "simpleshaderconfig");
 	DX12Shader* rgs = new DX12Shader();
 	rgs->Init(L"shaders/raytracing/RT/simplergs.hlsl", DX12Shader::ShaderType::RT);
-	//m_simplertpso.AddShader(rgs, L"rgsmain", L"SimpleRGS");
+	m_simplertpso.AddShader(rgs, L"rgsmain", L"SimpleRGS");
 	DX12Shader* simplemiss = new DX12Shader();
 	simplemiss->Init(L"shaders/raytracing/RT/simplemiss.hlsl", DX12Shader::ShaderType::RT);
 	m_simplertpso.AddShader(simplemiss, L"missmain", L"SimpleMISS");
