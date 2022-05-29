@@ -102,6 +102,17 @@ void RayTracingApplication::InitExtras()
 	m_gbuffernormal.SetName(L"GBUFFER_NORMAL");
 	m_gbufferposition.Init(m_creationdevice, gbuffertextureprops, ResourceCreationMode::COMMITED);
 	m_gbufferposition.SetName(L"GBUFFER_POSITION");
+	{
+		DX12ResourceCreationProperties rtoutputtexprops = {};
+		DX12TextureSimple::InitResourceCreationProperties(rtoutputtexprops);
+		
+		rtoutputtexprops.resdesc.Height = m_swapchain.GetSwapchainHeight();
+		rtoutputtexprops.resdesc.Width = m_swapchain.GetSwapchainWidth();
+		rtoutputtexprops.resdesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+		rtoutputtexprops.useclearvalue = false;
+		
+		m_rtouput.Init(m_creationdevice,rtoutputtexprops,ResourceCreationMode::COMMITED );
+	}
 	D3D12_RENDER_TARGET_VIEW_DESC gbufferrtvdesc = {};
 	gbufferrtvdesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 	gbufferrtvdesc.Texture2D.MipSlice = 0;

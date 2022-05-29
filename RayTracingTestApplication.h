@@ -27,7 +27,7 @@ protected:
 
 private:
 	DX12DESCHEAP m_gbufferrtvheaps;
-	DX12TextureSimple m_gbuffernormal,m_gbufferposition;
+	DX12TextureSimple m_gbuffernormal,m_gbufferposition,m_rtouput;
 	DX12PSO m_pso;
 	RTPSO m_simplertpso;
 	DX12RootSignature m_rootsignature;
