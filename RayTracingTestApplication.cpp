@@ -5,7 +5,8 @@
 
 RayTracingApplication::RayTracingApplication()
 	:m_loadedmodel(ModelDataUploadMode::COPY),
-	m_raytracingsupported(false)
+	m_raytracingsupported(false),
+	m_planemodel(ModelDataUploadMode::COPY)
 {
 	m_maincameracontroller.SetCameratoControl(&m_maincamera);
 	
@@ -73,6 +74,7 @@ void RayTracingApplication::InitExtras()
 	DXASSERT(m_creationdevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &option5features, sizeof(option5features)))
 		m_raytracingsupported = (option5features.RaytracingTier != D3D12_RAYTRACING_TIER_NOT_SUPPORTED);
 	BasicModelManager::LoadModel(m_creationdevice, "models/cube.dae", m_loadedmodel, VERTEXVERSION2);
+	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
 	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
 	
 
@@ -164,6 +166,7 @@ void RayTracingApplication::InitExtras()
 	}
 
 	m_uploadcommandlist.Reset();
+	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_loadedmodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	if (m_raytracingsupported)
 	{
@@ -230,6 +233,123 @@ void RayTracingApplication::InitPSO()
 		psoinitdata.psodesc.graphicspsodesc.pRootSignature = m_rootsignature.GetRootSignature();
 	}
 	m_pso.Init(m_creationdevice, psoinitdata);
+}
+void RayTracingApplication::InitRTDisplayPSO()
+{
+	PSOInitData basicpsodata = {};
+	basicpsodata.type = GRAPHICS;
+
+	//shaders to use
+	DX12Shader* vs = new DX12Shader();
+	DX12Shader* ps = new DX12Shader();
+	vs->Init(L"shaders/BasicVertexShader_1.hlsl", DX12Shader::ShaderType::VS);
+	ps->Init(L"shaders/BasicPixelShader_1.hlsl", DX12Shader::ShaderType::PS);
+	basicpsodata.m_shaderstouse.push_back(vs);
+	basicpsodata.m_shaderstouse.push_back(ps);
+
+	//build up graphic pso desc
+
+	//shaderdesc
+	basicpsodata.psodesc.graphicspsodesc.VS.pShaderBytecode = vs->GetCompiledCode();
+	basicpsodata.psodesc.graphicspsodesc.VS.BytecodeLength = vs->GetCompiledCodeSize();
+	basicpsodata.psodesc.graphicspsodesc.PS.pShaderBytecode = ps->GetCompiledCode();
+	basicpsodata.psodesc.graphicspsodesc.PS.BytecodeLength = ps->GetCompiledCodeSize();
+
+	//primitive setup
+	basicpsodata.psodesc.graphicspsodesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+
+	//rasterizer setup
+	basicpsodata.psodesc.graphicspsodesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	basicpsodata.psodesc.graphicspsodesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+	basicpsodata.psodesc.graphicspsodesc.RasterizerState.DepthClipEnable = FALSE;
+	basicpsodata.psodesc.graphicspsodesc.RasterizerState.AntialiasedLineEnable = FALSE;
+
+	//rtv&sample setup
+	basicpsodata.psodesc.graphicspsodesc.SampleMask = UINT_MAX;
+	basicpsodata.psodesc.graphicspsodesc.SampleDesc.Count = 1;
+	basicpsodata.psodesc.graphicspsodesc.SampleDesc.Quality = 0;
+	basicpsodata.psodesc.graphicspsodesc.RTVFormats[0] = DXGI_FORMAT_B8G8R8A8_UNORM;
+	basicpsodata.psodesc.graphicspsodesc.NumRenderTargets = 1;
+
+	//raster state
+	basicpsodata.psodesc.graphicspsodesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	basicpsodata.psodesc.graphicspsodesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+	basicpsodata.psodesc.graphicspsodesc.RasterizerState.DepthClipEnable = FALSE;
+	basicpsodata.psodesc.graphicspsodesc.RasterizerState.AntialiasedLineEnable = FALSE;
+
+	//root signature
+
+	//1 root param for ps texture & sampler 
+	D3D12_STATIC_SAMPLER_DESC simplesampler = {};
+	simplesampler.Filter = D3D12_FILTER::D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	simplesampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	simplesampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	simplesampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	simplesampler.MipLODBias = 0;
+	simplesampler.MaxAnisotropy = 0;
+	simplesampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+	simplesampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+	simplesampler.MinLOD = 0.0f;
+	simplesampler.MaxLOD = D3D12_FLOAT32_MAX;
+	simplesampler.ShaderRegister = 0;
+	simplesampler.RegisterSpace = 0;
+	simplesampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+	D3D12_ROOT_PARAMETER psimgrootparam = {};
+
+	D3D12_DESCRIPTOR_RANGE texsrvrange = {};
+	texsrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	texsrvrange.NumDescriptors = 1;
+	texsrvrange.BaseShaderRegister = 0;
+	texsrvrange.RegisterSpace = 0;
+	texsrvrange.OffsetInDescriptorsFromTableStart = 0;
+
+	psimgrootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	psimgrootparam.DescriptorTable.NumDescriptorRanges = 1;
+	psimgrootparam.DescriptorTable.pDescriptorRanges = &texsrvrange;
+
+	CD3DX12_ROOT_SIGNATURE_DESC emptyrootsignaturedesc = {};
+	emptyrootsignaturedesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+	emptyrootsignaturedesc.NumParameters = 1;
+	emptyrootsignaturedesc.pParameters = &psimgrootparam;
+	emptyrootsignaturedesc.NumStaticSamplers = 1;
+	emptyrootsignaturedesc.pStaticSamplers = &simplesampler;
+	
+
+	//inputlayoutsetup
+	{
+		D3D12_INPUT_ELEMENT_DESC simplevsinputelementdesc[2] = {};
+		simplevsinputelementdesc[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+		simplevsinputelementdesc[0].InputSlot = 0;
+		simplevsinputelementdesc[0].SemanticName = "POS";
+		simplevsinputelementdesc[0].SemanticIndex = 0;
+		simplevsinputelementdesc[0].InstanceDataStepRate = 0;
+		simplevsinputelementdesc[0].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+		simplevsinputelementdesc[1].Format = DXGI_FORMAT_R32G32_FLOAT;
+		simplevsinputelementdesc[1].InputSlot = 0;
+		simplevsinputelementdesc[1].SemanticName = "VUV";
+		simplevsinputelementdesc[1].SemanticIndex = 0;
+		simplevsinputelementdesc[1].InstanceDataStepRate = 0;
+		simplevsinputelementdesc[1].InstanceDataStepRate = 0;
+		simplevsinputelementdesc[1].AlignedByteOffset = sizeof(float) * 3;//uv after 3 pos floats
+		basicpsodata.psodesc.graphicspsodesc.InputLayout.NumElements = 2;
+		basicpsodata.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = simplevsinputelementdesc;
+
+	}
+
+
+
+	//blendstate setup
+	//blend state has fixed rt count of 8
+	for (size_t i = 0; i < 8; i++)
+	{
+		//same for all 8 rtvs
+		basicpsodata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].BlendEnable = FALSE;
+		basicpsodata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	}
+
+
+	m_psortdisplay.Init(m_creationdevice, basicpsodata);
 }
 void RayTracingApplication::InitRTPSO()
 {

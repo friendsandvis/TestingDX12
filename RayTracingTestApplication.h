@@ -30,16 +30,19 @@ private:
 	DX12DESCHEAP m_rtresheap_global;
 	DX12TextureSimple m_gbuffernormal,m_gbufferposition,m_rtouput;
 	DX12PSO m_pso;
+	//renderes the rt output texture as a full screen quad.
+	DX12PSO m_psortdisplay;
 	RTPSO m_simplertpso;
 	DX12RootSignature m_rootsignature;
 	//device5 is often used in raytracing so retrive it once and keep troughout app lifetime.
 	DX12Commandlist m_rtcommandlist;
 	ComPtr<ID3D12Device5> m_device5;
-	Model m_loadedmodel;
+	Model m_loadedmodel,m_planemodel;
 	bool m_raytracingsupported;
 	DXFPSCameraController m_maincameracontroller;
 	ModelAccelerationStructureBLAS loadedmodelasblas;
 	ModelAccelerationStructureTLAS loadedmodelastlas;
 	void InitPSO();
+	void InitRTDisplayPSO();
 	void InitRTPSO();
 };
