@@ -84,6 +84,13 @@ void RayTracingApplication::InitExtras()
 		gbufferrtvheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 		m_gbufferrtvheaps.Init(gbufferrtvheapdesc, m_creationdevice);
 	}
+	//heap to hold resources used by rt(global)
+	{
+		D3D12_DESCRIPTOR_HEAP_DESC heapdesc = {};
+		heapdesc.NumDescriptors = 1;//just 1 uav for now.
+		heapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		m_rtresheap_global.Init(heapdesc,m_creationdevice);
+	}
 	DX12ResourceCreationProperties gbuffertextureprops;
 	DX12TextureSimple::InitResourceCreationProperties(gbuffertextureprops);
 	gbuffertextureprops.resdesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -112,6 +119,12 @@ void RayTracingApplication::InitExtras()
 		rtoutputtexprops.useclearvalue = false;
 		
 		m_rtouput.Init(m_creationdevice,rtoutputtexprops,ResourceCreationMode::COMMITED );
+		m_rtouput.SetName(L"RToutput");
+		D3D12_UNORDERED_ACCESS_VIEW_DESC uavdesc = {};
+		uavdesc.Texture2D.MipSlice = 0;
+		uavdesc.Texture2D.PlaneSlice = 0;
+		uavdesc.ViewDimension = D3D12_UAV_DIMENSION::D3D12_UAV_DIMENSION_TEXTURE2D;
+		m_rtouput.CreateUAV(m_creationdevice, uavdesc, m_rtresheap_global.GetCPUHandleOffseted(0));
 	}
 	D3D12_RENDER_TARGET_VIEW_DESC gbufferrtvdesc = {};
 	gbufferrtvdesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
