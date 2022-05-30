@@ -135,6 +135,9 @@
     <ClCompile Include="RTPSO.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DX12RaytracingCommandlist.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="windmaker.h">
@@ -252,6 +255,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RTPSO.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12RaytracingCommandlist.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
