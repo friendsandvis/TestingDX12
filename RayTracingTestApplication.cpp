@@ -119,6 +119,7 @@ void RayTracingApplication::InitExtras()
 		rtoutputtexprops.resdesc.Width = m_swapchain.GetSwapchainWidth();
 		rtoutputtexprops.resdesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 		rtoutputtexprops.useclearvalue = false;
+		rtoutputtexprops.resdesc.Flags=D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 		
 		m_rtouput.Init(m_creationdevice,rtoutputtexprops,ResourceCreationMode::COMMITED );
 		m_rtouput.SetName(L"RToutput");
@@ -137,6 +138,7 @@ void RayTracingApplication::InitExtras()
 	
 
 	InitPSO();
+	InitRTDisplayPSO();
 	
 	
 	m_loadedmodel.UploadModelDatatoBuffers();
@@ -242,8 +244,8 @@ void RayTracingApplication::InitRTDisplayPSO()
 	//shaders to use
 	DX12Shader* vs = new DX12Shader();
 	DX12Shader* ps = new DX12Shader();
-	vs->Init(L"shaders/BasicVertexShader_1.hlsl", DX12Shader::ShaderType::VS);
-	ps->Init(L"shaders/BasicPixelShader_1.hlsl", DX12Shader::ShaderType::PS);
+	vs->Init(L"shaders/RTextras/VS.hlsl", DX12Shader::ShaderType::VS);
+	ps->Init(L"shaders/RTextras/PS.hlsl", DX12Shader::ShaderType::PS);
 	basicpsodata.m_shaderstouse.push_back(vs);
 	basicpsodata.m_shaderstouse.push_back(ps);
 
@@ -347,7 +349,33 @@ void RayTracingApplication::InitRTDisplayPSO()
 		basicpsodata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].BlendEnable = FALSE;
 		basicpsodata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 	}
+	//root signature
+	{
+		vector<D3D12_ROOT_PARAMETER> rootparams;
+		
+		vector<D3D12_STATIC_SAMPLER_DESC> staticsamplers;
+		D3D12_STATIC_SAMPLER_DESC asampler = StaticSamplerManager::GetDefaultStaticSamplerDesc();
+		asampler.Filter = D3D12_FILTER::D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+		staticsamplers.push_back(asampler);
+		D3D12_ROOT_PARAMETER psimgrootparam = {};
 
+		D3D12_DESCRIPTOR_RANGE texsrvrange = {};
+		texsrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		texsrvrange.NumDescriptors = 1;
+		texsrvrange.BaseShaderRegister = 0;
+		texsrvrange.RegisterSpace = 0;
+		texsrvrange.OffsetInDescriptorsFromTableStart = 0;
+
+		psimgrootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		psimgrootparam.DescriptorTable.NumDescriptorRanges = 1;
+		psimgrootparam.DescriptorTable.pDescriptorRanges = &texsrvrange;
+		rootparams.push_back(psimgrootparam);
+
+
+
+
+		basicpsodata.rootsignature.BuidDesc(rootparams,staticsamplers,D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+	}
 
 	m_psortdisplay.Init(m_creationdevice, basicpsodata);
 }

@@ -13,7 +13,7 @@ DX12RootSignature::DX12RootSignature()
 DX12RootSignature::~DX12RootSignature()
 {
 }
-void DX12RootSignature::BuidDesc(vector<D3D12_ROOT_PARAMETER>& rootparams, vector<D3D12_STATIC_SAMPLER_DESC>staticsamplers)
+void DX12RootSignature::BuidDesc(vector<D3D12_ROOT_PARAMETER>& rootparams, vector<D3D12_STATIC_SAMPLER_DESC>staticsamplers, D3D12_ROOT_SIGNATURE_FLAGS flags)
 {
 	m_rootparams = rootparams;
 	m_staticsamplerdescs = staticsamplers;
@@ -21,6 +21,7 @@ void DX12RootSignature::BuidDesc(vector<D3D12_ROOT_PARAMETER>& rootparams, vecto
 	m_desc.pParameters = m_rootparams.data();
 	m_desc.NumStaticSamplers = (UINT)m_staticsamplerdescs.size();
 	m_desc.pStaticSamplers = m_staticsamplerdescs.data();
+	m_desc.Flags = flags;
 
 }
 
@@ -29,6 +30,7 @@ void DX12RootSignature::Init(ComPtr< ID3D12Device> creationdevice,D3D_ROOT_SIGNA
 	DXASSERT(D3D12SerializeRootSignature(&m_desc, rootsigversion, m_rootSignatureblob.GetAddressOf(), m_errorblob.GetAddressOf()))
 		
 		
+
 	DXASSERT(creationdevice->CreateRootSignature(0,m_rootSignatureblob->GetBufferPointer(),m_rootSignatureblob->GetBufferSize(),IID_PPV_ARGS(m_signature.GetAddressOf())))
 }
 

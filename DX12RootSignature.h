@@ -8,7 +8,7 @@ public:
 	~DX12RootSignature();
 	void Init(ComPtr< ID3D12Device> creationdevice, D3D_ROOT_SIGNATURE_VERSION rootsigversion= D3D_ROOT_SIGNATURE_VERSION_1);
 	D3D12_ROOT_SIGNATURE_DESC& getSignatureDescforModification() { return m_desc; }
-	void BuidDesc(vector<D3D12_ROOT_PARAMETER>& rootparams, vector<D3D12_STATIC_SAMPLER_DESC>staticsamplers);
+	void BuidDesc(vector<D3D12_ROOT_PARAMETER>& rootparams, vector<D3D12_STATIC_SAMPLER_DESC>staticsamplers, D3D12_ROOT_SIGNATURE_FLAGS flags= D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 	ID3D12RootSignature* GetRootSignature() { return m_signature.Get(); }
 private:
 	ComPtr<ID3DBlob> m_rootSignatureblob, m_errorblob;
