@@ -19,7 +19,7 @@ void RayTracingApplication::PreRenderUpdate()
 {
 	m_maincameracontroller.Update();
 }
-
+/*a copy of model rendering to use later
 void RayTracingApplication::Render()
 {
 	m_primarycmdlist.Reset();
@@ -64,6 +64,46 @@ void RayTracingApplication::Render()
 	m_primarycmdlist->DrawIndexedInstanced(m_loadedmodel.GetIndiciesCount(), 1, 0, 0, 0);
 	DXASSERT(m_primarycmdlist->Close())
 		BasicRender();
+}*/
+void RayTracingApplication::Render()
+{
+	m_primarycmdlist.Reset();
+	//set rtv
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
+	m_primarycmdlist->SetPipelineState(m_psortdisplay.GetPSO());
+	m_primarycmdlist->SetGraphicsRootSignature(m_psortdisplay.GetRootSignature());
+	ID3D12DescriptorHeap* descheapstoset[1];
+	descheapstoset[0] = m_rtdisplayresheap.GetDescHeap();
+	m_primarycmdlist->SetDescriptorHeaps(1,descheapstoset );
+	m_primarycmdlist->SetGraphicsRootDescriptorTable(0,m_rtdisplayresheap.GetGPUHandlefromstart());
+	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, &dsvhandle);
+	float clearvalue[4] = { 1.0f,0.0f,0.0f,1.0f };
+	m_primarycmdlist->ClearRenderTargetView(rtvhandle, clearvalue, 0, nullptr);
+	m_primarycmdlist->ClearDepthStencilView(dsvhandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	{
+		m_primarycmdlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		D3D12_INDEX_BUFFER_VIEW ibview = m_planemodel.GetIBView();
+		D3D12_VERTEX_BUFFER_VIEW vbview = m_planemodel.GetVBView();
+		m_primarycmdlist->IASetVertexBuffers(0, 1, &vbview);
+		m_primarycmdlist->IASetIndexBuffer(&ibview);
+
+
+	}
+
+	{
+		D3D12_VIEWPORT aviewport = GetViewport();
+		D3D12_VIEWPORT viewportstoset[3] =
+		{ aviewport,aviewport,aviewport };
+		D3D12_RECT ascissorrect = GetScissorRect();
+		D3D12_RECT scissorrectstoset[3] =
+		{ ascissorrect,ascissorrect,ascissorrect };
+		m_primarycmdlist->RSSetViewports(3, viewportstoset);
+		m_primarycmdlist->RSSetScissorRects(3, scissorrectstoset);
+	}
+	m_primarycmdlist->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
+	DXASSERT(m_primarycmdlist->Close())
+		BasicRender();
 }
 
 void RayTracingApplication::InitExtras()
@@ -92,6 +132,14 @@ void RayTracingApplication::InitExtras()
 		heapdesc.NumDescriptors = 1;//just 1 uav for now.
 		heapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		m_rtresheap_global.Init(heapdesc,m_creationdevice);
+	}
+	//heap to hold resources used by rt output display pass
+	{
+		D3D12_DESCRIPTOR_HEAP_DESC heapdesc = {};
+		heapdesc.NumDescriptors = 1;//just 1 srv for now.
+		heapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		heapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		m_rtdisplayresheap.Init(heapdesc, m_creationdevice);
 	}
 	DX12ResourceCreationProperties gbuffertextureprops;
 	DX12TextureSimple::InitResourceCreationProperties(gbuffertextureprops);
@@ -128,6 +176,16 @@ void RayTracingApplication::InitExtras()
 		uavdesc.Texture2D.PlaneSlice = 0;
 		uavdesc.ViewDimension = D3D12_UAV_DIMENSION::D3D12_UAV_DIMENSION_TEXTURE2D;
 		m_rtouput.CreateUAV(m_creationdevice, uavdesc, m_rtresheap_global.GetCPUHandleOffseted(0));
+		{
+			D3D12_SHADER_RESOURCE_VIEW_DESC srvdesc = {};
+			srvdesc.ViewDimension = D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_TEXTURE2D;
+			srvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+			srvdesc.Texture2D.MipLevels = 1;
+			srvdesc.Texture2D.MostDetailedMip = 0;
+			srvdesc.Texture2D.ResourceMinLODClamp = 0.0f;
+
+			m_rtouput.CreateSRV(m_creationdevice, srvdesc, m_rtdisplayresheap.GetCPUHandleOffseted(0));
+		}
 	}
 	D3D12_RENDER_TARGET_VIEW_DESC gbufferrtvdesc = {};
 	gbufferrtvdesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;

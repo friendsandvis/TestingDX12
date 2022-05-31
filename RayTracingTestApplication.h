@@ -28,6 +28,7 @@ protected:
 private:
 	DX12DESCHEAP m_gbufferrtvheaps;
 	DX12DESCHEAP m_rtresheap_global;
+	DX12DESCHEAP m_rtdisplayresheap;
 	DX12TextureSimple m_gbuffernormal,m_gbufferposition,m_rtouput;
 	DX12PSO m_pso;
 	//renderes the rt output texture as a full screen quad.
