@@ -91,6 +91,7 @@ void RTPSO::AddLocalRootSignature(DX12RootSignature& rootsignature)
 	
 	
 }
+//rootsignature arg passed must be initialized.
 void RTPSO::SetGlobalRootSignature(DX12RootSignature& rootsignature)
 {
 	m_globalrootsignature = rootsignature;
