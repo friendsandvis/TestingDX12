@@ -2,6 +2,7 @@
 #include"DXUtils.h"
 #include"ShaderManager.h"
 #include<map>
+#include"DX12RootSignature.h"
 
 //a collective unit to repesent a shader used in rtpso as a dxil lib.
 class RTPSOShader
@@ -43,7 +44,8 @@ class RTPSO
 public:
 	RTPSO();
 	~RTPSO();
-	void AddLocalRootSignature();
+	void AddLocalRootSignature(DX12RootSignature& rootsignature);
+	void SetGlobalRootSignature(DX12RootSignature& rootsignature);
 	void AddShaderConfigAssociation(vector<LPCWSTR> exportstoassociateto, string shaderconfigtoassociate);
 	void AddShaderConfig(D3D12_RAYTRACING_SHADER_CONFIG shaderconfigdesc, string name);
 	void AddHitGroup(D3D12_HIT_GROUP_DESC& desc);
@@ -51,6 +53,9 @@ public:
 	void SetPipelineConfig(UINT maxtracerecursiondepth=1);
 	void AddShader(DX12Shader* shader, wstring hlslentry, wstring uniquename);
 private:
+	DX12RootSignature m_globalrootsignature;
+	//only 1 global root sig per rtpso
+	D3D12_GLOBAL_ROOT_SIGNATURE m_globalrootsignaturedesc;
 	ComPtr<ID3D12StateObject> m_stateobject;
 	ComPtr<ID3D12StateObjectProperties> m_stateobjectprops;
 	D3D12_STATE_OBJECT_DESC m_desc;

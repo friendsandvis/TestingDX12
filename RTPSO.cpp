@@ -84,12 +84,21 @@ void RTPSO::AddShaderConfigAssociation(vector<LPCWSTR> exportstoassociateto,stri
 	m_statesubobjects.push_back(associationsubobject);
 	
 }
-void RTPSO::AddLocalRootSignature()
+void RTPSO::AddLocalRootSignature(DX12RootSignature& rootsignature)
 {
 	D3D12_STATE_SUBOBJECT localrootsigobj = {};
 	localrootsigobj.Type = D3D12_STATE_SUBOBJECT_TYPE::D3D12_STATE_SUBOBJECT_TYPE_LOCAL_ROOT_SIGNATURE;
 	
 	
+}
+void RTPSO::SetGlobalRootSignature(DX12RootSignature& rootsignature)
+{
+	m_globalrootsignature = rootsignature;
+	m_globalrootsignaturedesc.pGlobalRootSignature = m_globalrootsignature.GetRootSignature();
+	D3D12_STATE_SUBOBJECT globalrootsigobj = {};
+	globalrootsigobj.Type = D3D12_STATE_SUBOBJECT_TYPE::D3D12_STATE_SUBOBJECT_TYPE_GLOBAL_ROOT_SIGNATURE;
+	globalrootsigobj.pDesc = &m_globalrootsignaturedesc;
+	m_statesubobjects.push_back(globalrootsigobj);
 }
 
 void RTPSO::SetPipelineConfig(UINT maxtracerecursiondepth)
