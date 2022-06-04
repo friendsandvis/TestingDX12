@@ -78,6 +78,13 @@ void RTPSO::AddShaderConfigAssociation(vector<LPCWSTR> exportstoassociateto,stri
 	m_statesubobjects.push_back(associationsubobject);
 	
 }
+void RTPSO::AddLocalRootSignature()
+{
+	D3D12_STATE_SUBOBJECT localrootsigobj = {};
+
+	
+	
+}
 
 void RTPSO::SetPipelineConfig(UINT maxtracerecursiondepth)
 {

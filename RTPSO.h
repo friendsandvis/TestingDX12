@@ -43,6 +43,7 @@ class RTPSO
 public:
 	RTPSO();
 	~RTPSO();
+	void AddLocalRootSignature();
 	void AddShaderConfigAssociation(vector<LPCWSTR> exportstoassociateto, string shaderconfigtoassociate);
 	void AddShaderConfig(D3D12_RAYTRACING_SHADER_CONFIG shaderconfigdesc, string name);
 	void AddHitGroup(D3D12_HIT_GROUP_DESC& desc);
