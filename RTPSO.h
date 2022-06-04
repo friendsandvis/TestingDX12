@@ -58,7 +58,8 @@ private:
 	//only 1 rt config for a pipeline(many does not makes any sense so keep this desc a direct member variable.
 	D3D12_RAYTRACING_PIPELINE_CONFIG m_rtconfig;
 	vector< RTPSOShader*> m_shaderstouse;
-	vector< ExportAssociation> m_associationsused;
+	//association objects are created in heap for use.
+	vector< ExportAssociation*> m_associationsused;
 	//descs needed for diffrent subobjects e diffrent so we dynamically allocate them(as byte array)
 	vector< uint8_t*> m_subobjectdescs;
 	map<wstring, void*> m_shaderidentifiermap;

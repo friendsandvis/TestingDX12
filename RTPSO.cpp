@@ -17,6 +17,11 @@ RTPSO::~RTPSO()
 	{
 		delete[] m_subobjectdescs[i];
 	}
+	// delete export association if any
+	for (size_t i = 0; i < m_associationsused.size(); i++)
+	{
+		delete m_associationsused[i];
+	}
 }
 
 void RTPSO::Init(ComPtr<ID3D12Device5> creationdevice)
@@ -65,23 +70,24 @@ void RTPSO::AddShaderConfig(D3D12_RAYTRACING_SHADER_CONFIG shaderconfigdesc, str
 void RTPSO::AddShaderConfigAssociation(vector<LPCWSTR> exportstoassociateto,string shaderconfigtoassociate)
 {
 	const UINT configsubobjectidx = m_shaderconfigmap[shaderconfigtoassociate];
-	m_associationsused.push_back(ExportAssociation());
-	ExportAssociation& exportassociation = m_associationsused[(m_associationsused.size()-1)];
+	
+	ExportAssociation* exportassociation=new ExportAssociation();
+	m_associationsused.push_back(exportassociation);
 	
 	D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION associationdesc = {};
 	associationdesc.NumExports = (UINT)exportstoassociateto.size();
 	associationdesc.pExports = exportstoassociateto.data();
 	
-	exportassociation.Init(exportstoassociateto, &m_statesubobjects[configsubobjectidx]);
+	exportassociation->Init(exportstoassociateto, &m_statesubobjects[configsubobjectidx]);
 	D3D12_STATE_SUBOBJECT associationsubobject = {};
-	exportassociation.PrepareSubObject(associationsubobject);
+	exportassociation->PrepareSubObject(associationsubobject);
 	m_statesubobjects.push_back(associationsubobject);
 	
 }
 void RTPSO::AddLocalRootSignature()
 {
 	D3D12_STATE_SUBOBJECT localrootsigobj = {};
-
+	localrootsigobj.Type = D3D12_STATE_SUBOBJECT_TYPE::D3D12_STATE_SUBOBJECT_TYPE_LOCAL_ROOT_SIGNATURE;
 	
 	
 }
