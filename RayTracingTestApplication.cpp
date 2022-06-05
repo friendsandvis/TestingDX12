@@ -450,6 +450,24 @@ void RayTracingApplication::InitRTPSO()
 	simplemiss->Init(L"shaders/raytracing/RT/simplemiss.hlsl", DX12Shader::ShaderType::RT);
 	m_simplertpso.AddShader(simplemiss, L"missmain", L"SimpleMISS");
 	m_simplertpso.SetPipelineConfig();
+	{
+		DX12RootSignature rtglobalrootsig;
+		vector<D3D12_ROOT_PARAMETER> rootparams;
+		D3D12_ROOT_PARAMETER param1 = {};
+		param1.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		param1.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		D3D12_DESCRIPTOR_RANGE uavrange = {};
+		uavrange.NumDescriptors = 1;
+		uavrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+		param1.DescriptorTable.pDescriptorRanges = &uavrange;
+		param1.DescriptorTable.NumDescriptorRanges = 1;
+		rootparams.push_back(param1);
+		vector<D3D12_STATIC_SAMPLER_DESC> staticsamplersused;
+
+		rtglobalrootsig.BuidDesc(rootparams, staticsamplersused, D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_NONE);
+		rtglobalrootsig.Init(m_creationdevice);
+		m_simplertpso.SetGlobalRootSignature(rtglobalrootsig);
+	}
 	m_simplertpso.Init(m_device5);
 }
 
