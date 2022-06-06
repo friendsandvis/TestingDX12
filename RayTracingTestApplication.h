@@ -35,6 +35,8 @@ private:
 	//renderes the rt output texture as a full screen quad.
 	DX12PSO m_psortdisplay;
 	RTPSO m_simplertpso;
+	//shader records
+	DX12Buffer m_rgsrecords;
 	DX12RootSignature m_rootsignature;
 	//device5 is often used in raytracing so retrive it once and keep troughout app lifetime.
 	DX12RaytracingCommandlist m_rtcommandlist;

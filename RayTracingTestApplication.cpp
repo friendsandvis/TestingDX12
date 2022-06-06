@@ -97,6 +97,8 @@ void RayTracingApplication::Render()
 		dispatchraysdesc.Height= m_swapchain.GetSwapchainHeight();
 		dispatchraysdesc.Depth = 1;
 		
+		
+		
 		//m_rtcommandlist->DispatchRays(&dispatchraysdesc);
 	}
 
@@ -131,6 +133,15 @@ void RayTracingApplication::InitExtras()
 	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
 	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
 	
+	//shader records
+	{
+		DX12ResourceCreationProperties rgsrecordsprops = {};
+		DX12Buffer::InitResourceCreationProperties(rgsrecordsprops);
+		//rgs records will contain only 1 record for now.
+		rgsrecordsprops.resdesc.Width = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES * 1;
+		rgsrecordsprops.resheapprop.Type = D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD;
+		m_rgsrecords.Init(m_creationdevice, rgsrecordsprops, ResourceCreationMode::COMMITED);
+	}
 
 	//init gbuffer textures
 	//gbuffer rtv heap
