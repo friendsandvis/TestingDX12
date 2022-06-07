@@ -27,6 +27,14 @@ protected:
 	void InitExtras()override;
 
 private:
+	struct RGSRecord
+	{
+		uint8_t m_shaderidentifier[D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES];
+		void SetShaderidentifier(void* identifier)
+		{
+			memcpy(m_shaderidentifier, identifier, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
+		}
+	};
 	DX12DESCHEAP m_gbufferrtvheaps;
 	DX12DESCHEAP m_rtresheap_global;
 	DX12DESCHEAP m_rtdisplayresheap;

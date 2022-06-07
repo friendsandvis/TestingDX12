@@ -133,12 +133,12 @@ void RayTracingApplication::InitExtras()
 	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
 	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
 	
-	//shader records
+	//shader records buffer init
 	{
 		DX12ResourceCreationProperties rgsrecordsprops = {};
 		DX12Buffer::InitResourceCreationProperties(rgsrecordsprops);
 		//rgs records will contain only 1 record for now.
-		rgsrecordsprops.resdesc.Width = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES * 1;
+		rgsrecordsprops.resdesc.Width = sizeof(RGSRecord) * 1;
 		rgsrecordsprops.resheapprop.Type = D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD;
 		m_rgsrecords.Init(m_creationdevice, rgsrecordsprops, ResourceCreationMode::COMMITED);
 	}
@@ -495,6 +495,25 @@ void RayTracingApplication::InitRTPSO()
 		m_simplertpso.SetGlobalRootSignature(rtglobalrootsig);
 	}
 	m_simplertpso.Init(m_device5);
+	//upload actual data to shader recods
+	{
+		//rgs
+		RGSRecord record = {};
+		void* shaderidentifier = m_simplertpso.GetShaderIdentifier(L"SimpleRGS");
+		assert(shaderidentifier != nullptr);
+		record.SetShaderidentifier(shaderidentifier);
+		BufferMapParams rgsmapparams = {};
+		rgsmapparams.range.Begin = 0;
+		rgsmapparams.range.End = 0;
+
+		void* mappedbuffer=m_rgsrecords.Map(rgsmapparams);
+		assert(mappedbuffer != nullptr);
+		//copy over rgs records
+		memcpy(mappedbuffer, &record, sizeof(RGSRecord));
+		rgsmapparams.range.End = m_rgsrecords.GetSize();
+		m_rgsrecords.UnMap(rgsmapparams);
+
+	}
 }
 
 

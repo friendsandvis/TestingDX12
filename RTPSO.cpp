@@ -41,6 +41,10 @@ void RTPSO::Init(ComPtr<ID3D12Device5> creationdevice)
 			m_shaderidentifiermap[shadername] = m_stateobjectprops->GetShaderIdentifier(shadername.c_str());
 	}
 }
+void* RTPSO::GetShaderIdentifier(wstring shadername)
+{
+	return m_shaderidentifiermap[shadername];
+}
 void RTPSO::AddHitGroup(D3D12_HIT_GROUP_DESC& desc)
 {
 	uint8_t* descdata = new uint8_t[sizeof(D3D12_HIT_GROUP_DESC)];

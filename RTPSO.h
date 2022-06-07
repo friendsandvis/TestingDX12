@@ -50,6 +50,7 @@ public:
 	void AddShaderConfig(D3D12_RAYTRACING_SHADER_CONFIG shaderconfigdesc, string name);
 	void AddHitGroup(D3D12_HIT_GROUP_DESC& desc);
 	void Init(ComPtr<ID3D12Device5> creationdevice);
+	void* GetShaderIdentifier(wstring shadername);
 	void SetPipelineConfig(UINT maxtracerecursiondepth=1);
 	void AddShader(DX12Shader* shader, wstring hlslentry, wstring uniquename);
 private:
