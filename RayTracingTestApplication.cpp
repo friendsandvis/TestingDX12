@@ -96,10 +96,15 @@ void RayTracingApplication::Render()
 		dispatchraysdesc.Width = m_swapchain.GetSwapchainWidth();
 		dispatchraysdesc.Height= m_swapchain.GetSwapchainHeight();
 		dispatchraysdesc.Depth = 1;
+		dispatchraysdesc.RayGenerationShaderRecord.StartAddress = m_rgsrecords.GetResource()->GetGPUVirtualAddress();;
+		dispatchraysdesc.RayGenerationShaderRecord.SizeInBytes = sizeof(RGSRecord);
 		
-		
-		
-		//m_rtcommandlist->DispatchRays(&dispatchraysdesc);
+		D3D12_RESOURCE_BARRIER rgsrecordbuffertransitionbarrier=m_rgsrecords.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+		m_rtcommandlist->ResourceBarrier(1, &rgsrecordbuffertransitionbarrier);
+		ID3D12DescriptorHeap* heapstoset[1] = { m_rtresheap_global.GetDescHeap()};
+		m_rtcommandlist->SetDescriptorHeaps(1, heapstoset);
+		m_rtcommandlist->SetComputeRootDescriptorTable(0, m_rtresheap_global.GetGPUHandleOffseted(0));
+		m_rtcommandlist->DispatchRays(&dispatchraysdesc);
 	}
 
 	{
