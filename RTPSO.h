@@ -53,6 +53,8 @@ public:
 	void* GetShaderIdentifier(wstring shadername);
 	void SetPipelineConfig(UINT maxtracerecursiondepth=1);
 	void AddShader(DX12Shader* shader, wstring hlslentry, wstring uniquename);
+	ID3D12RootSignature* GetGlobalRootSignature() { return m_globalrootsignature.GetRootSignature(); }
+	ID3D12StateObject* GetPipelineStateObject() { return m_stateobject.Get(); }
 private:
 	DX12RootSignature m_globalrootsignature;
 	//only 1 global root sig per rtpso

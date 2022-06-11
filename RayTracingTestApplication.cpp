@@ -94,17 +94,26 @@ void RayTracingApplication::Render()
 	{
 		D3D12_DISPATCH_RAYS_DESC dispatchraysdesc = {};
 		dispatchraysdesc.Width = m_swapchain.GetSwapchainWidth();
-		dispatchraysdesc.Height= m_swapchain.GetSwapchainHeight();
+		dispatchraysdesc.Height = m_swapchain.GetSwapchainHeight();
 		dispatchraysdesc.Depth = 1;
 		dispatchraysdesc.RayGenerationShaderRecord.StartAddress = m_rgsrecords.GetResource()->GetGPUVirtualAddress();;
 		dispatchraysdesc.RayGenerationShaderRecord.SizeInBytes = sizeof(RGSRecord);
-		
-		D3D12_RESOURCE_BARRIER rgsrecordbuffertransitionbarrier=m_rgsrecords.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+
+		m_rtcommandlist.Reset();
+		if (m_rgsrecords.GetCurrentResourceState()!= D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)
+		{
+			D3D12_RESOURCE_BARRIER rgsrecordbuffertransitionbarrier = m_rgsrecords.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 		m_rtcommandlist->ResourceBarrier(1, &rgsrecordbuffertransitionbarrier);
+	}
 		ID3D12DescriptorHeap* heapstoset[1] = { m_rtresheap_global.GetDescHeap()};
 		m_rtcommandlist->SetDescriptorHeaps(1, heapstoset);
+		ID3D12RootSignature* rtglobalrootsig = m_simplertpso.GetGlobalRootSignature();
+		assert(rtglobalrootsig != nullptr);
+		m_rtcommandlist->SetComputeRootSignature(rtglobalrootsig);
 		m_rtcommandlist->SetComputeRootDescriptorTable(0, m_rtresheap_global.GetGPUHandleOffseted(0));
+		m_rtcommandlist->SetPipelineState1(m_simplertpso.GetPipelineStateObject());
 		m_rtcommandlist->DispatchRays(&dispatchraysdesc);
+		m_rtcommandlist.Close();
 	}
 
 	{
@@ -161,6 +170,7 @@ void RayTracingApplication::InitExtras()
 		D3D12_DESCRIPTOR_HEAP_DESC heapdesc = {};
 		heapdesc.NumDescriptors = 1;//just 1 uav for now.
 		heapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		heapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		m_rtresheap_global.Init(heapdesc,m_creationdevice);
 	}
 	//heap to hold resources used by rt output display pass
