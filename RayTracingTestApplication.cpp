@@ -497,11 +497,14 @@ void RayTracingApplication::InitRTPSO()
 		D3D12_ROOT_PARAMETER param1 = {};
 		param1.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 		param1.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		D3D12_DESCRIPTOR_RANGE uavrange = {};
-		uavrange.NumDescriptors = 1;
-		uavrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
-		param1.DescriptorTable.pDescriptorRanges = &uavrange;
-		param1.DescriptorTable.NumDescriptorRanges = 1;
+		D3D12_DESCRIPTOR_RANGE uavrange[2];
+		uavrange[1].NumDescriptors = 1;
+		uavrange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+		uavrange[1].NumDescriptors = 1;
+		uavrange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		
+		param1.DescriptorTable.pDescriptorRanges = uavrange;
+		param1.DescriptorTable.NumDescriptorRanges = 2;
 		rootparams.push_back(param1);
 		vector<D3D12_STATIC_SAMPLER_DESC> staticsamplersused;
 
