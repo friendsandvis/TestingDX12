@@ -97,7 +97,7 @@ void RayTracingApplication::Render()
 		dispatchraysdesc.Height = m_swapchain.GetSwapchainHeight();
 		dispatchraysdesc.Depth = 1;
 		dispatchraysdesc.RayGenerationShaderRecord.StartAddress = m_rgsrecords.GetResource()->GetGPUVirtualAddress();;
-		dispatchraysdesc.RayGenerationShaderRecord.SizeInBytes = sizeof(RGSRecord);
+		dispatchraysdesc.RayGenerationShaderRecord.SizeInBytes = sizeof(BasicShaderRecord);
 
 		m_rtcommandlist.Reset();
 		if (m_rgsrecords.GetCurrentResourceState()!= D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)
@@ -152,7 +152,7 @@ void RayTracingApplication::InitExtras()
 		DX12ResourceCreationProperties rgsrecordsprops = {};
 		DX12Buffer::InitResourceCreationProperties(rgsrecordsprops);
 		//rgs records will contain only 1 record for now.
-		rgsrecordsprops.resdesc.Width = sizeof(RGSRecord) * 1;
+		rgsrecordsprops.resdesc.Width = sizeof(BasicShaderRecord) * 1;
 		rgsrecordsprops.resheapprop.Type = D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD;
 		m_rgsrecords.Init(m_creationdevice, rgsrecordsprops, ResourceCreationMode::COMMITED);
 	}
@@ -513,7 +513,7 @@ void RayTracingApplication::InitRTPSO()
 	//upload actual data to shader recods
 	{
 		//rgs
-		RGSRecord record = {};
+		BasicShaderRecord record = {};
 		void* shaderidentifier = m_simplertpso.GetShaderIdentifier(L"SimpleRGS");
 		assert(shaderidentifier != nullptr);
 		record.SetShaderidentifier(shaderidentifier);
@@ -524,7 +524,7 @@ void RayTracingApplication::InitRTPSO()
 		void* mappedbuffer=m_rgsrecords.Map(rgsmapparams);
 		assert(mappedbuffer != nullptr);
 		//copy over rgs records
-		memcpy(mappedbuffer, &record, sizeof(RGSRecord));
+		memcpy(mappedbuffer, &record, sizeof(BasicShaderRecord));
 		rgsmapparams.range.End = m_rgsrecords.GetSize();
 		m_rgsrecords.UnMap(rgsmapparams);
 

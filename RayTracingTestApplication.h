@@ -27,7 +27,7 @@ protected:
 	void InitExtras()override;
 
 private:
-	struct RGSRecord
+	struct BasicShaderRecord
 	{
 		uint8_t m_shaderidentifier[D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES];
 		void SetShaderidentifier(void* identifier)
