@@ -155,6 +155,8 @@ void RayTracingApplication::InitExtras()
 		rgsrecordsprops.resdesc.Width = sizeof(BasicShaderRecord) * 1;
 		rgsrecordsprops.resheapprop.Type = D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD;
 		m_rgsrecords.Init(m_creationdevice, rgsrecordsprops, ResourceCreationMode::COMMITED);
+		DX12ResourceCreationProperties missshaderrecordsprops = rgsrecordsprops;
+		m_missrecords.Init(m_creationdevice, missshaderrecordsprops, ResourceCreationMode::COMMITED);
 	}
 
 	//init gbuffer textures
@@ -515,21 +517,41 @@ void RayTracingApplication::InitRTPSO()
 	m_simplertpso.Init(m_device5);
 	//upload actual data to shader recods
 	{
-		//rgs
-		BasicShaderRecord record = {};
-		void* shaderidentifier = m_simplertpso.GetShaderIdentifier(L"SimpleRGS");
-		assert(shaderidentifier != nullptr);
-		record.SetShaderidentifier(shaderidentifier);
-		BufferMapParams rgsmapparams = {};
-		rgsmapparams.range.Begin = 0;
-		rgsmapparams.range.End = 0;
-
-		void* mappedbuffer=m_rgsrecords.Map(rgsmapparams);
-		assert(mappedbuffer != nullptr);
-		//copy over rgs records
-		memcpy(mappedbuffer, &record, sizeof(BasicShaderRecord));
-		rgsmapparams.range.End = m_rgsrecords.GetSize();
-		m_rgsrecords.UnMap(rgsmapparams);
+		
+		//pass rgs records to buffer
+		{
+			//rgs
+			BasicShaderRecord record = {};
+			void* shaderidentifier = m_simplertpso.GetShaderIdentifier(L"SimpleRGS");
+			assert(shaderidentifier != nullptr);
+			record.SetShaderidentifier(shaderidentifier);
+			BufferMapParams rgsmapparams = {};
+			rgsmapparams.range.Begin = 0;
+			rgsmapparams.range.End = 0;
+			void* mappedbuffer = m_rgsrecords.Map(rgsmapparams);
+			assert(mappedbuffer != nullptr);
+			//copy over rgs records
+			memcpy(mappedbuffer, &record, sizeof(BasicShaderRecord));
+			rgsmapparams.range.End = m_rgsrecords.GetSize();
+			m_rgsrecords.UnMap(rgsmapparams);
+		}
+		//pass missshader records to buffer
+		{
+			//rgs
+			BasicShaderRecord record = {};
+			void* shaderidentifier = m_simplertpso.GetShaderIdentifier(L"SimpleMISS");
+			assert(shaderidentifier != nullptr);
+			record.SetShaderidentifier(shaderidentifier);
+			BufferMapParams mapparams = {};
+			mapparams.range.Begin = 0;
+			mapparams.range.End = 0;
+			void* mappedbuffer = m_missrecords.Map(mapparams);
+			assert(mappedbuffer != nullptr);
+			//copy over miss records
+			memcpy(mappedbuffer, &record, sizeof(BasicShaderRecord));
+			mapparams.range.End = m_rgsrecords.GetSize();
+			m_rgsrecords.UnMap(mapparams);
+		}
 
 	}
 }
