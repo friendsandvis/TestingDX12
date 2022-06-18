@@ -499,13 +499,20 @@ void RayTracingApplication::InitRTPSO()
 		D3D12_ROOT_PARAMETER param1 = {};
 		param1.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 		param1.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		D3D12_DESCRIPTOR_RANGE uavrange[2];
-		uavrange[1].NumDescriptors = 1;
-		uavrange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
-		uavrange[1].NumDescriptors = 1;
-		uavrange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		D3D12_DESCRIPTOR_RANGE descranges[2];
+		descranges[0].NumDescriptors = 1;
+		descranges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+		descranges[0].NumDescriptors = 1;
+		descranges[0].BaseShaderRegister = 0;
+		descranges[0].RegisterSpace = 0;
+		descranges[0].OffsetInDescriptorsFromTableStart = 0;
+		descranges[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		descranges[1].NumDescriptors = 1;
+		descranges[1].BaseShaderRegister = 0;
+		descranges[1].RegisterSpace = 0;
+		descranges[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 		
-		param1.DescriptorTable.pDescriptorRanges = uavrange;
+		param1.DescriptorTable.pDescriptorRanges = descranges;
 		param1.DescriptorTable.NumDescriptorRanges = 2;
 		rootparams.push_back(param1);
 		vector<D3D12_STATIC_SAMPLER_DESC> staticsamplersused;
