@@ -87,11 +87,13 @@ class BasicModelManager
 public:
 	static void InitPlaneModel(ComPtr< ID3D12Device> creationdevice, Model& planemodel);
 	static void InitCubeModel(ComPtr< ID3D12Device> creationdevice, Model& cubemodel);
+	static void InitTriangleModel(ComPtr< ID3D12Device> creationdevice, Model& trianglemodel);
 	static void LoadModel(ComPtr< ID3D12Device> creationdevice,std::string modelfilepath, Model& outmodel, VertexVersion requiredvertexversion);
 	static void LoadModel(ComPtr< ID3D12Device> creationdevice, std::string modelfilepath, CompoundModel& outmodel, VertexVersion requiredvertexversion);
 
 private:
 	static void GetPlaneVerticiesV0(vector<VertexBase*>& outverticies);
 	static void GetCubeVerticiesV0(vector<VertexBase*>& outverticies);
+	static void GetTriangleVerticiesV0(vector<VertexBase*>& outverticies);
 };
 

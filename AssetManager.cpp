@@ -43,6 +43,10 @@ std::vector<unsigned> planeindicies =
 	0,1,2,
 	0,2,3
 };
+std::vector<unsigned> triangleindicies =
+{
+	0,1,2
+};
 //repesentation of a single mesh vertex
 
 
@@ -374,6 +378,16 @@ void BasicModelManager::InitCubeModel(ComPtr< ID3D12Device> creationdevice, Mode
 	cubemodel.InitIndexBuffer(creationdevice,cubeindicies);
 	cubemodel.UploadModelDatatoBuffers();
 }
+void BasicModelManager::InitTriangleModel(ComPtr< ID3D12Device> creationdevice, Model& trianglemodel)
+{
+	vector<VertexBase*> verticies;
+	GetTriangleVerticiesV0(verticies);
+	trianglemodel.SetVertexVersionUsed(VERTEXVERSION0);
+	trianglemodel.InitVertexBuffer(creationdevice, verticies);
+	trianglemodel.InitIndexBuffer(creationdevice, triangleindicies);
+	trianglemodel.UploadModelDatatoBuffers();
+}
+
 void BasicModelManager::LoadModel(ComPtr< ID3D12Device> creationdevice,std::string modelfilepath, Model& outmodel,VertexVersion requiredvertexversion)
 {
 	AssimpManager assimpmodel(modelfilepath);
@@ -453,4 +467,23 @@ void BasicModelManager::GetCubeVerticiesV0(vector<VertexBase*>& outverticies)
 	vert->m_position = { 1.0f,-1.0f, 1.0f };
 	vert->m_uv = { 0.0,0.0f };
 	outverticies.push_back(vert);
+}
+void BasicModelManager::GetTriangleVerticiesV0(vector<VertexBase*>& outverticies)
+{
+	//0(left-top)
+	VetexV0* vert = new VetexV0();
+	vert->m_position = { -1.0f, 1.0f, 0.0f };
+	vert->m_uv = { 0.0f,0.0f };
+	outverticies.push_back(vert);
+	//1(left-bottom)
+	vert = new VetexV0();
+	vert->m_position = { -1.0f,-1.0f,0.0f };
+	vert->m_uv = { 0.0f,1.0f };
+	outverticies.push_back(vert);
+	//2(right-bottom)
+	vert = new VetexV0();
+	vert->m_position = { 1.0f,-1.0f,0.0f };
+	vert->m_uv = { 1.0f,1.0f };
+	outverticies.push_back(vert);
+	
 }
