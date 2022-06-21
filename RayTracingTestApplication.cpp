@@ -19,8 +19,8 @@ void RayTracingApplication::PreRenderUpdate()
 {
 	m_maincameracontroller.Update();
 }
-/*a copy of model rendering to use later
-void RayTracingApplication::Render()
+
+void RayTracingApplication::RenderRaster()
 {
 	m_primarycmdlist.Reset();
 	//set rtv
@@ -64,8 +64,53 @@ void RayTracingApplication::Render()
 	m_primarycmdlist->DrawIndexedInstanced(m_loadedmodel.GetIndiciesCount(), 1, 0, 0, 0);
 	DXASSERT(m_primarycmdlist->Close())
 		BasicRender();
-}*/
-void RayTracingApplication::Render()
+}
+void RayTracingApplication::RenderRaster_NoProjection()
+{
+	m_primarycmdlist.Reset();
+	//set rtv
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
+	m_primarycmdlist->SetPipelineState(m_pso.GetPSO());
+	m_primarycmdlist->SetGraphicsRootSignature(m_rootsignature.GetRootSignature());
+	XMMATRIX mvp = m_maincamera.GetMVP();
+	m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvp, 0);
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandlestoset[3] =
+	{
+		rtvhandle,
+		m_gbufferrtvheaps.GetCPUHandleOffseted(0),
+		m_gbufferrtvheaps.GetCPUHandleOffseted(1)
+	};
+	m_primarycmdlist->OMSetRenderTargets(3, rtvhandlestoset, FALSE, &dsvhandle);
+	float clearvalue[4] = { 1.0f,1.0f,1.0f,1.0f };
+	float blackclearvalue[4] = { 0.0f,0.0f,0.0f,1.0f };
+	m_primarycmdlist->ClearRenderTargetView(m_gbufferrtvheaps.GetCPUHandleOffseted(0), blackclearvalue, 0, nullptr);
+	m_primarycmdlist->ClearRenderTargetView(rtvhandle, clearvalue, 0, nullptr);
+	m_primarycmdlist->ClearDepthStencilView(dsvhandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	{
+		m_primarycmdlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		D3D12_INDEX_BUFFER_VIEW ibview = m_planemodel.GetIBView();
+		D3D12_VERTEX_BUFFER_VIEW vbview = m_planemodel.GetVBView();
+		m_primarycmdlist->IASetVertexBuffers(0, 1, &vbview);
+		m_primarycmdlist->IASetIndexBuffer(&ibview);
+
+	}
+
+	{
+		D3D12_VIEWPORT aviewport = GetViewport();
+		D3D12_VIEWPORT viewportstoset[3] =
+		{ aviewport,aviewport,aviewport };
+		D3D12_RECT ascissorrect = GetScissorRect();
+		D3D12_RECT scissorrectstoset[3] =
+		{ ascissorrect,ascissorrect,ascissorrect };
+		m_primarycmdlist->RSSetViewports(3, viewportstoset);
+		m_primarycmdlist->RSSetScissorRects(3, scissorrectstoset);
+	}
+	m_primarycmdlist->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
+	DXASSERT(m_primarycmdlist->Close())
+		BasicRender();
+}
+void RayTracingApplication::RenderRT()
 {
 	m_primarycmdlist.Reset();
 	//set rtv
@@ -135,6 +180,10 @@ void RayTracingApplication::Render()
 	}
 		BasicRender();
 }
+void RayTracingApplication::Render()
+{
+	RenderRaster_NoProjection();
+}
 
 void RayTracingApplication::InitExtras()
 {
@@ -144,7 +193,7 @@ void RayTracingApplication::InitExtras()
 	DXASSERT(m_creationdevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &option5features, sizeof(option5features)))
 		m_raytracingsupported = (option5features.RaytracingTier != D3D12_RAYTRACING_TIER_NOT_SUPPORTED);
 	BasicModelManager::LoadModel(m_creationdevice, "models/cube.dae", m_loadedmodel, VERTEXVERSION2);
-	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
+	BasicModelManager::InitTriangleModel(m_creationdevice, m_planemodel);
 	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
 	
 	//shader records buffer init
@@ -237,7 +286,8 @@ void RayTracingApplication::InitExtras()
 	m_gbufferposition.CreateRTV(m_creationdevice, gbufferrtvdesc, m_gbufferrtvheaps.GetCPUHandleOffseted(1));
 	
 
-	InitPSO();
+	//InitPSO();
+	InitPSO_NoProjection();
 	InitRTDisplayPSO();
 	
 	
@@ -561,6 +611,62 @@ void RayTracingApplication::InitRTPSO()
 		}
 
 	}
+}
+void RayTracingApplication::InitPSO_NoProjection()
+{
+	PSOInitData psoinitdata;
+	psoinitdata.type = PSOType::GRAPHICS;
+
+	DX12Shader* vs = new DX12Shader();
+	DX12Shader* ps = new DX12Shader();
+	vs->Init(L"shaders/raytracing/GeneralRenderVertexShader_noProjection.hlsl", DX12Shader::ShaderType::VS);
+	ps->Init(L"shaders/raytracing/GeneralRenderTestPixelShader_noProjection.hlsl", DX12Shader::ShaderType::PS);
+	psoinitdata.m_shaderstouse.push_back(vs); psoinitdata.m_shaderstouse.push_back(ps);
+	DX12PSO::DefaultInitPSOData(psoinitdata);
+	psoinitdata.psodesc.graphicspsodesc.PS.BytecodeLength = ps->GetCompiledCodeSize();
+	psoinitdata.psodesc.graphicspsodesc.PS.pShaderBytecode = ps->GetCompiledCode();
+	psoinitdata.psodesc.graphicspsodesc.VS.BytecodeLength = vs->GetCompiledCodeSize();
+	psoinitdata.psodesc.graphicspsodesc.VS.pShaderBytecode = vs->GetCompiledCode();
+	//rtv setup
+	psoinitdata.psodesc.graphicspsodesc.NumRenderTargets = 3;
+	psoinitdata.psodesc.graphicspsodesc.RTVFormats[1] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	psoinitdata.psodesc.graphicspsodesc.RTVFormats[2] = DXGI_FORMAT_R32G32B32A32_FLOAT;
+
+	//root signature setup
+	{
+		{
+			D3D12_ROOT_PARAMETER rootparams[1] = {};
+			D3D12_ROOT_SIGNATURE_DESC& rootsigdesc = m_rootsignature.getSignatureDescforModification();
+			rootsigdesc.NumParameters = 1;
+
+			rootparams[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+			rootparams[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+			rootparams[0].Constants.Num32BitValues = sizeof(XMMATRIX) / 4;
+			rootparams[0].Constants.RegisterSpace = 0;
+			rootparams[0].Constants.ShaderRegister = 0;
+			rootsigdesc.pParameters = rootparams;
+
+		}
+
+		//input assembler setup
+		D3D12_INPUT_ELEMENT_DESC inputelements[2] = { 0 };
+		inputelements[0].SemanticName = "POS";
+		inputelements[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+		inputelements[0].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+		inputelements[0].InputSlot = 0;
+		inputelements[1].SemanticName = "VUV";
+		inputelements[1].Format = DXGI_FORMAT_R32G32_FLOAT;
+		inputelements[1].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+		inputelements[1].InputSlot = 0;
+		inputelements[1].AlignedByteOffset = sizeof(float) * 3;//after three floats is normal
+
+		psoinitdata.psodesc.graphicspsodesc.InputLayout.NumElements = 2;
+		psoinitdata.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = inputelements;
+
+		m_rootsignature.Init(m_creationdevice, D3D_ROOT_SIGNATURE_VERSION_1);
+		psoinitdata.psodesc.graphicspsodesc.pRootSignature = m_rootsignature.GetRootSignature();
+	}
+	m_pso.Init(m_creationdevice, psoinitdata);
 }
 
 
