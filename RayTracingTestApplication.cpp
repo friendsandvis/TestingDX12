@@ -6,7 +6,7 @@
 RayTracingApplication::RayTracingApplication()
 	:m_loadedmodel(ModelDataUploadMode::COPY),
 	m_raytracingsupported(false),
-	m_planemodel(ModelDataUploadMode::COPY)
+	m_trianglemodel(ModelDataUploadMode::COPY)
 {
 	m_maincameracontroller.SetCameratoControl(&m_maincamera);
 	
@@ -89,8 +89,8 @@ void RayTracingApplication::RenderRaster_NoProjection()
 	m_primarycmdlist->ClearDepthStencilView(dsvhandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	{
 		m_primarycmdlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		D3D12_INDEX_BUFFER_VIEW ibview = m_planemodel.GetIBView();
-		D3D12_VERTEX_BUFFER_VIEW vbview = m_planemodel.GetVBView();
+		D3D12_INDEX_BUFFER_VIEW ibview = m_trianglemodel.GetIBView();
+		D3D12_VERTEX_BUFFER_VIEW vbview = m_trianglemodel.GetVBView();
 		m_primarycmdlist->IASetVertexBuffers(0, 1, &vbview);
 		m_primarycmdlist->IASetIndexBuffer(&ibview);
 
@@ -106,7 +106,7 @@ void RayTracingApplication::RenderRaster_NoProjection()
 		m_primarycmdlist->RSSetViewports(3, viewportstoset);
 		m_primarycmdlist->RSSetScissorRects(3, scissorrectstoset);
 	}
-	m_primarycmdlist->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
+	m_primarycmdlist->DrawIndexedInstanced(m_trianglemodel.GetIndiciesCount(), 1, 0, 0, 0);
 	DXASSERT(m_primarycmdlist->Close())
 		BasicRender();
 }
@@ -128,8 +128,8 @@ void RayTracingApplication::RenderRT()
 	m_primarycmdlist->ClearDepthStencilView(dsvhandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	{
 		m_primarycmdlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		D3D12_INDEX_BUFFER_VIEW ibview = m_planemodel.GetIBView();
-		D3D12_VERTEX_BUFFER_VIEW vbview = m_planemodel.GetVBView();
+		D3D12_INDEX_BUFFER_VIEW ibview = m_trianglemodel.GetIBView();
+		D3D12_VERTEX_BUFFER_VIEW vbview = m_trianglemodel.GetVBView();
 		m_primarycmdlist->IASetVertexBuffers(0, 1, &vbview);
 		m_primarycmdlist->IASetIndexBuffer(&ibview);
 
@@ -174,7 +174,7 @@ void RayTracingApplication::RenderRT()
 		m_primarycmdlist->RSSetViewports(3, viewportstoset);
 		m_primarycmdlist->RSSetScissorRects(3, scissorrectstoset);
 	}
-	m_primarycmdlist->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
+	m_primarycmdlist->DrawIndexedInstanced(m_trianglemodel.GetIndiciesCount(), 1, 0, 0, 0);
 	DXASSERT(m_primarycmdlist->Close())
 	//execute rt cmd list first
 	{
@@ -197,7 +197,7 @@ void RayTracingApplication::InitExtras()
 	DXASSERT(m_creationdevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &option5features, sizeof(option5features)))
 		m_raytracingsupported = (option5features.RaytracingTier != D3D12_RAYTRACING_TIER_NOT_SUPPORTED);
 	BasicModelManager::LoadModel(m_creationdevice, "models/cube.dae", m_loadedmodel, VERTEXVERSION2);
-	BasicModelManager::InitTriangleModel(m_creationdevice, m_planemodel);
+	BasicModelManager::InitTriangleModel(m_creationdevice, m_trianglemodel);
 	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
 	
 	//shader records buffer init
@@ -323,7 +323,7 @@ void RayTracingApplication::InitExtras()
 	}
 
 	m_uploadcommandlist.Reset();
-	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
+	m_trianglemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_loadedmodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	if (m_raytracingsupported)
 	{
