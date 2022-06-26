@@ -143,6 +143,9 @@ void RayTracingApplication::RenderRT()
 		dispatchraysdesc.Depth = 1;
 		dispatchraysdesc.RayGenerationShaderRecord.StartAddress = m_rgsrecords.GetResource()->GetGPUVirtualAddress();;
 		dispatchraysdesc.RayGenerationShaderRecord.SizeInBytes = sizeof(BasicShaderRecord);
+		dispatchraysdesc.MissShaderTable.StartAddress = m_missrecords.GetResource()->GetGPUVirtualAddress();
+		dispatchraysdesc.MissShaderTable.SizeInBytes = m_missrecords.GetSize();
+		dispatchraysdesc.MissShaderTable.StrideInBytes= sizeof(BasicShaderRecord);
 
 		m_rtcommandlist.Reset();
 		if (m_rgsrecords.GetCurrentResourceState()!= D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)
@@ -182,7 +185,8 @@ void RayTracingApplication::RenderRT()
 }
 void RayTracingApplication::Render()
 {
-	RenderRaster_NoProjection();
+	//RenderRaster_NoProjection();
+	RenderRT();
 }
 
 void RayTracingApplication::InitExtras()
