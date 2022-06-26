@@ -546,6 +546,11 @@ void RayTracingApplication::InitRTPSO()
 	DX12Shader* simplemiss = new DX12Shader();
 	simplemiss->Init(L"shaders/raytracing/RT/simplemiss.hlsl", DX12Shader::ShaderType::RT);
 	m_simplertpso.AddShader(simplemiss, L"missmain", L"SimpleMISS");
+	
+		DX12Shader* simplech = new DX12Shader();
+		simplech->Init(L"shaders/raytracing/RT/simpleclosesthit.hlsl", DX12Shader::ShaderType::RT);
+		m_simplertpso.AddShader(simplech, L"closesthitmain", L"SimpleCH");
+	
 	m_simplertpso.SetPipelineConfig();
 	{
 		DX12RootSignature rtglobalrootsig;
