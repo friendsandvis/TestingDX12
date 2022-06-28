@@ -146,6 +146,10 @@ void RayTracingApplication::RenderRT()
 		dispatchraysdesc.MissShaderTable.StartAddress = m_missrecords.GetResource()->GetGPUVirtualAddress();
 		dispatchraysdesc.MissShaderTable.SizeInBytes = m_missrecords.GetSize();
 		dispatchraysdesc.MissShaderTable.StrideInBytes= sizeof(BasicShaderRecord);
+		dispatchraysdesc.HitGroupTable.StartAddress = m_hitrecords.GetResource()->GetGPUVirtualAddress();
+		dispatchraysdesc.HitGroupTable.SizeInBytes =m_hitrecords.GetSize();
+		dispatchraysdesc.HitGroupTable.StrideInBytes = sizeof(BasicShaderRecord);
+
 
 		m_rtcommandlist.Reset();
 		if (m_rgsrecords.GetCurrentResourceState()!= D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)
@@ -210,6 +214,8 @@ void RayTracingApplication::InitExtras()
 		m_rgsrecords.Init(m_creationdevice, rgsrecordsprops, ResourceCreationMode::COMMITED);
 		DX12ResourceCreationProperties missshaderrecordsprops = rgsrecordsprops;
 		m_missrecords.Init(m_creationdevice, missshaderrecordsprops, ResourceCreationMode::COMMITED);
+		DX12ResourceCreationProperties hitshaderrecordsprops = rgsrecordsprops;
+		m_hitrecords.Init(m_creationdevice, hitshaderrecordsprops, ResourceCreationMode::COMMITED);
 	}
 
 	//init gbuffer textures
@@ -621,8 +627,25 @@ void RayTracingApplication::InitRTPSO()
 			assert(mappedbuffer != nullptr);
 			//copy over miss records
 			memcpy(mappedbuffer, &record, sizeof(BasicShaderRecord));
-			mapparams.range.End = m_rgsrecords.GetSize();
-			m_rgsrecords.UnMap(mapparams);
+			mapparams.range.End = m_missrecords.GetSize();
+			m_missrecords.UnMap(mapparams);
+		}
+		//pass hit group records to buffer
+		{
+			
+			BasicShaderRecord record = {};
+			void* shaderidentifier = m_simplertpso.GetShaderIdentifier(L"SimpleHIT");
+			assert(shaderidentifier != nullptr);
+			record.SetShaderidentifier(shaderidentifier);
+			BufferMapParams mapparams = {};
+			mapparams.range.Begin = 0;
+			mapparams.range.End = 0;
+			void* mappedbuffer = m_hitrecords.Map(mapparams);
+			assert(mappedbuffer != nullptr);
+			//copy over hit group records
+			memcpy(mappedbuffer, &record, sizeof(BasicShaderRecord));
+			mapparams.range.End = m_hitrecords.GetSize();
+			m_hitrecords.UnMap(mapparams);
 		}
 
 	}
