@@ -37,13 +37,27 @@ void RTPSO::Init(ComPtr<ID3D12Device5> creationdevice)
 		//retrive shader identifiers for all shaders in state object.
 		for (size_t i = 0; i < m_shaderstouse.size(); i++)
 		{
+			if (!m_shaderstouse[i]->IsShaderIdentifierRetriveable())
+			{
+				continue;
+			}
 			wstring shadername=m_shaderstouse[i]->GetUniqueName();
 			m_shaderidentifiermap[shadername] = m_stateobjectprops->GetShaderIdentifier(shadername.c_str());
 	}
+	//retrive hitgroup identifiers for all hit groups  in state object.
+	for (size_t i = 0; i < m_hitgroupstouse.size(); i++)
+	{
+		wstring hitgroupname = m_hitgroupstouse[i];
+		m_hitgroupidentifiermap[hitgroupname] = m_stateobjectprops->GetShaderIdentifier(hitgroupname.c_str());
+	}
 }
-void* RTPSO::GetShaderIdentifier(wstring shadername)
+void* RTPSO::GetIdentifier(wstring name, bool ishitgroup)
 {
-	return m_shaderidentifiermap[shadername];
+	if (ishitgroup)
+	{
+		return m_hitgroupidentifiermap[name];
+	}
+	return m_shaderidentifiermap[name];
 }
 void RTPSO::AddHitGroup(D3D12_HIT_GROUP_DESC& desc)
 {
@@ -55,6 +69,7 @@ void RTPSO::AddHitGroup(D3D12_HIT_GROUP_DESC& desc)
 	hitgroupobj.pDesc = hitgroupdesc;
 	hitgroupobj.Type = D3D12_STATE_SUBOBJECT_TYPE::D3D12_STATE_SUBOBJECT_TYPE_HIT_GROUP;
 	m_statesubobjects.push_back(hitgroupobj);
+	m_hitgroupstouse.push_back(desc.HitGroupExport);
 }
 void RTPSO::AddShaderConfig(D3D12_RAYTRACING_SHADER_CONFIG shaderconfigdesc, string name)
 {
@@ -114,12 +129,12 @@ void RTPSO::SetPipelineConfig(UINT maxtracerecursiondepth)
 	subobj.pDesc = &m_rtconfig;
 	m_statesubobjects.push_back(subobj);
 }
-void RTPSO::AddShader(DX12Shader* shader, wstring hlslentry, wstring uniquename)
+void RTPSO::AddShader(DX12Shader* shader, wstring hlslentry, wstring uniquename,RTPSOSHADERTYPE shadertype)
 {
 	RTPSOShader* rtshaderunit = new RTPSOShader();
 	m_shaderstouse.push_back(rtshaderunit);
 	
-	rtshaderunit->Init(shader, hlslentry, uniquename);
+	rtshaderunit->Init(shader, hlslentry, uniquename,shadertype);
 	D3D12_STATE_SUBOBJECT shadersubobj = {};
 	shadersubobj.Type = D3D12_STATE_SUBOBJECT_TYPE::D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY;
 	shadersubobj.pDesc = &rtshaderunit->GetDXILLIBDESC();
@@ -158,9 +173,14 @@ void ExportAssociation::PrepareSubObject(D3D12_STATE_SUBOBJECT& outassociationsu
 	outassociationsubobject.Type = D3D12_STATE_SUBOBJECT_TYPE::D3D12_STATE_SUBOBJECT_TYPE_DXIL_SUBOBJECT_TO_EXPORTS_ASSOCIATION;
 	outassociationsubobject.pDesc = &m_desc;
 }
-
-void RTPSOShader::Init(DX12Shader* shader, wstring hlslentry, wstring uniquename)
+bool RTPSOShader::IsShaderIdentifierRetriveable()
 {
+	bool result = (m_type!=RTPSOSHADERTYPE::CLOSESTHIT);
+	return result;
+}
+void RTPSOShader::Init(DX12Shader* shader, wstring hlslentry, wstring uniquename, RTPSOSHADERTYPE shadertype)
+{
+	m_type = shadertype;
 	m_shader = shader;
 	m_uniquename = uniquename;
 	m_hlslentrypoint = hlslentry;

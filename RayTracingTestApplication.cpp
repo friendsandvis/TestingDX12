@@ -6,7 +6,8 @@
 RayTracingApplication::RayTracingApplication()
 	:m_loadedmodel(ModelDataUploadMode::COPY),
 	m_raytracingsupported(false),
-	m_trianglemodel(ModelDataUploadMode::COPY)
+	m_trianglemodel(ModelDataUploadMode::COPY),
+	m_planemodel(ModelDataUploadMode::COPY)
 {
 	m_maincameracontroller.SetCameratoControl(&m_maincamera);
 	
@@ -123,13 +124,13 @@ void RayTracingApplication::RenderRT()
 	m_primarycmdlist->SetDescriptorHeaps(1,descheapstoset );
 	m_primarycmdlist->SetGraphicsRootDescriptorTable(0,m_rtdisplayresheap.GetGPUHandlefromstart());
 	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, &dsvhandle);
-	float clearvalue[4] = { 1.0f,0.0f,0.0f,1.0f };
+	float clearvalue[4] = { 1.0f,1.0f,1.0f,1.0f };
 	m_primarycmdlist->ClearRenderTargetView(rtvhandle, clearvalue, 0, nullptr);
 	m_primarycmdlist->ClearDepthStencilView(dsvhandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	{
 		m_primarycmdlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		D3D12_INDEX_BUFFER_VIEW ibview = m_trianglemodel.GetIBView();
-		D3D12_VERTEX_BUFFER_VIEW vbview = m_trianglemodel.GetVBView();
+		D3D12_INDEX_BUFFER_VIEW ibview = m_planemodel.GetIBView();
+		D3D12_VERTEX_BUFFER_VIEW vbview = m_planemodel.GetVBView();
 		m_primarycmdlist->IASetVertexBuffers(0, 1, &vbview);
 		m_primarycmdlist->IASetIndexBuffer(&ibview);
 
@@ -178,7 +179,7 @@ void RayTracingApplication::RenderRT()
 		m_primarycmdlist->RSSetViewports(3, viewportstoset);
 		m_primarycmdlist->RSSetScissorRects(3, scissorrectstoset);
 	}
-	m_primarycmdlist->DrawIndexedInstanced(m_trianglemodel.GetIndiciesCount(), 1, 0, 0, 0);
+	m_primarycmdlist->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
 	DXASSERT(m_primarycmdlist->Close())
 	//execute rt cmd list first
 	{
@@ -202,6 +203,7 @@ void RayTracingApplication::InitExtras()
 		m_raytracingsupported = (option5features.RaytracingTier != D3D12_RAYTRACING_TIER_NOT_SUPPORTED);
 	BasicModelManager::LoadModel(m_creationdevice, "models/cube.dae", m_loadedmodel, VERTEXVERSION2);
 	BasicModelManager::InitTriangleModel(m_creationdevice, m_trianglemodel);
+	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
 	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
 	
 	//shader records buffer init
@@ -330,6 +332,7 @@ void RayTracingApplication::InitExtras()
 
 	m_uploadcommandlist.Reset();
 	m_trianglemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
+	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_loadedmodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	if (m_raytracingsupported)
 	{
@@ -548,14 +551,14 @@ void RayTracingApplication::InitRTPSO()
 	m_simplertpso.AddShaderConfig(simplertshaderconfig, "simpleshaderconfig");
 	DX12Shader* rgs = new DX12Shader();
 	rgs->Init(L"shaders/raytracing/RT/simplergs.hlsl", DX12Shader::ShaderType::RT);
-	m_simplertpso.AddShader(rgs, L"rgsmain", L"SimpleRGS");
+	m_simplertpso.AddShader(rgs, L"rgsmain", L"SimpleRGS",RTPSOSHADERTYPE::RAYGEN);
 	DX12Shader* simplemiss = new DX12Shader();
 	simplemiss->Init(L"shaders/raytracing/RT/simplemiss.hlsl", DX12Shader::ShaderType::RT);
-	m_simplertpso.AddShader(simplemiss, L"missmain", L"SimpleMISS");
+	m_simplertpso.AddShader(simplemiss, L"missmain", L"SimpleMISS", RTPSOSHADERTYPE::MISS);
 	
 		DX12Shader* simplech = new DX12Shader();
 		simplech->Init(L"shaders/raytracing/RT/simpleclosesthit.hlsl", DX12Shader::ShaderType::RT);
-		m_simplertpso.AddShader(simplech, L"closesthitmain", L"SimpleCH");
+		m_simplertpso.AddShader(simplech, L"closesthitmain", L"SimpleCH", RTPSOSHADERTYPE::CLOSESTHIT);
 		D3D12_HIT_GROUP_DESC simplehitgroupdesc = {};
 		simplehitgroupdesc.Type = D3D12_HIT_GROUP_TYPE::D3D12_HIT_GROUP_TYPE_TRIANGLES;
 		simplehitgroupdesc.HitGroupExport = L"SimpleHIT";
@@ -600,7 +603,7 @@ void RayTracingApplication::InitRTPSO()
 		{
 			//rgs
 			BasicShaderRecord record = {};
-			void* shaderidentifier = m_simplertpso.GetShaderIdentifier(L"SimpleRGS");
+			void* shaderidentifier = m_simplertpso.GetIdentifier(L"SimpleRGS");
 			assert(shaderidentifier != nullptr);
 			record.SetShaderidentifier(shaderidentifier);
 			BufferMapParams rgsmapparams = {};
@@ -617,7 +620,7 @@ void RayTracingApplication::InitRTPSO()
 		{
 			//rgs
 			BasicShaderRecord record = {};
-			void* shaderidentifier = m_simplertpso.GetShaderIdentifier(L"SimpleMISS");
+			void* shaderidentifier = m_simplertpso.GetIdentifier(L"SimpleMISS");
 			assert(shaderidentifier != nullptr);
 			record.SetShaderidentifier(shaderidentifier);
 			BufferMapParams mapparams = {};
@@ -634,7 +637,7 @@ void RayTracingApplication::InitRTPSO()
 		{
 			
 			BasicShaderRecord record = {};
-			void* shaderidentifier = m_simplertpso.GetShaderIdentifier(L"SimpleHIT");
+			void* shaderidentifier = m_simplertpso.GetIdentifier(L"SimpleHIT",true);
 			assert(shaderidentifier != nullptr);
 			record.SetShaderidentifier(shaderidentifier);
 			BufferMapParams mapparams = {};

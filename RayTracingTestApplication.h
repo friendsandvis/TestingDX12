@@ -49,7 +49,7 @@ private:
 	//device5 is often used in raytracing so retrive it once and keep troughout app lifetime.
 	DX12RaytracingCommandlist m_rtcommandlist;
 	ComPtr<ID3D12Device5> m_device5;
-	Model m_loadedmodel,m_trianglemodel;
+	Model m_loadedmodel,m_trianglemodel,m_planemodel;
 	bool m_raytracingsupported;
 	DXFPSCameraController m_maincameracontroller;
 	ModelAccelerationStructureBLAS loadedmodelasblas;
