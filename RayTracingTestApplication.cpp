@@ -231,7 +231,7 @@ void RayTracingApplication::InitExtras()
 	//heap to hold resources used by rt(global)
 	{
 		D3D12_DESCRIPTOR_HEAP_DESC heapdesc = {};
-		heapdesc.NumDescriptors = 1;//just 1 uav for now.
+		heapdesc.NumDescriptors = 2;//just 1 uav for now and 1 srv.
 		heapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		heapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		m_rtresheap_global.Init(heapdesc,m_creationdevice);
@@ -279,6 +279,14 @@ void RayTracingApplication::InitExtras()
 		uavdesc.Texture2D.PlaneSlice = 0;
 		uavdesc.ViewDimension = D3D12_UAV_DIMENSION::D3D12_UAV_DIMENSION_TEXTURE2D;
 		m_rtouput.CreateUAV(m_creationdevice, uavdesc, m_rtresheap_global.GetCPUHandleOffseted(0));
+		{
+			//create tlas srv
+			//empty tlas
+			D3D12_SHADER_RESOURCE_VIEW_DESC tlassrrvdesc = {};
+			tlassrrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+			tlassrrvdesc.ViewDimension = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
+			m_creationdevice->CreateShaderResourceView(nullptr, &tlassrrvdesc, m_rtresheap_global.GetCPUHandleOffseted(1));
+		}
 		{
 			D3D12_SHADER_RESOURCE_VIEW_DESC srvdesc = {};
 			srvdesc.ViewDimension = D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_TEXTURE2D;
@@ -550,7 +558,7 @@ void RayTracingApplication::InitRTPSO()
 	simplertshaderconfig.MaxAttributeSizeInBytes = D3D12_RAYTRACING_MAX_ATTRIBUTE_SIZE_IN_BYTES;
 	m_simplertpso.AddShaderConfig(simplertshaderconfig, "simpleshaderconfig");
 	DX12Shader* rgs = new DX12Shader();
-	rgs->Init(L"shaders/raytracing/RT/simplergs.hlsl", DX12Shader::ShaderType::RT);
+	rgs->Init(L"shaders/raytracing/RT/simplergs2.hlsl", DX12Shader::ShaderType::RT);
 	m_simplertpso.AddShader(rgs, L"rgsmain", L"SimpleRGS",RTPSOSHADERTYPE::RAYGEN);
 	DX12Shader* simplemiss = new DX12Shader();
 	simplemiss->Init(L"shaders/raytracing/RT/simplemiss.hlsl", DX12Shader::ShaderType::RT);
