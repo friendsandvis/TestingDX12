@@ -165,6 +165,8 @@ void RayTracingApplication::RenderRT()
 		m_rtcommandlist->SetComputeRootSignature(rtglobalrootsig);
 		m_rtcommandlist->SetComputeRootDescriptorTable(0, m_rtresheap_global.GetGPUHandleOffseted(0));
 		m_rtcommandlist->SetPipelineState1(m_simplertpso.GetPipelineStateObject());
+		float  clearcolour[4] = {1.0f,1.0f,1.0f,1.0f};
+		m_rtcommandlist->ClearUnorderedAccessViewFloat(m_rtresheap_global.GetGPUHandlefromstart(),m_rtresheap_globalupload.GetCPUHandlefromstart(),m_rtouput.GetResource().Get(),clearcolour,0,nullptr);
 		m_rtcommandlist->DispatchRays(&dispatchraysdesc);
 		m_rtcommandlist.Close();
 	}
@@ -230,11 +232,16 @@ void RayTracingApplication::InitExtras()
 	}
 	//heap to hold resources used by rt(global)
 	{
-		D3D12_DESCRIPTOR_HEAP_DESC heapdesc = {};
-		heapdesc.NumDescriptors = 2;//just 1 uav for now and 1 srv.
-		heapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		heapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-		m_rtresheap_global.Init(heapdesc,m_creationdevice);
+		D3D12_DESCRIPTOR_HEAP_DESC rtglobalheapdesc = {};
+		rtglobalheapdesc.NumDescriptors = 2;//just 1 uav for now and 1 srv.
+		rtglobalheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		rtglobalheapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		m_rtresheap_global.Init(rtglobalheapdesc,m_creationdevice);
+		D3D12_DESCRIPTOR_HEAP_DESC rtglobalheapdescupload = {};
+		rtglobalheapdescupload.NumDescriptors = 1;//just 1 uav for now
+		rtglobalheapdescupload.Type= D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		rtglobalheapdescupload.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		m_rtresheap_globalupload.Init(rtglobalheapdescupload, m_creationdevice);
 	}
 	//heap to hold resources used by rt output display pass
 	{
@@ -279,13 +286,15 @@ void RayTracingApplication::InitExtras()
 		uavdesc.Texture2D.PlaneSlice = 0;
 		uavdesc.ViewDimension = D3D12_UAV_DIMENSION::D3D12_UAV_DIMENSION_TEXTURE2D;
 		m_rtouput.CreateUAV(m_creationdevice, uavdesc, m_rtresheap_global.GetCPUHandleOffseted(0));
+		m_rtouput.CreateUAV(m_creationdevice, uavdesc, m_rtresheap_globalupload.GetCPUHandleOffseted(0));
 		{
 			//create tlas srv
 			//empty tlas
 			D3D12_SHADER_RESOURCE_VIEW_DESC tlassrrvdesc = {};
 			tlassrrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 			tlassrrvdesc.ViewDimension = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
-			m_creationdevice->CreateShaderResourceView(nullptr, &tlassrrvdesc, m_rtresheap_global.GetCPUHandleOffseted(1));
+			//m_creationdevice->CreateShaderResourceView(nullptr, &tlassrrvdesc, m_rtresheap_global.GetCPUHandleOffseted(1));
+			
 		}
 		{
 			D3D12_SHADER_RESOURCE_VIEW_DESC srvdesc = {};
@@ -318,7 +327,7 @@ void RayTracingApplication::InitExtras()
 		m_rtcommandlist.Init(D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
 		m_rtcommandlist.SetName(L"RTCommandlist");
 		DXASSERT(m_creationdevice.As(&m_device5))
-		loadedmodelasblas.Init(m_loadedmodel);
+		loadedmodelasblas.Init(m_trianglemodel);
 		loadedmodelasblas.Build(m_device5); 
 		InitRTPSO();
 
@@ -333,7 +342,9 @@ void RayTracingApplication::InitExtras()
 			vector< D3D12_RAYTRACING_INSTANCE_DESC> instancedescs;
 			instancedescs.push_back(aninstancedesc);
 			loadedmodelastlas.Init(m_creationdevice, instancedescs);
+			
 			loadedmodelastlas.Build(m_device5);
+			loadedmodelastlas.CreateSRV(m_creationdevice, m_rtresheap_global.GetCPUHandleOffseted(1));
 		}
 		
 	}

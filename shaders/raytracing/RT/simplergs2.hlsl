@@ -10,9 +10,9 @@ void rgsmain()
 Simpleraypayload payload;
 payload.outcol=float3(0.0f,0.0f,0.0f);
 RayDesc ray;
-ray.Origin=float3(0.0f,0.0f,0.0f);
-ray.TMin=0.0f;
-ray.TMax=0.0f;
+ray.Origin=float3(0.0f,0.0f,1.0f);
+ray.TMin=0.01f;
+ray.TMax=10.0f;
 ray.Direction=float3(0.0f,0.0f,-1.0f);
 	uint3 rayidx=DispatchRaysIndex();
 	TraceRay(basicas,RAY_FLAG_NONE,0xFF,0,0,0,ray,payload);

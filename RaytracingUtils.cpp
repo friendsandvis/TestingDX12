@@ -131,6 +131,7 @@ void ModelAccelerationStructureTLAS::Init(ComPtr< ID3D12Device> creationdevice,v
 		void* srcptr = reinterpret_cast<void*>(m_instancedescs.data());
 		size_t copysize = sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * m_instancedescs.size();
 		memcpy(bufferptr, srcptr,copysize );
+		mapparams.range.End = m_instancedescbuffer.GetSize();
 		m_instancedescbuffer.UnMap(mapparams);
 	}
 
@@ -178,7 +179,8 @@ void RaytracingCommon::InitAsIdentityMatrix(FLOAT arr[3][4])
 void ModelAccelerationStructureTLAS::CreateSRV(ComPtr< ID3D12Device> creationdevice, D3D12_CPU_DESCRIPTOR_HANDLE srvhandle)
 {
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvdesc = {};
+	srvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvdesc.RaytracingAccelerationStructure.Location = m_accelerationstructure.GetResource()->GetGPUVirtualAddress();
 	srvdesc.ViewDimension = D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
-	creationdevice->CreateShaderResourceView(m_accelerationstructure.GetResource().Get(), &srvdesc, srvhandle);
+	creationdevice->CreateShaderResourceView(nullptr, &srvdesc, srvhandle);
 }

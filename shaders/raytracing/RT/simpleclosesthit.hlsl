@@ -1,11 +1,11 @@
 
-struct BasicPayLoad
+struct Simpleraypayload
 {
-	float4 colour;
+	float3 outcol;
 };
 
 [shader("closesthit")]
-void closesthitmain(inout BasicPayLoad payload,in BuiltInTriangleIntersectionAttributes intersectionattribs)
+void closesthitmain(inout Simpleraypayload payload,in BuiltInTriangleIntersectionAttributes intersectionattribs)
 {
-	payload.colour=float4(0.0f,0.0f,1.0f,1.0f);
+	payload.outcol=float3(1.0f,0.0f,0.0f);
 }
