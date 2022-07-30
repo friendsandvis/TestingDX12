@@ -6,8 +6,7 @@
 ModelTestApplication::ModelTestApplication()
 	:m_planemodel(ModelDataUploadMode::COPY),
 	m_cubemodel(ModelDataUploadMode::COPY),
-	m_loadedmodel(ModelDataUploadMode::COPY),
-	m_loadedcommodel(ModelDataUploadMode::COPY)
+	m_loadedmodel(ModelDataUploadMode::COPY)
 {
 	m_maincameracontroller.SetCameratoControl(&m_maincamera);
 }
@@ -49,7 +48,6 @@ void ModelTestApplication::Render()
 	}
 	XMMATRIX vpmat = m_maincamera.GetVP();
 	//m_loadedmodel.Draw(m_primarycmdlist,vpmat);
-	m_loadedcommodel.Draw(m_primarycmdlist,vpmat);
 	DXASSERT(m_primarycmdlist->Close())
 	BasicRender();
 }
@@ -57,7 +55,6 @@ void ModelTestApplication::Render()
 void ModelTestApplication::InitExtras()
 {
 	BasicModelManager::LoadModel(m_creationdevice,"models/cube.dae",m_loadedmodel,VERTEXVERSION2);
-	BasicModelManager::LoadModel(m_creationdevice, "models/fireplace_room.obj", m_loadedcommodel, VERTEXVERSION2);
 	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
 	
 	InitPSO();
@@ -66,12 +63,10 @@ void ModelTestApplication::InitExtras()
 	m_planemodel.UploadModelDatatoBuffers();
 	m_cubemodel.UploadModelDatatoBuffers();
 	m_loadedmodel.UploadModelDatatoBuffers();
-	m_loadedcommodel.UploadModelDatatoBuffers();
 
 	m_uploadcommandlist.Reset();
 	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_loadedmodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
-	m_loadedcommodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_cubemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	DXASSERT(m_uploadcommandlist->Close());
 }

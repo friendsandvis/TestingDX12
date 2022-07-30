@@ -72,8 +72,8 @@ void Model::Draw(DX12Commandlist& renderingcmdlist,XMMATRIX vpmatrix)
 	renderingcmdlist->IASetVertexBuffers(0, 1, &m_vertexbufferview);
 	renderingcmdlist->IASetIndexBuffer(&m_indexbufferview);
 	
-	XMMATRIX mvp = XMMatrixMultiply(m_transform,vpmatrix);
-	renderingcmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvp, 0);
+	//XMMATRIX mvp = XMMatrixMultiply(m_transform,vpmatrix);
+	//renderingcmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvp, 0);
 	renderingcmdlist->DrawIndexedInstanced(GetIndiciesCount(), 1, 0, 0, 0);
 }
 
@@ -380,6 +380,7 @@ void BasicModelManager::InitCubeModel(ComPtr< ID3D12Device> creationdevice, Mode
 }
 void BasicModelManager::InitTriangleModel(ComPtr< ID3D12Device> creationdevice, Model& trianglemodel)
 {
+	
 	vector<VertexBase*> verticies;
 	GetTriangleVerticiesV0(verticies);
 	trianglemodel.SetVertexVersionUsed(VERTEXVERSION0);
