@@ -6,7 +6,8 @@
 ModelTestApplication::ModelTestApplication()
 	:m_planemodel(ModelDataUploadMode::COPY),
 	m_cubemodel(ModelDataUploadMode::COPY),
-	m_loadedmodel(ModelDataUploadMode::COPY)
+	m_loadedmodel(ModelDataUploadMode::COPY),
+	m_trianglemodel(ModelDataUploadMode::COPY)
 {
 	m_maincameracontroller.SetCameratoControl(&m_maincamera);
 }
@@ -27,7 +28,10 @@ void ModelTestApplication::Render()
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
 	m_primarycmdlist->SetPipelineState(m_pso.GetPSO());
 	m_primarycmdlist->SetGraphicsRootSignature(m_rootsignature.GetRootSignature());
-	XMMATRIX mvp = m_maincamera.GetMVP();
+	//XMMATRIX mvp = m_maincamera.GetMVP();
+	XMMATRIX orthoproj = XMMatrixOrthographicLH(2.0F, 2.0F, 0.01f, 100.0f);
+	XMMATRIX model = XMMatrixIdentity();
+	XMMATRIX mvp = XMMatrixMultiply(model,orthoproj);
 	m_primarycmdlist->SetGraphicsRoot32BitConstants(0,sizeof(XMMATRIX)/4, &mvp, 0);
 	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE,&dsvhandle);
 	float clearvalue[4] = {1.0f,1.0f,1.0f,1.0f};
@@ -47,7 +51,7 @@ void ModelTestApplication::Render()
 		m_primarycmdlist->RSSetScissorRects(1, &ascissorrect);
 	}
 	XMMATRIX vpmat = m_maincamera.GetVP();
-	//m_loadedmodel.Draw(m_primarycmdlist,vpmat);
+	m_trianglemodel.Draw(m_primarycmdlist,vpmat);
 	DXASSERT(m_primarycmdlist->Close())
 	BasicRender();
 }
@@ -56,10 +60,11 @@ void ModelTestApplication::InitExtras()
 {
 	BasicModelManager::LoadModel(m_creationdevice,"models/cube.dae",m_loadedmodel,VERTEXVERSION2);
 	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
-	
-	InitPSO();
-	BasicModelManager::InitPlaneModel(m_creationdevice,m_planemodel);
+	BasicModelManager::InitTriangleModel(m_creationdevice, m_trianglemodel);
+	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
 	BasicModelManager::InitCubeModel(m_creationdevice, m_cubemodel);
+	InitPSO();
+	
 	m_planemodel.UploadModelDatatoBuffers();
 	m_cubemodel.UploadModelDatatoBuffers();
 	m_loadedmodel.UploadModelDatatoBuffers();
@@ -68,18 +73,21 @@ void ModelTestApplication::InitExtras()
 	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_loadedmodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_cubemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
+	m_trianglemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	DXASSERT(m_uploadcommandlist->Close());
 }
 
 void ModelTestApplication::InitPSO()
 {
+	vector<D3D12_INPUT_ELEMENT_DESC> inputelements;
+	DXVertexManager::BuildDefaultInputelementdesc(inputelements, m_trianglemodel.GetVertexVersionUsed());
 	PSOInitData psoinitdata;
 	psoinitdata.type = PSOType::GRAPHICS;
 
 	DX12Shader* vs = new DX12Shader();
 	DX12Shader* ps = new DX12Shader();
-	vs->Init(L"shaders/modeltest/ModelTestVertexShader.hlsl", DX12Shader::ShaderType::VS);
-	ps->Init(L"shaders/modeltest/ModelTestPixelShader.hlsl", DX12Shader::ShaderType::PS);
+	vs->Init(L"shaders/modeltest/ModelTestVertexShader2D.hlsl", DX12Shader::ShaderType::VS);
+	ps->Init(L"shaders/modeltest/ModelTestPixelShader2D.hlsl", DX12Shader::ShaderType::PS);
 	psoinitdata.m_shaderstouse.push_back(vs); psoinitdata.m_shaderstouse.push_back(ps);
 	DX12PSO::DefaultInitPSOData(psoinitdata);
 	psoinitdata.psodesc.graphicspsodesc.PS.BytecodeLength = ps->GetCompiledCodeSize();
@@ -104,19 +112,9 @@ void ModelTestApplication::InitPSO()
 		}
 
 		//input assembler setup
-		D3D12_INPUT_ELEMENT_DESC inputelements[2] = { 0 };
-		inputelements[0].SemanticName = "POS";
-		inputelements[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-		inputelements[0].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-		inputelements[0].InputSlot = 0;
-		inputelements[1].SemanticName = "NORMAL";
-		inputelements[1].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-		inputelements[1].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-		inputelements[1].InputSlot = 0;
-		inputelements[1].AlignedByteOffset = sizeof(float)*3;//after three floats is normal
-		
-		psoinitdata.psodesc.graphicspsodesc.InputLayout.NumElements = 2;
-		psoinitdata.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = inputelements;
+		 
+		psoinitdata.psodesc.graphicspsodesc.InputLayout.NumElements = (UINT)inputelements.size();
+		psoinitdata.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = inputelements.data();
 
 		m_rootsignature.Init(m_creationdevice, D3D_ROOT_SIGNATURE_VERSION_1);
 		psoinitdata.psodesc.graphicspsodesc.pRootSignature = m_rootsignature.GetRootSignature();

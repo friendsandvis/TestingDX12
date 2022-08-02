@@ -22,7 +22,7 @@ protected:
 private:
 	DX12PSO m_pso;
 	DX12RootSignature m_rootsignature;
-	Model m_planemodel;
+	Model m_planemodel,m_trianglemodel;
 	Model m_cubemodel;
 	Model m_loadedmodel;
 	DXFPSCameraController m_maincameracontroller;
