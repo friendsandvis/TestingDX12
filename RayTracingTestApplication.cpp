@@ -164,6 +164,11 @@ void RayTracingApplication::RenderRT()
 		assert(rtglobalrootsig != nullptr);
 		m_rtcommandlist->SetComputeRootSignature(rtglobalrootsig);
 		m_rtcommandlist->SetComputeRootDescriptorTable(0, m_rtresheap_global.GetGPUHandleOffseted(0));
+		XMMATRIX orthoproj = XMMatrixOrthographicLH(2.0F, 2.0F, 0.01f, 100.0f);
+		XMMATRIX invprojmat=XMMatrixIdentity();
+		XMMatrixInverse(nullptr, invprojmat);
+
+		m_rtcommandlist->SetComputeRoot32BitConstants(1, (sizeof(XMMATRIX) / 4),&invprojmat, 0);
 		m_rtcommandlist->SetPipelineState1(m_simplertpso.GetPipelineStateObject());
 		float  clearcolour[4] = {1.0f,1.0f,1.0f,1.0f};
 		m_rtcommandlist->ClearUnorderedAccessViewFloat(m_rtresheap_global.GetGPUHandlefromstart(),m_rtresheap_globalupload.GetCPUHandlefromstart(),m_rtouput.GetResource().Get(),clearcolour,0,nullptr);
@@ -569,7 +574,7 @@ void RayTracingApplication::InitRTPSO()
 	simplertshaderconfig.MaxAttributeSizeInBytes = D3D12_RAYTRACING_MAX_ATTRIBUTE_SIZE_IN_BYTES;
 	m_simplertpso.AddShaderConfig(simplertshaderconfig, "simpleshaderconfig");
 	DX12Shader* rgs = new DX12Shader();
-	rgs->Init(L"shaders/raytracing/RT/simplergs2.hlsl", DX12Shader::ShaderType::RT);
+	rgs->Init(L"shaders/raytracing/RT/simplergs3.hlsl", DX12Shader::ShaderType::RT);
 	m_simplertpso.AddShader(rgs, L"rgsmain", L"SimpleRGS",RTPSOSHADERTYPE::RAYGEN);
 	DX12Shader* simplemiss = new DX12Shader();
 	simplemiss->Init(L"shaders/raytracing/RT/simplemiss.hlsl", DX12Shader::ShaderType::RT);
@@ -604,10 +609,18 @@ void RayTracingApplication::InitRTPSO()
 		descranges[1].BaseShaderRegister = 0;
 		descranges[1].RegisterSpace = 0;
 		descranges[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+		D3D12_ROOT_PARAMETER param2 = {};
+		param2.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+		param2.Constants.Num32BitValues = sizeof(XMMATRIX) / 4;
+		param2.Constants.RegisterSpace = 0;
+		param2.Constants.RegisterSpace = 0;
+		param2.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
 		
 		param1.DescriptorTable.pDescriptorRanges = descranges;
 		param1.DescriptorTable.NumDescriptorRanges = 2;
 		rootparams.push_back(param1);
+		rootparams.push_back(param2);
 		vector<D3D12_STATIC_SAMPLER_DESC> staticsamplersused;
 
 		rtglobalrootsig.BuidDesc(rootparams, staticsamplersused, D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_NONE);
