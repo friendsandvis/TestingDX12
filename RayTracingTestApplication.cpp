@@ -164,9 +164,9 @@ void RayTracingApplication::RenderRT()
 		assert(rtglobalrootsig != nullptr);
 		m_rtcommandlist->SetComputeRootSignature(rtglobalrootsig);
 		m_rtcommandlist->SetComputeRootDescriptorTable(0, m_rtresheap_global.GetGPUHandleOffseted(0));
-		XMMATRIX orthoproj = XMMatrixOrthographicLH(2.0F, 2.0F, 0.01f, 100.0f);
-		XMMATRIX invprojmat=XMMatrixIdentity();
-		XMMatrixInverse(nullptr, invprojmat);
+		XMMATRIX orthoproj = XMMatrixOrthographicLH(2.0F, 2.0F, -1.0f, 1.0f);
+		XMMATRIX invprojmat= XMMatrixInverse(nullptr, orthoproj);
+		
 
 		m_rtcommandlist->SetComputeRoot32BitConstants(1, (sizeof(XMMATRIX) / 4),&invprojmat, 0);
 		m_rtcommandlist->SetPipelineState1(m_simplertpso.GetPipelineStateObject());
