@@ -29,7 +29,7 @@ void ModelTestApplication::Render()
 	m_primarycmdlist->SetPipelineState(m_pso.GetPSO());
 	m_primarycmdlist->SetGraphicsRootSignature(m_rootsignature.GetRootSignature());
 	//XMMATRIX mvp = m_maincamera.GetMVP();
-	XMMATRIX orthoproj = XMMatrixOrthographicLH(2.0F, 2.0F, -100.0f, 100.0f);
+	XMMATRIX orthoproj = XMMatrixOrthographicLH(2.0F, 2.0F, -1.0f, 1.0f);
 	XMMATRIX model = XMMatrixIdentity();
 	XMMATRIX mvp = XMMatrixMultiply(model,orthoproj);
 	m_primarycmdlist->SetGraphicsRoot32BitConstants(0,sizeof(XMMATRIX)/4, &mvp, 0);
@@ -119,8 +119,7 @@ void ModelTestApplication::InitPSO()
 		m_rootsignature.Init(m_creationdevice, D3D_ROOT_SIGNATURE_VERSION_1);
 		psoinitdata.psodesc.graphicspsodesc.pRootSignature = m_rootsignature.GetRootSignature();
 	}
-	//raster setup
-	psoinitdata.psodesc.graphicspsodesc.RasterizerState.DepthClipEnable = true;
+	
 	
 	m_pso.Init(m_creationdevice, psoinitdata);
 }

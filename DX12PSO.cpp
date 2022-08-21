@@ -63,7 +63,7 @@ void DX12PSO::DefaultInitPSOData(PSOInitData& initdata)
 	//rasterizer setup
 	initdata.psodesc.graphicspsodesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
 	initdata.psodesc.graphicspsodesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-	initdata.psodesc.graphicspsodesc.RasterizerState.DepthClipEnable = FALSE;
+	initdata.psodesc.graphicspsodesc.RasterizerState.DepthClipEnable = TRUE;
 	initdata.psodesc.graphicspsodesc.RasterizerState.AntialiasedLineEnable = FALSE;
 	initdata.psodesc.graphicspsodesc.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 	initdata.psodesc.graphicspsodesc.RasterizerState.ForcedSampleCount = 0;
