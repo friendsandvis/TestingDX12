@@ -72,10 +72,25 @@
     <ClCompile Include="DX12ApplicationManagerBase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DX12SimpleTexturedQuadApplication.cpp">
+      <Filter>Applications</Filter>
+    </ClCompile>
+    <ClCompile Include="DX12SamplerfeedbackApplication.cpp">
+      <Filter>Applications</Filter>
+    </ClCompile>
+    <ClCompile Include="DX12ComputeApplication.cpp">
+      <Filter>Applications</Filter>
+    </ClCompile>
     <ClCompile Include="DX12Texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DX12ReservedResourceApplication.cpp">
+      <Filter>Applications</Filter>
+    </ClCompile>
     <ClCompile Include="DX12ReservedResourceMemoryManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ModelTestApplication.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DX12RootSignature.cpp">
@@ -85,6 +100,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="WindowProcHook.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MipTestApplication.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DX12SkyboxtestingApplication.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DXVertexManager.cpp">
@@ -105,6 +126,9 @@
     <ClCompile Include="AssimpManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RayTracingTestApplication.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="RaytracingUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -113,9 +137,6 @@
     </ClCompile>
     <ClCompile Include="DX12RaytracingCommandlist.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RayTracingTestApplication.cpp">
-      <Filter>Applications</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -170,13 +191,28 @@
     <ClInclude Include="DX12ApplicationManagerBase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DX12SimpleTexturedQuadApplication.h">
+      <Filter>Applications</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12SamplerfeedbackApplication.h">
+      <Filter>Applications</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12ComputeApplication.h">
+      <Filter>Applications</Filter>
+    </ClInclude>
     <ClInclude Include="DX12Texture.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12ReservedResourceApplication.h">
+      <Filter>Applications</Filter>
     </ClInclude>
     <ClInclude Include="DX12ReservedResourceMemoryManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CommonDataStructures.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelTestApplication.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DX12RootSignature.h">
@@ -186,6 +222,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="WindowProcHook.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MipTestApplication.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12SkyboxtestingApplication.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DXVertexManager.h">
@@ -206,6 +248,9 @@
     <ClInclude Include="AssimpManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RayTracingTestApplication.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="RaytracingUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -214,9 +259,6 @@
     </ClInclude>
     <ClInclude Include="DX12RaytracingCommandlist.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RayTracingTestApplication.h">
-      <Filter>Applications</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
