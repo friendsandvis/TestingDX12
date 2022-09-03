@@ -12,7 +12,7 @@ void ModelAccelerationStructureBLAS::Init(Model& modeltoprocess)
 	m_rtgeometrydesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE::D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
 	//fixed in the current frame work(index is unsigned int)
 	m_rtgeometrydesc.Triangles.IndexFormat = DXGI_FORMAT_R32_UINT;
-	m_rtgeometrydesc.Triangles.IndexBuffer = modeltoprocess.GetIertexBufferGPUVirtualAddress();
+	m_rtgeometrydesc.Triangles.IndexBuffer = modeltoprocess.GetIndexBufferGPUVirtualAddress();
 	m_rtgeometrydesc.Triangles.IndexCount = (UINT)modeltoprocess.GetIndiciesCount();
 
 	m_rtgeometrydesc.Triangles.VertexBuffer.StartAddress = modeltoprocess.GetVertexBufferGPUVirtualAddress();

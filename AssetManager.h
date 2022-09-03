@@ -36,7 +36,7 @@ public:
 	
 	
 	D3D12_GPU_VIRTUAL_ADDRESS GetVertexBufferGPUVirtualAddress();
-	D3D12_GPU_VIRTUAL_ADDRESS GetIertexBufferGPUVirtualAddress();
+	D3D12_GPU_VIRTUAL_ADDRESS GetIndexBufferGPUVirtualAddress();
 	void Init(ComPtr< ID3D12Device> creationdevice,AssimpLoadedModel& assimpModel,UINT meshindexinassimpmodeltoload,VertexVersion modelvertexversion);
 	void InitVertexBuffer(ComPtr< ID3D12Device> creationdevice,vector<VertexBase*>& verticies);
 	void InitIndexBuffer(ComPtr< ID3D12Device> creationdevice,vector<unsigned>& indicies);

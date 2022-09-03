@@ -195,7 +195,7 @@ D3D12_GPU_VIRTUAL_ADDRESS Model::GetVertexBufferGPUVirtualAddress()
 	}
 	return NULL;
 }
-D3D12_GPU_VIRTUAL_ADDRESS Model::GetIertexBufferGPUVirtualAddress()
+D3D12_GPU_VIRTUAL_ADDRESS Model::GetIndexBufferGPUVirtualAddress()
 {
 	if (m_indexbuffer.GetResource().Get())
 	{
