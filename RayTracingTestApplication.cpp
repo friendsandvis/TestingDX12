@@ -238,12 +238,10 @@ void RayTracingApplication::InitExtras()
 
 			void* mapedbuffer=m_blastransform.Map(mapparams);
 			
-			FLOAT transform[12] =
-			{
-				1.0f,0.0f,0.0f,0.0f,
-				0.0f,1.0f,0.0f,0.0f,
-				0.0f,0.0f,1.0f,0.0f
-			};
+			FLOAT transform[12];
+			XMMATRIX m1 = XMMatrixIdentity();
+			RaytracingCommon::XMMatrixToRowMajor3x4(m1, transform);
+			
 			mapparams.range.End = m_blastransform.GetSize();
 			std::memcpy(mapedbuffer, transform, sizeof(FLOAT) * 12);
 			m_blastransform.UnMap(mapparams);

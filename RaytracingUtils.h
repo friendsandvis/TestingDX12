@@ -51,4 +51,5 @@ class RaytracingCommon
 {
 public:
 	static void InitAsIdentityMatrix(FLOAT arr[3][4]);
+	static void XMMatrixToRowMajor3x4(XMMATRIX&mat,float* outmat);
 };

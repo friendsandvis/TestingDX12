@@ -175,6 +175,18 @@ void RaytracingCommon::InitAsIdentityMatrix(FLOAT arr[3][4])
 	}
 	arr[0][0] = arr[1][1]= arr[2][2]= 1.0f;
 }
+void RaytracingCommon::XMMatrixToRowMajor3x4(XMMATRIX& mat, float* outmat)
+{
+	short finalindex = 0;
+	for (short i = 0; i < 3; i++)
+	{
+		for (short j = 0; j < 4; j++)
+		{
+
+			outmat[finalindex++] = mat.r[i].m128_f32[j];
+		}
+	}
+}
 
 void ModelAccelerationStructureTLAS::CreateSRV(ComPtr< ID3D12Device> creationdevice, D3D12_CPU_DESCRIPTOR_HANDLE srvhandle)
 {
