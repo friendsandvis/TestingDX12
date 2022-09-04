@@ -164,7 +164,7 @@ void RayTracingApplication::RenderRT()
 		assert(rtglobalrootsig != nullptr);
 		m_rtcommandlist->SetComputeRootSignature(rtglobalrootsig);
 		m_rtcommandlist->SetComputeRootDescriptorTable(0, m_rtresheap_global.GetGPUHandleOffseted(0));
-		XMMATRIX orthoproj = XMMatrixOrthographicLH(2.0F, 2.0F, -1.0f, 1.0f);
+		XMMATRIX orthoproj = XMMatrixOrthographicLH(2.0F, 2.0F, -100.0f, 100.0f);
 		XMMATRIX invprojmat= XMMatrixInverse(nullptr, orthoproj);
 		
 
@@ -225,6 +225,29 @@ void RayTracingApplication::InitExtras()
 		m_missrecords.Init(m_creationdevice, missshaderrecordsprops, ResourceCreationMode::COMMITED);
 		DX12ResourceCreationProperties hitshaderrecordsprops = rgsrecordsprops;
 		m_hitrecords.Init(m_creationdevice, hitshaderrecordsprops, ResourceCreationMode::COMMITED);
+		//blas transform buffer
+		DX12ResourceCreationProperties blastransformprops;
+		DX12Buffer::InitResourceCreationProperties(blastransformprops);
+		blastransformprops.resdesc.Width=sizeof(FLOAT)*12;//3x4 matrix
+		blastransformprops.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
+		m_blastransform.Init(m_creationdevice, blastransformprops, ResourceCreationMode::COMMITED);
+		{
+			BufferMapParams mapparams = {};
+			mapparams.range.Begin = 0;
+			mapparams.range.End = 0;
+
+			void* mapedbuffer=m_blastransform.Map(mapparams);
+			
+			FLOAT transform[12] =
+			{
+				1.0f,0.0f,0.0f,0.0f,
+				0.0f,1.0f,0.0f,0.0f,
+				0.0f,0.0f,1.0f,0.0f
+			};
+			mapparams.range.End = m_blastransform.GetSize();
+			std::memcpy(mapedbuffer, transform, sizeof(FLOAT) * 12);
+			m_blastransform.UnMap(mapparams);
+		}
 	}
 
 	//init gbuffer textures
@@ -332,7 +355,7 @@ void RayTracingApplication::InitExtras()
 		m_rtcommandlist.Init(D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
 		m_rtcommandlist.SetName(L"RTCommandlist");
 		DXASSERT(m_creationdevice.As(&m_device5))
-		loadedmodelasblas.Init(m_trianglemodel);
+		loadedmodelasblas.Init(m_trianglemodel,m_blastransform.GetResource()->GetGPUVirtualAddress());
 		loadedmodelasblas.Build(m_device5); 
 		InitRTPSO();
 
@@ -362,6 +385,11 @@ void RayTracingApplication::InitExtras()
 	{
 		ComPtr<ID3D12GraphicsCommandList4> cmdlist4;
 		DXASSERT(m_uploadcommandlist.GetcmdListComPtr().As(&cmdlist4))
+			if(m_blastransform.GetCurrentResourceState()!= D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)
+		{
+			D3D12_RESOURCE_BARRIER barrier = m_blastransform.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+			m_uploadcommandlist->ResourceBarrier(1, &barrier);
+		}
 		loadedmodelasblas.IssueBuild(cmdlist4);
 		loadedmodelastlas.IssueBuild(cmdlist4);
 	}

@@ -24,7 +24,7 @@ RayDesc ray;
 float2 center=float2(-0.5f,-0.5f);
 //ray.Origin=float3(0.0f,0.0,1.0f);
 ray.TMin=0.001f;
-ray.TMax=10.0f;
+ray.TMax=200.0f;
 ray.Direction=float3(0.0f,0.0f,-1.0f);
 	uint3 rayidx=DispatchRaysIndex();
 	uint3 raydims=DispatchRaysDimensions();
