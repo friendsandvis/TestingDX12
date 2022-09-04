@@ -5,7 +5,7 @@ ModelAccelerationStructureBLAS::ModelAccelerationStructureBLAS()
 {
 
 }
-void ModelAccelerationStructureBLAS::Init(Model& modeltoprocess)
+void ModelAccelerationStructureBLAS::Init(Model& modeltoprocess, D3D12_GPU_VIRTUAL_ADDRESS transform)
 {
 	//we need ib &vb in gpu memory.
 	assert(modeltoprocess.GetUploadMode() == ModelDataUploadMode::COPY);
@@ -22,7 +22,7 @@ void ModelAccelerationStructureBLAS::Init(Model& modeltoprocess)
 	//a vertex position always has same format no matter the vertex version used
 	m_rtgeometrydesc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
 	m_rtgeometrydesc.Triangles.VertexCount = modeltoprocess.GetVerticiesCount();
-	m_rtgeometrydesc.Triangles.Transform3x4 = NULL;
+	m_rtgeometrydesc.Triangles.Transform3x4 = transform;
 	
 	
 }

@@ -16,7 +16,8 @@ class ModelAccelerationStructureBLAS
 public:
 	AccelerationStructureResource& GetBLAS() { return m_accelerationstructure; }
 	ModelAccelerationStructureBLAS();
-	void Init(Model& modeltoprocess);
+	
+	void Init(Model& modeltoprocess, D3D12_GPU_VIRTUAL_ADDRESS transform=NULL);
 	//setup all the needful for building the as
 	void Build(ComPtr< ID3D12Device5> device);
 	void IssueBuild(ComPtr<ID3D12GraphicsCommandList4>buildcmdlist);
