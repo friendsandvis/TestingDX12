@@ -4,7 +4,7 @@
 #include"DX12SamplerfeedbackApplication.h"
 //#include"DX12ReservedResourceApplication.h"
 //#include"DX12SkyboxtestingApplication.h"
-//#include"ModelTestApplication.h"
+#include"ModelTestApplication.h"
 //#include"MipTestApplication.h"
 //#include"DX12ComputeApplication.h"
 #include"RayTracingTestApplication.h"
@@ -19,6 +19,7 @@ int main()
 	//multiple applications present in this testing program choose the one to run(via user input).
 	std::cout << "1.RaytracingApplication.\n";
 	std::cout << "2.SamplerFeedbackApplication.\n";
+	std::cout << "3.ModelTestApplication.\n";
 	std::cout << "Enter application number  to run:\n";
 	int appnumber;
 	std::cin >> appnumber;
@@ -29,6 +30,8 @@ int main()
 		appmanager = new RayTracingApplication(); break;
 	case 2:
 		appmanager = new DX12SamplerfeedbackApplication(); break;
+	case 3:
+		appmanager = new ModelTestApplication(); break;
 	default:
 		std::cout << "Invalid App number choosen";
 		return 1;

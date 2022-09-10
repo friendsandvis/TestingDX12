@@ -37,7 +37,7 @@ void DXFPSCameraController::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM 
 	{
 		WORD xbutton=GET_XBUTTON_WPARAM(wParam);
 
-		if (xbutton == XBUTTON1)
+		if ((xbutton == XBUTTON1))
 		{
 			m_movefrontbackmodifier = -1.0f;
 		}

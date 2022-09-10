@@ -51,7 +51,9 @@ void ModelTestApplication::Render()
 		m_primarycmdlist->RSSetScissorRects(1, &ascissorrect);
 	}
 	XMMATRIX vpmat = m_maincamera.GetVP();
-	m_trianglemodel.Draw(m_primarycmdlist,vpmat);
+	//m_trianglemodel.Draw(m_primarycmdlist,vpmat);
+	m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &vpmat, 0);
+	m_loadedmodel.Draw(m_primarycmdlist,vpmat);
 	DXASSERT(m_primarycmdlist->Close())
 	BasicRender();
 }
@@ -80,14 +82,14 @@ void ModelTestApplication::InitExtras()
 void ModelTestApplication::InitPSO()
 {
 	vector<D3D12_INPUT_ELEMENT_DESC> inputelements;
-	DXVertexManager::BuildDefaultInputelementdesc(inputelements, m_trianglemodel.GetVertexVersionUsed());
+	DXVertexManager::BuildDefaultInputelementdesc(inputelements, m_loadedmodel.GetVertexVersionUsed());
 	PSOInitData psoinitdata;
 	psoinitdata.type = PSOType::GRAPHICS;
 
 	DX12Shader* vs = new DX12Shader();
 	DX12Shader* ps = new DX12Shader();
-	vs->Init(L"shaders/modeltest/ModelTestVertexShader2D.hlsl", DX12Shader::ShaderType::VS);
-	ps->Init(L"shaders/modeltest/ModelTestPixelShader2D.hlsl", DX12Shader::ShaderType::PS);
+	vs->Init(L"shaders/modeltest/ModelTestVertexShader.hlsl", DX12Shader::ShaderType::VS);
+	ps->Init(L"shaders/modeltest/ModelTestPixelShader.hlsl", DX12Shader::ShaderType::PS);
 	psoinitdata.m_shaderstouse.push_back(vs); psoinitdata.m_shaderstouse.push_back(ps);
 	DX12PSO::DefaultInitPSOData(psoinitdata);
 	psoinitdata.psodesc.graphicspsodesc.PS.BytecodeLength = ps->GetCompiledCodeSize();
