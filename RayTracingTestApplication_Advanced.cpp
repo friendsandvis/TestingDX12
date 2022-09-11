@@ -165,10 +165,12 @@ void RayTracingApplicationAdvanced::RenderRT()
 		m_rtcommandlist->SetComputeRootSignature(rtglobalrootsig);
 		m_rtcommandlist->SetComputeRootDescriptorTable(0, m_rtresheap_global.GetGPUHandleOffseted(0));
 		XMMATRIX orthoproj = XMMatrixOrthographicLH(2.0F, 2.0F, -100.0f, 100.0f);
-		XMMATRIX invprojmat= XMMatrixInverse(nullptr, orthoproj);
 		
+		XMMATRIX invproj= XMMatrixInverse(nullptr, m_maincamera.GetProjection());
+		XMMATRIX invview = XMMatrixInverse(nullptr, m_maincamera.GetView());
 
-		m_rtcommandlist->SetComputeRoot32BitConstants(1, (sizeof(XMMATRIX) / 4),&invprojmat, 0);
+		m_rtcommandlist->SetComputeRoot32BitConstants(1, (sizeof(XMMATRIX) / 4),&invproj, 0);
+		m_rtcommandlist->SetComputeRoot32BitConstants(2, (sizeof(XMMATRIX) / 4), &invview, 0);
 		m_rtcommandlist->SetPipelineState1(m_simplertpso.GetPipelineStateObject());
 		float  clearcolour[4] = {1.0f,1.0f,1.0f,1.0f};
 		m_rtcommandlist->ClearUnorderedAccessViewFloat(m_rtresheap_global.GetGPUHandlefromstart(),m_rtresheap_globalupload.GetCPUHandlefromstart(),m_rtouput.GetResource().Get(),clearcolour,0,nullptr);
@@ -353,7 +355,7 @@ void RayTracingApplicationAdvanced::InitExtras()
 		m_rtcommandlist.Init(D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
 		m_rtcommandlist.SetName(L"RTCommandlist");
 		DXASSERT(m_creationdevice.As(&m_device5))
-		loadedmodelasblas.Init(m_trianglemodel,m_blastransform.GetResource()->GetGPUVirtualAddress());
+		loadedmodelasblas.Init(m_loadedmodel,m_blastransform.GetResource()->GetGPUVirtualAddress());
 		loadedmodelasblas.Build(m_device5); 
 		InitRTPSO();
 
@@ -600,7 +602,7 @@ void RayTracingApplicationAdvanced::InitRTPSO()
 	simplertshaderconfig.MaxAttributeSizeInBytes = D3D12_RAYTRACING_MAX_ATTRIBUTE_SIZE_IN_BYTES;
 	m_simplertpso.AddShaderConfig(simplertshaderconfig, "simpleshaderconfig");
 	DX12Shader* rgs = new DX12Shader();
-	rgs->Init(L"shaders/raytracing/RT/simplergs3.hlsl", DX12Shader::ShaderType::RT);
+	rgs->Init(L"shaders/raytracing/RT/simplergs3_Advance.hlsl", DX12Shader::ShaderType::RT);
 	m_simplertpso.AddShader(rgs, L"rgsmain", L"SimpleRGS",RTPSOSHADERTYPE::RAYGEN);
 	DX12Shader* simplemiss = new DX12Shader();
 	simplemiss->Init(L"shaders/raytracing/RT/simplemiss.hlsl", DX12Shader::ShaderType::RT);
@@ -638,15 +640,22 @@ void RayTracingApplicationAdvanced::InitRTPSO()
 		D3D12_ROOT_PARAMETER param2 = {};
 		param2.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
 		param2.Constants.Num32BitValues = sizeof(XMMATRIX) / 4;
-		param2.Constants.RegisterSpace = 0;
+		param2.Constants.ShaderRegister = 0;
 		param2.Constants.RegisterSpace = 0;
 		param2.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		D3D12_ROOT_PARAMETER param3 = {};
+		param3.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+		param3.Constants.Num32BitValues = sizeof(XMMATRIX) / 4;
+		param3.Constants.ShaderRegister = 1;
+		param3.Constants.RegisterSpace = 0;
+		param3.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 		
 		param1.DescriptorTable.pDescriptorRanges = descranges;
 		param1.DescriptorTable.NumDescriptorRanges = 2;
 		rootparams.push_back(param1);
 		rootparams.push_back(param2);
+		rootparams.push_back(param3);
 		vector<D3D12_STATIC_SAMPLER_DESC> staticsamplersused;
 
 		rtglobalrootsig.BuidDesc(rootparams, staticsamplersused, D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_NONE);

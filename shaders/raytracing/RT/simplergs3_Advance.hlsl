@@ -36,7 +36,14 @@ ray.Direction=float3(0.0f,0.0f,-1.0f);
 	float4 clippointfar=float4(clippointxy,1.0f,1.0f);
 	clippointfar=mul(rtconstsprojection.mat,clippointfar);
 	ray.Origin=clippointnear.xyz;
+	float4 originmod=float4(clippointnear.xyz,1.0f);
+	originmod=mul(rtconstsview.mat,originmod);
+	ray.Origin=originmod.xyz;
+	
 	ray.Direction=normalize(clippointfar.xyz-clippointnear.xyz);
+	float4 dirmod=float4(ray.Direction.xyz,0.0f);
+	ray.Direction=dirmod.xyz;
+	dirmod=mul(rtconstsview.mat,dirmod);
 	TraceRay(basicas,RAY_FLAG_NONE,0xFF,0,0,0,ray,payload);
 	//flipping the output.
 	uint2 outindex=uint2(rayidx.x,raydims.y-rayidx.y);
