@@ -28,7 +28,7 @@ public:
 	//Warning: updates swapchain backbuffer index
 	void BasicRender();
 	DX12ApplicationManagerBase();
-	~DX12ApplicationManagerBase();
+	virtual ~DX12ApplicationManagerBase();
 
 protected:
 	//a camera object representing the main camera for a basic application

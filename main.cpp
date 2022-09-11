@@ -8,6 +8,7 @@
 //#include"MipTestApplication.h"
 //#include"DX12ComputeApplication.h"
 #include"RayTracingTestApplication.h"
+#include"RayTracingTestApplication_Advanced.h"
 #include<iostream>
 #define ENABLEDEBUGLAYER true
 
@@ -20,6 +21,7 @@ int main()
 	std::cout << "1.RaytracingApplication.\n";
 	std::cout << "2.SamplerFeedbackApplication.\n";
 	std::cout << "3.ModelTestApplication.\n";
+	std::cout << "4.RaytracingApplicationAdvanced.\n";
 	std::cout << "Enter application number  to run:\n";
 	int appnumber;
 	std::cin >> appnumber;
@@ -32,6 +34,8 @@ int main()
 		appmanager = new DX12SamplerfeedbackApplication(); break;
 	case 3:
 		appmanager = new ModelTestApplication(); break;
+	case 4:
+		appmanager = new RayTracingApplicationAdvanced(); break;
 	default:
 		std::cout << "Invalid App number choosen";
 		return 1;

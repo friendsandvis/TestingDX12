@@ -138,6 +138,9 @@
     <ClCompile Include="DX12RaytracingCommandlist.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RayTracingTestApplication_Advanced.cpp">
+      <Filter>Applications</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="windmaker.h">
@@ -259,6 +262,9 @@
     </ClInclude>
     <ClInclude Include="DX12RaytracingCommandlist.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RayTracingTestApplication_Advanced.h">
+      <Filter>Applications</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
