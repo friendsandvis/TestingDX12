@@ -36,7 +36,9 @@ ray.Direction=float3(0.0f,0.0f,-1.0f);
 	float4 clippointfar=float4(clippointxy,1.0f,1.0f);
 	clippointfar=mul(rtconstsprojection.mat,clippointfar);
 	ray.Origin=clippointnear.xyz;
-	ray.Direction=normalize(clippointfar.xyz-clippointnear.xyz);
+	ray.Direction=(clippointfar.xyz-clippointnear.xyz);
+	ray.TMax=length(ray.Direction);
+	ray.Direction=normalize(ray.Direction);
 	TraceRay(basicas,RAY_FLAG_NONE,0xFF,0,0,0,ray,payload);
 	//flipping the output.
 	uint2 outindex=uint2(rayidx.x,raydims.y-rayidx.y);
