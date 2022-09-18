@@ -17,7 +17,7 @@ ModelTestApplication::~ModelTestApplication()
 }
 void ModelTestApplication::PreRenderUpdate()
 {
-	//m_maincameracontroller.Update();
+	m_maincameracontroller.Update();
 }
 
 void ModelTestApplication::Render()
@@ -129,6 +129,6 @@ void ModelTestApplication::InitPSO()
 void ModelTestApplication::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 
-	//m_maincameracontroller.ProcessWindowProcEvent(hwnd, uMsg, wParam, lParam);
+	m_maincameracontroller.ProcessWindowProcEvent(hwnd, uMsg, wParam, lParam);
 	
 }

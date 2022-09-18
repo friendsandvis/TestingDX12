@@ -48,8 +48,23 @@ void DXFPSCameraController::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM 
 
 		break;
 	}
+	case WM_KEYDOWN:
+	{
+		if (wParam == VK_UP)
+		{
+			m_movefrontbackmodifier = 1.0f;
+		}
+		else if(wParam == VK_DOWN)
+		{
+			m_movefrontbackmodifier = -1.0f;
+		}
+		break;
+	}
+	case WM_KEYUP:
 	case WM_XBUTTONUP:
+	{
 		m_movefrontbackmodifier = 0.0f; break;
+	}
 	default:
 		break;
 	case WM_MOUSEMOVE:
