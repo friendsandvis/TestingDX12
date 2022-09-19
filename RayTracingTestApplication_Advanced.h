@@ -56,7 +56,7 @@ private:
 	ModelAccelerationStructureBLAS loadedmodelasblas;
 	ModelAccelerationStructureTLAS loadedmodelastlas;
 	void InitPSO();
-	void InitPSO_NoProjection();
+	void InitPSO_RTRaster();
 	void InitRTDisplayPSO();
 	void InitRTPSO();
 	void RenderRT();

@@ -90,8 +90,8 @@ void RayTracingApplicationAdvanced::RenderRaster_NoProjection()
 	m_primarycmdlist->ClearDepthStencilView(dsvhandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	{
 		m_primarycmdlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		D3D12_INDEX_BUFFER_VIEW ibview = m_trianglemodel.GetIBView();
-		D3D12_VERTEX_BUFFER_VIEW vbview = m_trianglemodel.GetVBView();
+		D3D12_INDEX_BUFFER_VIEW ibview = m_loadedmodel.GetIBView();
+		D3D12_VERTEX_BUFFER_VIEW vbview = m_loadedmodel.GetVBView();
 		m_primarycmdlist->IASetVertexBuffers(0, 1, &vbview);
 		m_primarycmdlist->IASetIndexBuffer(&ibview);
 
@@ -107,7 +107,7 @@ void RayTracingApplicationAdvanced::RenderRaster_NoProjection()
 		m_primarycmdlist->RSSetViewports(3, viewportstoset);
 		m_primarycmdlist->RSSetScissorRects(3, scissorrectstoset);
 	}
-	m_primarycmdlist->DrawIndexedInstanced(m_trianglemodel.GetIndiciesCount(), 1, 0, 0, 0);
+	m_primarycmdlist->DrawIndexedInstanced(m_loadedmodel.GetIndiciesCount(), 1, 0, 0, 0);
 	DXASSERT(m_primarycmdlist->Close())
 		BasicRender();
 }
@@ -199,8 +199,8 @@ void RayTracingApplicationAdvanced::RenderRT()
 }
 void RayTracingApplicationAdvanced::Render()
 {
-	//RenderRaster_NoProjection();
-	RenderRT();
+	RenderRaster_NoProjection();
+	//RenderRT();
 }
 
 void RayTracingApplicationAdvanced::InitExtras()
@@ -344,7 +344,7 @@ void RayTracingApplicationAdvanced::InitExtras()
 	
 
 	//InitPSO();
-	InitPSO_NoProjection();
+	InitPSO_RTRaster();
 	InitRTDisplayPSO();
 	
 	
@@ -720,26 +720,24 @@ void RayTracingApplicationAdvanced::InitRTPSO()
 
 	}
 }
-void RayTracingApplicationAdvanced::InitPSO_NoProjection()
+void RayTracingApplicationAdvanced::InitPSO_RTRaster()
 {
+	vector<D3D12_INPUT_ELEMENT_DESC> inputelements;
+	DXVertexManager::BuildDefaultInputelementdesc(inputelements, m_loadedmodel.GetVertexVersionUsed());
 	PSOInitData psoinitdata;
 	psoinitdata.type = PSOType::GRAPHICS;
 
 	DX12Shader* vs = new DX12Shader();
 	DX12Shader* ps = new DX12Shader();
-	vs->Init(L"shaders/raytracing/GeneralRenderVertexShader_noProjection.hlsl", DX12Shader::ShaderType::VS);
-	ps->Init(L"shaders/raytracing/GeneralRenderTestPixelShader_noProjection.hlsl", DX12Shader::ShaderType::PS);
+	vs->Init(L"shaders/raytracing/RTRasterVertexShader.hlsl", DX12Shader::ShaderType::VS);
+	ps->Init(L"shaders/raytracing/RTRasterPixelShader.hlsl", DX12Shader::ShaderType::PS);
 	psoinitdata.m_shaderstouse.push_back(vs); psoinitdata.m_shaderstouse.push_back(ps);
 	DX12PSO::DefaultInitPSOData(psoinitdata);
 	psoinitdata.psodesc.graphicspsodesc.PS.BytecodeLength = ps->GetCompiledCodeSize();
 	psoinitdata.psodesc.graphicspsodesc.PS.pShaderBytecode = ps->GetCompiledCode();
 	psoinitdata.psodesc.graphicspsodesc.VS.BytecodeLength = vs->GetCompiledCodeSize();
 	psoinitdata.psodesc.graphicspsodesc.VS.pShaderBytecode = vs->GetCompiledCode();
-	//rtv setup
-	psoinitdata.psodesc.graphicspsodesc.NumRenderTargets = 3;
-	psoinitdata.psodesc.graphicspsodesc.RTVFormats[1] = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	psoinitdata.psodesc.graphicspsodesc.RTVFormats[2] = DXGI_FORMAT_R32G32B32A32_FLOAT;
-
+	
 	//root signature setup
 	{
 		{
@@ -757,23 +755,15 @@ void RayTracingApplicationAdvanced::InitPSO_NoProjection()
 		}
 
 		//input assembler setup
-		D3D12_INPUT_ELEMENT_DESC inputelements[2] = { 0 };
-		inputelements[0].SemanticName = "POS";
-		inputelements[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-		inputelements[0].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-		inputelements[0].InputSlot = 0;
-		inputelements[1].SemanticName = "VUV";
-		inputelements[1].Format = DXGI_FORMAT_R32G32_FLOAT;
-		inputelements[1].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-		inputelements[1].InputSlot = 0;
-		inputelements[1].AlignedByteOffset = sizeof(float) * 3;//after three floats is normal
 
-		psoinitdata.psodesc.graphicspsodesc.InputLayout.NumElements = 2;
-		psoinitdata.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = inputelements;
+		psoinitdata.psodesc.graphicspsodesc.InputLayout.NumElements = (UINT)inputelements.size();
+		psoinitdata.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = inputelements.data();
 
 		m_rootsignature.Init(m_creationdevice, D3D_ROOT_SIGNATURE_VERSION_1);
 		psoinitdata.psodesc.graphicspsodesc.pRootSignature = m_rootsignature.GetRootSignature();
 	}
+
+
 	m_pso.Init(m_creationdevice, psoinitdata);
 }
 

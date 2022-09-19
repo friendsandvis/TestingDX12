@@ -342,7 +342,7 @@ void RayTracingApplication::InitExtras()
 	
 
 	//InitPSO();
-	InitPSO_NoProjection();
+	InitPSO_RTRaster();
 	InitRTDisplayPSO();
 	
 	
@@ -711,7 +711,7 @@ void RayTracingApplication::InitRTPSO()
 
 	}
 }
-void RayTracingApplication::InitPSO_NoProjection()
+void RayTracingApplication::InitPSO_RTRaster()
 {
 	PSOInitData psoinitdata;
 	psoinitdata.type = PSOType::GRAPHICS;
