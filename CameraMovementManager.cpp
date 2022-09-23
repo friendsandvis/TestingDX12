@@ -5,6 +5,7 @@
 DXFPSCameraController::DXFPSCameraController()
 	:m_cameratocontrol(nullptr),
 	m_movefrontbackmodifier(0.0f),
+	m_moveleftrightmodifier(0.0f),
 	m_mousefirstmove(true),
 	m_lastmouseXpos(0),
 	m_lastmouseYpos(0),
@@ -50,19 +51,36 @@ void DXFPSCameraController::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM 
 	}
 	case WM_KEYDOWN:
 	{
-		if (wParam == VK_UP)
+		
+		switch (wParam)
 		{
-			m_movefrontbackmodifier = 1.0f;
+		case VK_UP:
+		{m_movefrontbackmodifier = 1.0f;
+		break;
 		}
-		else if(wParam == VK_DOWN)
-		{
-			m_movefrontbackmodifier = -1.0f;
+		case VK_DOWN:
+		{m_movefrontbackmodifier = -1.0f;
+		break;
 		}
+		case VK_LEFT:
+		{m_moveleftrightmodifier = -1.0f;
+		break;
+		}
+		case VK_RIGHT:
+		{m_moveleftrightmodifier = 1.0f;
+		break;
+		}
+		default:
+			break;
+		}
+
+		
 		break;
 	}
 	case WM_KEYUP:
 	case WM_XBUTTONUP:
 	{
+		m_moveleftrightmodifier = 0.0f;
 		m_movefrontbackmodifier = 0.0f; break;
 	}
 	default:
@@ -104,6 +122,14 @@ void DXFPSCameraController::Update()
 		XMVECTOR campos = m_cameratocontrol->GetCamPos();
 		campos = campos + 0.01f* m_movefrontbackmodifier*camforward;
 		m_cameratocontrol->SetCamPos(campos);	
+	}
+	if (m_moveleftrightmodifier != 0.0f)
+	{
+		XMVECTOR camright = m_cameratocontrol->GetCamRight();
+		XMVECTOR campos = m_cameratocontrol->GetCamPos();
+		campos = campos + 0.01f * m_moveleftrightmodifier * camright;
+		m_cameratocontrol->SetCamPos(campos);
+
 	}
 }
 	

@@ -14,6 +14,7 @@ DXCamera::DXCamera()
 	m_camerapos = { 0.0f,0.0f,3.0f };
 	m_up = {0.0f,1.0f,0.0f};
 	m_forward = { 0.0f,0.0f,-1.0f };
+	m_right = XMVector3Cross(m_up, m_forward);
 	
 	
 }
@@ -92,5 +93,5 @@ void DXCamera::UpdateCameraVectors(float pitch, float yaw)
 	XMVECTOR newforward = XMVectorSet(x, y, z,0.0f);
 	newforward = XMVector3Normalize(newforward);
 	m_forward = newforward;
-
+	m_right = XMVector3Cross(m_up, m_forward);
 }

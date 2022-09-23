@@ -13,7 +13,7 @@ public:
 	void Update();
 private:
 	DXCamera* m_cameratocontrol;
-	float m_movefrontbackmodifier;
+	float m_movefrontbackmodifier,m_moveleftrightmodifier;
 	//requirnments to control camera movement via mouse
 	float m_camyaw, m_campitch;
 	int m_lastmouseXpos, m_lastmouseYpos;
