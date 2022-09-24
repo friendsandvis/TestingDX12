@@ -47,6 +47,8 @@ private:
 	//shader records
 	DX12Buffer m_rgsrecords,m_missrecords,m_hitrecords,m_blastransform;
 	DX12RootSignature m_rootsignature;
+	//redender in raytracing mode otherwise in rasterization 
+	bool m_rtmode;
 	//device5 is often used in raytracing so retrive it once and keep troughout app lifetime.
 	DX12RaytracingCommandlist m_rtcommandlist;
 	ComPtr<ID3D12Device5> m_device5;

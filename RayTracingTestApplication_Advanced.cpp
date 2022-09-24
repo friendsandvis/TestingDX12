@@ -6,6 +6,7 @@
 RayTracingApplicationAdvanced::RayTracingApplicationAdvanced()
 	:m_loadedmodel(ModelDataUploadMode::COPY),
 	m_raytracingsupported(false),
+	m_rtmode(true),
 	m_trianglemodel(ModelDataUploadMode::COPY),
 	m_planemodel(ModelDataUploadMode::COPY)
 {
@@ -199,8 +200,15 @@ void RayTracingApplicationAdvanced::RenderRT()
 }
 void RayTracingApplicationAdvanced::Render()
 {
-	RenderRaster_NoProjection();
-	//RenderRT();
+	//make sure both the modes are drawing same geometry to view  real-time tooggle diffrence.
+	if (m_rtmode)
+	{
+		 RenderRT();
+	}
+	else
+	{
+		RenderRaster_NoProjection();
+	}
 }
 
 void RayTracingApplicationAdvanced::InitExtras()
@@ -770,7 +778,14 @@ void RayTracingApplicationAdvanced::InitPSO_RTRaster()
 
 void RayTracingApplicationAdvanced::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-
+	if (uMsg == WM_CHAR)
+	{
+		char charpressed = (char)wParam;
+		if (charpressed == '1')
+		{
+			m_rtmode = !m_rtmode;
+		}
+	}
 	m_maincameracontroller.ProcessWindowProcEvent(hwnd, uMsg, wParam, lParam);
 
 }
