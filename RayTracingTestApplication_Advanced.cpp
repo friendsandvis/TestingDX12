@@ -5,7 +5,7 @@
 
 RayTracingApplicationAdvanced::RayTracingApplicationAdvanced()
 	:m_loadedmodel(ModelDataUploadMode::COPY),
-	m_raytracingsupported(false),
+	m_raytracingsupported(true),
 	m_rtmode(false),
 	m_trianglemodel(ModelDataUploadMode::COPY),
 	m_planemodel(ModelDataUploadMode::COPY)
