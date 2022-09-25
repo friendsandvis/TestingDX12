@@ -51,6 +51,7 @@ private:
 	bool m_rtmode;
 	//device5 is often used in raytracing so retrive it once and keep troughout app lifetime.
 	DX12RaytracingCommandlist m_rtcommandlist;
+	DX12Commandlist m_gbufferrendercommandlist;
 	ComPtr<ID3D12Device5> m_device5;
 	Model m_loadedmodel,m_trianglemodel,m_planemodel;
 	bool m_raytracingsupported;
@@ -63,5 +64,5 @@ private:
 	void InitRTPSO();
 	void RenderRT();
 	void RenderRaster();
-	void RenderRaster_NoProjection();
+	void RenderTextureOnScreen();
 };

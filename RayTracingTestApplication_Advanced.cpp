@@ -67,51 +67,8 @@ void RayTracingApplicationAdvanced::RenderRaster()
 	DXASSERT(m_primarycmdlist->Close())
 		BasicRender();
 }
-void RayTracingApplicationAdvanced::RenderRaster_NoProjection()
-{
-	m_primarycmdlist.Reset();
-	//set rtv
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
-	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
-	m_primarycmdlist->SetPipelineState(m_pso.GetPSO());
-	m_primarycmdlist->SetGraphicsRootSignature(m_rootsignature.GetRootSignature());
-	XMMATRIX mvp = m_maincamera.GetMVP();
-	m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvp, 0);
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandlestoset[3] =
-	{
-		rtvhandle,
-		m_gbufferrtvheaps.GetCPUHandleOffseted(0),
-		m_gbufferrtvheaps.GetCPUHandleOffseted(1)
-	};
-	m_primarycmdlist->OMSetRenderTargets(3, rtvhandlestoset, FALSE, &dsvhandle);
-	float clearvalue[4] = { 1.0f,1.0f,1.0f,1.0f };
-	float blackclearvalue[4] = { 0.0f,0.0f,0.0f,1.0f };
-	m_primarycmdlist->ClearRenderTargetView(m_gbufferrtvheaps.GetCPUHandleOffseted(0), blackclearvalue, 0, nullptr);
-	m_primarycmdlist->ClearRenderTargetView(rtvhandle, clearvalue, 0, nullptr);
-	m_primarycmdlist->ClearDepthStencilView(dsvhandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-	{
-		m_primarycmdlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		D3D12_INDEX_BUFFER_VIEW ibview = m_loadedmodel.GetIBView();
-		D3D12_VERTEX_BUFFER_VIEW vbview = m_loadedmodel.GetVBView();
-		m_primarycmdlist->IASetVertexBuffers(0, 1, &vbview);
-		m_primarycmdlist->IASetIndexBuffer(&ibview);
 
-	}
 
-	{
-		D3D12_VIEWPORT aviewport = GetViewport();
-		D3D12_VIEWPORT viewportstoset[3] =
-		{ aviewport,aviewport,aviewport };
-		D3D12_RECT ascissorrect = GetScissorRect();
-		D3D12_RECT scissorrectstoset[3] =
-		{ ascissorrect,ascissorrect,ascissorrect };
-		m_primarycmdlist->RSSetViewports(3, viewportstoset);
-		m_primarycmdlist->RSSetScissorRects(3, scissorrectstoset);
-	}
-	m_primarycmdlist->DrawIndexedInstanced(m_loadedmodel.GetIndiciesCount(), 1, 0, 0, 0);
-	DXASSERT(m_primarycmdlist->Close())
-		BasicRender();
-}
 void RayTracingApplicationAdvanced::RenderRT()
 {
 	m_primarycmdlist.Reset();
@@ -207,7 +164,7 @@ void RayTracingApplicationAdvanced::Render()
 	}
 	else
 	{
-		RenderRaster_NoProjection();
+		RenderRaster();
 	}
 }
 
@@ -383,6 +340,11 @@ void RayTracingApplicationAdvanced::InitExtras()
 			loadedmodelastlas.CreateSRV(m_creationdevice, m_rtresheap_global.GetCPUHandleOffseted(1));
 		}
 		
+	}
+	
+	{
+		m_gbufferrendercommandlist.Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
+		m_gbufferrendercommandlist.SetName(L"Gbuffer render commandlist");
 	}
 
 	m_uploadcommandlist.Reset();
