@@ -29,7 +29,7 @@ void RayTracingApplicationAdvanced::RenderRaster()
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
 	m_primarycmdlist->SetPipelineState(m_pso.GetPSO());
-	m_primarycmdlist->SetGraphicsRootSignature(m_rootsignature.GetRootSignature());
+	m_primarycmdlist->SetGraphicsRootSignature(m_pso.GetRootSignature());
 	XMMATRIX mvp = m_maincamera.GetMVP();
 	m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvp, 0);
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandlestoset[1] =
@@ -64,6 +64,50 @@ void RayTracingApplicationAdvanced::RenderRaster()
 	m_primarycmdlist->DrawIndexedInstanced(m_loadedmodel.GetIndiciesCount(), 1, 0, 0, 0);
 	DXASSERT(m_primarycmdlist->Close())
 		BasicRender();
+}
+void RayTracingApplicationAdvanced::RenderGbuffer()
+{
+	m_gbufferrendercommandlist.Reset();
+	m_gbufferrendercommandlist->SetPipelineState(m_pso.GetPSO());
+	m_gbufferrendercommandlist->SetGraphicsRootSignature(m_pso.GetRootSignature());
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandlestoset[3] =
+	{
+		m_gbufferrtvheaps.GetCPUHandleOffseted(0),
+		m_gbufferrtvheaps.GetCPUHandleOffseted(1),
+		m_gbufferrtvheaps.GetCPUHandleOffseted(2)
+	};
+	m_gbufferrendercommandlist->OMSetRenderTargets(3, rtvhandlestoset, FALSE, &dsvhandle);
+	
+	float blackclearvalue[4] = { 0.0f,0.0f,0.0f,1.0f };
+	m_gbufferrendercommandlist->ClearRenderTargetView(m_gbufferrtvheaps.GetCPUHandleOffseted(0), blackclearvalue, 0, nullptr);
+	m_gbufferrendercommandlist->ClearRenderTargetView(m_gbufferrtvheaps.GetCPUHandleOffseted(1), blackclearvalue, 0, nullptr);
+	m_gbufferrendercommandlist->ClearRenderTargetView(m_gbufferrtvheaps.GetCPUHandleOffseted(2), blackclearvalue, 0, nullptr);
+	m_gbufferrendercommandlist->ClearDepthStencilView(dsvhandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	{
+		D3D12_VIEWPORT aviewport = GetViewport();
+		D3D12_VIEWPORT viewportstoset[3] =
+		{ aviewport,aviewport,aviewport };
+		D3D12_RECT ascissorrect = GetScissorRect();
+		D3D12_RECT scissorrectstoset[3] =
+		{ ascissorrect,ascissorrect,ascissorrect };
+		m_gbufferrendercommandlist->RSSetViewports(3, viewportstoset);
+		m_gbufferrendercommandlist->RSSetScissorRects(3, scissorrectstoset);
+	}
+	{
+		m_gbufferrendercommandlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		D3D12_INDEX_BUFFER_VIEW ibview = m_loadedmodel.GetIBView();
+		D3D12_VERTEX_BUFFER_VIEW vbview = m_loadedmodel.GetVBView();
+		m_gbufferrendercommandlist->IASetVertexBuffers(0, 1, &vbview);
+		m_gbufferrendercommandlist->IASetIndexBuffer(&ibview);
+		XMMATRIX mvp = m_maincamera.GetMVP();
+		m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvp, 0);
+		m_gbufferrendercommandlist->DrawIndexedInstanced(m_loadedmodel.GetIndiciesCount(), 1, 0, 0, 0);
+		m_gbufferrendercommandlist.Close();
+	}
+	ID3D12CommandList* cmdliststoexecute[1] = { m_gbufferrendercommandlist.GetcmdList() };
+	m_mainqueue.GetQueue()->ExecuteCommandLists(1, cmdliststoexecute);
+
 }
 void RayTracingApplicationAdvanced::RenderTextureOnScreen()
 {
@@ -223,7 +267,7 @@ void RayTracingApplicationAdvanced::InitExtras()
 	//gbuffer rtv heap
 	{
 		D3D12_DESCRIPTOR_HEAP_DESC gbufferrtvheapdesc = {};
-		gbufferrtvheapdesc.NumDescriptors = 2;
+		gbufferrtvheapdesc.NumDescriptors = 3;
 		gbufferrtvheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 		m_gbufferrtvheaps.Init(gbufferrtvheapdesc, m_creationdevice);
 	}
@@ -266,6 +310,8 @@ void RayTracingApplicationAdvanced::InitExtras()
 	m_gbuffernormal.SetName(L"GBUFFER_NORMAL");
 	m_gbufferposition.Init(m_creationdevice, gbuffertextureprops, ResourceCreationMode::COMMITED);
 	m_gbufferposition.SetName(L"GBUFFER_POSITION");
+	m_gbufferalbedo.Init(m_creationdevice, gbuffertextureprops, ResourceCreationMode::COMMITED);
+	m_gbufferalbedo.SetName(L"GBUFFER_ALBEDO");
 	{
 		DX12ResourceCreationProperties rtoutputtexprops = {};
 		DX12TextureSimple::InitResourceCreationProperties(rtoutputtexprops);
@@ -308,8 +354,9 @@ void RayTracingApplicationAdvanced::InitExtras()
 	gbufferrtvdesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 	gbufferrtvdesc.Texture2D.MipSlice = 0;
 	gbufferrtvdesc.Texture2D.PlaneSlice = 0;
-	m_gbuffernormal.CreateRTV(m_creationdevice, gbufferrtvdesc, m_gbufferrtvheaps.GetCPUHandleOffseted(0));
-	m_gbufferposition.CreateRTV(m_creationdevice, gbufferrtvdesc, m_gbufferrtvheaps.GetCPUHandleOffseted(1));
+	m_gbufferalbedo.CreateRTV(m_creationdevice, gbufferrtvdesc, m_gbufferrtvheaps.GetCPUHandleOffseted(0));
+	m_gbuffernormal.CreateRTV(m_creationdevice, gbufferrtvdesc, m_gbufferrtvheaps.GetCPUHandleOffseted(1));
+	m_gbufferposition.CreateRTV(m_creationdevice, gbufferrtvdesc, m_gbufferrtvheaps.GetCPUHandleOffseted(2));
 	
 
 	//InitPSO();
@@ -393,16 +440,19 @@ void RayTracingApplicationAdvanced::InitPSO()
 	//root signature setup
 	{
 		{
-			D3D12_ROOT_PARAMETER rootparams[1] = {};
-			D3D12_ROOT_SIGNATURE_DESC& rootsigdesc = m_rootsignature.getSignatureDescforModification();
-			rootsigdesc.NumParameters = 1;
+			std::vector< D3D12_ROOT_PARAMETER>rootparams;
+			std::vector<D3D12_STATIC_SAMPLER_DESC> staticsamplers;
+			
+			D3D12_ROOT_PARAMETER arootparam = {};
+			arootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+			arootparam.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+			arootparam.Constants.Num32BitValues = sizeof(XMMATRIX) / 4;
+			arootparam.Constants.RegisterSpace = 0;
+			arootparam.Constants.ShaderRegister = 0;
+			rootparams.push_back(arootparam);
+			
+			psoinitdata.rootsignature.BuidDesc(rootparams, staticsamplers);
 
-			rootparams[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-			rootparams[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-			rootparams[0].Constants.Num32BitValues = sizeof(XMMATRIX) / 4;
-			rootparams[0].Constants.RegisterSpace = 0;
-			rootparams[0].Constants.ShaderRegister = 0;
-			rootsigdesc.pParameters = rootparams;
 
 		}
 
@@ -421,8 +471,8 @@ void RayTracingApplicationAdvanced::InitPSO()
 		psoinitdata.psodesc.graphicspsodesc.InputLayout.NumElements = 2;
 		psoinitdata.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = inputelements;
 
-		m_rootsignature.Init(m_creationdevice, D3D_ROOT_SIGNATURE_VERSION_1);
-		psoinitdata.psodesc.graphicspsodesc.pRootSignature = m_rootsignature.GetRootSignature();
+		
+		
 	}
 	m_pso.Init(m_creationdevice, psoinitdata);
 }
@@ -715,17 +765,17 @@ void RayTracingApplicationAdvanced::InitPSO_RTRaster()
 	//root signature setup
 	{
 		{
-			D3D12_ROOT_PARAMETER rootparams[1] = {};
-			D3D12_ROOT_SIGNATURE_DESC& rootsigdesc = m_rootsignature.getSignatureDescforModification();
-			rootsigdesc.NumParameters = 1;
-
-			rootparams[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-			rootparams[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-			rootparams[0].Constants.Num32BitValues = sizeof(XMMATRIX) / 4;
-			rootparams[0].Constants.RegisterSpace = 0;
-			rootparams[0].Constants.ShaderRegister = 0;
-			rootsigdesc.pParameters = rootparams;
-
+			std::vector<D3D12_ROOT_PARAMETER> rootparams;
+			std::vector<D3D12_STATIC_SAMPLER_DESC> samplers;
+			
+			D3D12_ROOT_PARAMETER arootparam;
+			arootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+			arootparam.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+			arootparam.Constants.Num32BitValues = sizeof(XMMATRIX) / 4;
+			arootparam.Constants.RegisterSpace = 0;
+			arootparam.Constants.ShaderRegister = 0;
+			rootparams.push_back(arootparam);
+			psoinitdata.rootsignature.BuidDesc(rootparams, samplers);
 		}
 
 		//input assembler setup
@@ -733,8 +783,8 @@ void RayTracingApplicationAdvanced::InitPSO_RTRaster()
 		psoinitdata.psodesc.graphicspsodesc.InputLayout.NumElements = (UINT)inputelements.size();
 		psoinitdata.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = inputelements.data();
 
-		m_rootsignature.Init(m_creationdevice, D3D_ROOT_SIGNATURE_VERSION_1);
-		psoinitdata.psodesc.graphicspsodesc.pRootSignature = m_rootsignature.GetRootSignature();
+		
+		
 	}
 
 
