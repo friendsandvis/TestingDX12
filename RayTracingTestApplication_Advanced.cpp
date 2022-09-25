@@ -6,7 +6,7 @@
 RayTracingApplicationAdvanced::RayTracingApplicationAdvanced()
 	:m_loadedmodel(ModelDataUploadMode::COPY),
 	m_raytracingsupported(false),
-	m_rtmode(true),
+	m_rtmode(false),
 	m_trianglemodel(ModelDataUploadMode::COPY),
 	m_planemodel(ModelDataUploadMode::COPY)
 {
@@ -109,7 +109,7 @@ void RayTracingApplicationAdvanced::RenderGbuffer()
 	m_mainqueue.GetQueue()->ExecuteCommandLists(1, cmdliststoexecute);
 
 }
-void RayTracingApplicationAdvanced::RenderTextureOnScreen()
+void RayTracingApplicationAdvanced::RenderTextureOnScreenRT()
 {
 	m_primarycmdlist.Reset();
 	//set rtv
@@ -208,7 +208,7 @@ void RayTracingApplicationAdvanced::Render()
 	if (m_rtmode)
 	{
 		 RenderRT();
-		 RenderTextureOnScreen();
+		 RenderTextureOnScreenRT();
 	}
 	else
 	{
@@ -264,12 +264,19 @@ void RayTracingApplicationAdvanced::InitExtras()
 	}
 
 	//init gbuffer textures
-	//gbuffer rtv heap
+	//gbuffer rtv heap and gbuffer srv heap
 	{
 		D3D12_DESCRIPTOR_HEAP_DESC gbufferrtvheapdesc = {};
 		gbufferrtvheapdesc.NumDescriptors = 3;
 		gbufferrtvheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 		m_gbufferrtvheaps.Init(gbufferrtvheapdesc, m_creationdevice);
+	}
+	{
+		D3D12_DESCRIPTOR_HEAP_DESC gbuffersrvheapdesc = {};
+		gbuffersrvheapdesc.NumDescriptors = 3;
+		gbuffersrvheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		gbuffersrvheapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		m_gbuffersrvheap.Init(gbuffersrvheapdesc, m_creationdevice);
 	}
 	//heap to hold resources used by rt(global)
 	{
@@ -354,13 +361,24 @@ void RayTracingApplicationAdvanced::InitExtras()
 	gbufferrtvdesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 	gbufferrtvdesc.Texture2D.MipSlice = 0;
 	gbufferrtvdesc.Texture2D.PlaneSlice = 0;
+	D3D12_SHADER_RESOURCE_VIEW_DESC gbuffersrvdesc = {};
+	gbuffersrvdesc.ViewDimension = D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_TEXTURE2D;
+	gbuffersrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	gbuffersrvdesc.Texture2D.MipLevels = 1;
+	gbuffersrvdesc.Texture2D.MostDetailedMip = 0;
+	gbuffersrvdesc.Texture2D.ResourceMinLODClamp = 0.0f;
+	//create rtv for gbuffer
 	m_gbufferalbedo.CreateRTV(m_creationdevice, gbufferrtvdesc, m_gbufferrtvheaps.GetCPUHandleOffseted(0));
 	m_gbuffernormal.CreateRTV(m_creationdevice, gbufferrtvdesc, m_gbufferrtvheaps.GetCPUHandleOffseted(1));
 	m_gbufferposition.CreateRTV(m_creationdevice, gbufferrtvdesc, m_gbufferrtvheaps.GetCPUHandleOffseted(2));
+	//create srv for gbuffer
+	m_gbufferalbedo.CreateSRV(m_creationdevice, gbuffersrvdesc, m_gbuffersrvheap.GetCPUHandleOffseted(0));
+	m_gbuffernormal.CreateSRV(m_creationdevice, gbuffersrvdesc, m_gbuffersrvheap.GetCPUHandleOffseted(1));
+	m_gbufferposition.CreateSRV(m_creationdevice, gbuffersrvdesc, m_gbuffersrvheap.GetCPUHandleOffseted(2));
 	
 
-	//InitPSO();
-	InitPSO_RTRaster();
+	InitPSO();
+	//InitPSO_RTRaster();
 	InitRTDisplayPSO();
 	
 	
@@ -434,6 +452,7 @@ void RayTracingApplicationAdvanced::InitPSO()
 	psoinitdata.psodesc.graphicspsodesc.VS.pShaderBytecode = vs->GetCompiledCode();
 	//rtv setup
 	psoinitdata.psodesc.graphicspsodesc.NumRenderTargets = 3;
+	psoinitdata.psodesc.graphicspsodesc.RTVFormats[0] = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	psoinitdata.psodesc.graphicspsodesc.RTVFormats[1] = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	psoinitdata.psodesc.graphicspsodesc.RTVFormats[2] = DXGI_FORMAT_R32G32B32A32_FLOAT;
 
@@ -618,6 +637,149 @@ void RayTracingApplicationAdvanced::InitRTDisplayPSO()
 	}
 
 	m_psortdisplay.Init(m_creationdevice, basicpsodata);
+}
+void RayTracingApplicationAdvanced::InitGBufferDisplayPSO()
+{
+	PSOInitData basicpsodata = {};
+	basicpsodata.type = GRAPHICS;
+
+	//shaders to use
+	DX12Shader* vs = new DX12Shader();
+	DX12Shader* ps = new DX12Shader();
+	vs->Init(L"shaders/RTextras/VS.hlsl", DX12Shader::ShaderType::VS);
+	ps->Init(L"shaders/RTextras/PS.hlsl", DX12Shader::ShaderType::PS);
+	basicpsodata.m_shaderstouse.push_back(vs);
+	basicpsodata.m_shaderstouse.push_back(ps);
+
+	//build up graphic pso desc
+
+	//shaderdesc
+	basicpsodata.psodesc.graphicspsodesc.VS.pShaderBytecode = vs->GetCompiledCode();
+	basicpsodata.psodesc.graphicspsodesc.VS.BytecodeLength = vs->GetCompiledCodeSize();
+	basicpsodata.psodesc.graphicspsodesc.PS.pShaderBytecode = ps->GetCompiledCode();
+	basicpsodata.psodesc.graphicspsodesc.PS.BytecodeLength = ps->GetCompiledCodeSize();
+
+	//primitive setup
+	basicpsodata.psodesc.graphicspsodesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+
+	//rasterizer setup
+	basicpsodata.psodesc.graphicspsodesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	basicpsodata.psodesc.graphicspsodesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+	basicpsodata.psodesc.graphicspsodesc.RasterizerState.DepthClipEnable = FALSE;
+	basicpsodata.psodesc.graphicspsodesc.RasterizerState.AntialiasedLineEnable = FALSE;
+
+	//rtv&sample setup
+	basicpsodata.psodesc.graphicspsodesc.SampleMask = UINT_MAX;
+	basicpsodata.psodesc.graphicspsodesc.SampleDesc.Count = 1;
+	basicpsodata.psodesc.graphicspsodesc.SampleDesc.Quality = 0;
+	basicpsodata.psodesc.graphicspsodesc.RTVFormats[0] = DXGI_FORMAT_B8G8R8A8_UNORM;
+	basicpsodata.psodesc.graphicspsodesc.NumRenderTargets = 1;
+
+	//raster state
+	basicpsodata.psodesc.graphicspsodesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	basicpsodata.psodesc.graphicspsodesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+	basicpsodata.psodesc.graphicspsodesc.RasterizerState.DepthClipEnable = FALSE;
+	basicpsodata.psodesc.graphicspsodesc.RasterizerState.AntialiasedLineEnable = FALSE;
+
+	//root signature
+
+	//1 root param for ps texture & sampler 
+	D3D12_STATIC_SAMPLER_DESC simplesampler = {};
+	simplesampler.Filter = D3D12_FILTER::D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	simplesampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	simplesampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	simplesampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	simplesampler.MipLODBias = 0;
+	simplesampler.MaxAnisotropy = 0;
+	simplesampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+	simplesampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+	simplesampler.MinLOD = 0.0f;
+	simplesampler.MaxLOD = D3D12_FLOAT32_MAX;
+	simplesampler.ShaderRegister = 0;
+	simplesampler.RegisterSpace = 0;
+	simplesampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+	D3D12_ROOT_PARAMETER psimgrootparam = {};
+
+	D3D12_DESCRIPTOR_RANGE texsrvrange = {};
+	texsrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	texsrvrange.NumDescriptors = 1;
+	texsrvrange.BaseShaderRegister = 0;
+	texsrvrange.RegisterSpace = 0;
+	texsrvrange.OffsetInDescriptorsFromTableStart = 0;
+
+	psimgrootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	psimgrootparam.DescriptorTable.NumDescriptorRanges = 1;
+	psimgrootparam.DescriptorTable.pDescriptorRanges = &texsrvrange;
+
+	CD3DX12_ROOT_SIGNATURE_DESC emptyrootsignaturedesc = {};
+	emptyrootsignaturedesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+	emptyrootsignaturedesc.NumParameters = 1;
+	emptyrootsignaturedesc.pParameters = &psimgrootparam;
+	emptyrootsignaturedesc.NumStaticSamplers = 1;
+	emptyrootsignaturedesc.pStaticSamplers = &simplesampler;
+
+
+	//inputlayoutsetup
+	{
+		D3D12_INPUT_ELEMENT_DESC simplevsinputelementdesc[2] = {};
+		simplevsinputelementdesc[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+		simplevsinputelementdesc[0].InputSlot = 0;
+		simplevsinputelementdesc[0].SemanticName = "POS";
+		simplevsinputelementdesc[0].SemanticIndex = 0;
+		simplevsinputelementdesc[0].InstanceDataStepRate = 0;
+		simplevsinputelementdesc[0].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+		simplevsinputelementdesc[1].Format = DXGI_FORMAT_R32G32_FLOAT;
+		simplevsinputelementdesc[1].InputSlot = 0;
+		simplevsinputelementdesc[1].SemanticName = "VUV";
+		simplevsinputelementdesc[1].SemanticIndex = 0;
+		simplevsinputelementdesc[1].InstanceDataStepRate = 0;
+		simplevsinputelementdesc[1].InstanceDataStepRate = 0;
+		simplevsinputelementdesc[1].AlignedByteOffset = sizeof(float) * 3;//uv after 3 pos floats
+		basicpsodata.psodesc.graphicspsodesc.InputLayout.NumElements = 2;
+		basicpsodata.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = simplevsinputelementdesc;
+
+	}
+
+
+
+	//blendstate setup
+	//blend state has fixed rt count of 8
+	for (size_t i = 0; i < 8; i++)
+	{
+		//same for all 8 rtvs
+		basicpsodata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].BlendEnable = FALSE;
+		basicpsodata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	}
+	//root signature
+	{
+		vector<D3D12_ROOT_PARAMETER> rootparams;
+
+		vector<D3D12_STATIC_SAMPLER_DESC> staticsamplers;
+		D3D12_STATIC_SAMPLER_DESC asampler = StaticSamplerManager::GetDefaultStaticSamplerDesc();
+		asampler.Filter = D3D12_FILTER::D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+		staticsamplers.push_back(asampler);
+		D3D12_ROOT_PARAMETER psimgrootparam = {};
+
+		D3D12_DESCRIPTOR_RANGE texsrvrange = {};
+		texsrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		texsrvrange.NumDescriptors = 1;
+		texsrvrange.BaseShaderRegister = 0;
+		texsrvrange.RegisterSpace = 0;
+		texsrvrange.OffsetInDescriptorsFromTableStart = 0;
+
+		psimgrootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		psimgrootparam.DescriptorTable.NumDescriptorRanges = 1;
+		psimgrootparam.DescriptorTable.pDescriptorRanges = &texsrvrange;
+		rootparams.push_back(psimgrootparam);
+
+
+
+
+		basicpsodata.rootsignature.BuidDesc(rootparams, staticsamplers, D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+	}
+
+	m_psogbufferdisplay.Init(m_creationdevice, basicpsodata);
 }
 void RayTracingApplicationAdvanced::InitRTPSO()
 {
