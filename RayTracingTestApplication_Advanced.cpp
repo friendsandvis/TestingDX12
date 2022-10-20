@@ -68,7 +68,7 @@ void RayTracingApplicationAdvanced::RenderRaster()
 void RayTracingApplicationAdvanced::RenderGbuffer()
 {
 	m_gbufferrendercommandlist.Reset();
-	m_gbufferrendercommandlist->SetPipelineState(m_pso.GetPSO());
+	m_gbufferrendercommandlist->SetPipelineState(m_gbufferpso.GetPSO());
 	m_gbufferrendercommandlist->SetGraphicsRootSignature(m_pso.GetRootSignature());
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandlestoset[3] =
@@ -143,6 +143,42 @@ void RayTracingApplicationAdvanced::RenderTextureOnScreenRT()
 		}
 		m_primarycmdlist->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
 		DXASSERT(m_primarycmdlist->Close())
+		BasicRender();
+}
+void RayTracingApplicationAdvanced::RenderTextureOnScreenGBuffer()
+{
+	m_primarycmdlist.Reset();
+	//set rtv
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
+	m_primarycmdlist->SetPipelineState(m_psogbufferdisplay.GetPSO());
+	m_primarycmdlist->SetGraphicsRootSignature(m_psogbufferdisplay.GetRootSignature());
+	ID3D12DescriptorHeap* descheapstoset[1];
+	descheapstoset[0] = m_gbuffersrvheap.GetDescHeap();
+	m_primarycmdlist->SetDescriptorHeaps(1, descheapstoset);
+	m_primarycmdlist->SetGraphicsRootDescriptorTable(0, m_gbuffersrvheap.GetGPUHandlefromstart());
+	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, &dsvhandle);
+	float clearvalue[4] = { 1.0f,1.0f,1.0f,1.0f };
+	m_primarycmdlist->ClearRenderTargetView(rtvhandle, clearvalue, 0, nullptr);
+	m_primarycmdlist->ClearDepthStencilView(dsvhandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
+	m_primarycmdlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	D3D12_INDEX_BUFFER_VIEW ibview = m_planemodel.GetIBView();
+	D3D12_VERTEX_BUFFER_VIEW vbview = m_planemodel.GetVBView();
+	m_primarycmdlist->IASetVertexBuffers(0, 1, &vbview);
+	m_primarycmdlist->IASetIndexBuffer(&ibview);
+	{
+		D3D12_VIEWPORT aviewport = GetViewport();
+		D3D12_VIEWPORT viewportstoset[3] =
+		{ aviewport,aviewport,aviewport };
+		D3D12_RECT ascissorrect = GetScissorRect();
+		D3D12_RECT scissorrectstoset[3] =
+		{ ascissorrect,ascissorrect,ascissorrect };
+		m_primarycmdlist->RSSetViewports(3, viewportstoset);
+		m_primarycmdlist->RSSetScissorRects(3, scissorrectstoset);
+	}
+	m_primarycmdlist->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
+	DXASSERT(m_primarycmdlist->Close())
 		BasicRender();
 }
 
