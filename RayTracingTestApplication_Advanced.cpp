@@ -377,8 +377,8 @@ void RayTracingApplicationAdvanced::InitExtras()
 	m_gbufferposition.CreateSRV(m_creationdevice, gbuffersrvdesc, m_gbuffersrvheap.GetCPUHandleOffseted(2));
 	
 
-	InitPSO();
-	//InitPSO_RTRaster();
+	InitGbufferPSO();
+	InitPSO_RTRaster();
 	InitRTDisplayPSO();
 	
 	
@@ -435,7 +435,7 @@ void RayTracingApplicationAdvanced::InitExtras()
 	DXASSERT(m_uploadcommandlist->Close());
 }
 
-void RayTracingApplicationAdvanced::InitPSO()
+void RayTracingApplicationAdvanced::InitGbufferPSO()
 {
 	PSOInitData psoinitdata;
 	psoinitdata.type = PSOType::GRAPHICS;
@@ -493,7 +493,7 @@ void RayTracingApplicationAdvanced::InitPSO()
 		
 		
 	}
-	m_pso.Init(m_creationdevice, psoinitdata);
+	m_gbufferpso.Init(m_creationdevice, psoinitdata);
 }
 void RayTracingApplicationAdvanced::InitRTDisplayPSO()
 {

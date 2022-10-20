@@ -40,7 +40,7 @@ private:
 	DX12DESCHEAP m_rtresheap_global, m_rtresheap_globalupload;
 	DX12DESCHEAP m_rtdisplayresheap;
 	DX12TextureSimple m_gbuffernormal,m_gbufferposition, m_gbufferalbedo,m_rtouput;
-	DX12PSO m_pso;
+	DX12PSO m_pso,m_gbufferpso;
 	//renderes the rt output texture as a full screen quad.
 	DX12PSO m_psortdisplay,m_psogbufferdisplay;
 	RTPSO m_simplertpso;
@@ -58,7 +58,7 @@ private:
 	DXFPSCameraController m_maincameracontroller;
 	ModelAccelerationStructureBLAS loadedmodelasblas;
 	ModelAccelerationStructureTLAS loadedmodelastlas;
-	void InitPSO();
+	void InitGbufferPSO();
 	void InitPSO_RTRaster();
 	void InitRTDisplayPSO();
 	void InitGBufferDisplayPSO();
