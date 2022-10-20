@@ -79,7 +79,7 @@ void RayTracingApplicationAdvanced::RenderGbuffer()
 	};
 	m_gbufferrendercommandlist->OMSetRenderTargets(3, rtvhandlestoset, FALSE, &dsvhandle);
 	
-	float blackclearvalue[4] = { 0.0f,0.0f,0.0f,1.0f };
+	float blackclearvalue[4] = { 0.0f,0.0f,0.0f,0.0f };
 	m_gbufferrendercommandlist->ClearRenderTargetView(m_gbufferrtvheaps.GetCPUHandleOffseted(0), blackclearvalue, 0, nullptr);
 	m_gbufferrendercommandlist->ClearRenderTargetView(m_gbufferrtvheaps.GetCPUHandleOffseted(1), blackclearvalue, 0, nullptr);
 	m_gbufferrendercommandlist->ClearRenderTargetView(m_gbufferrtvheaps.GetCPUHandleOffseted(2), blackclearvalue, 0, nullptr);
@@ -248,7 +248,8 @@ void RayTracingApplicationAdvanced::Render()
 	}
 	else
 	{
-		RenderRaster();
+		//RenderRaster();
+		RenderGbuffer();
 	}
 }
 
