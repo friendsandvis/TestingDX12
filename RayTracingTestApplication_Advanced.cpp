@@ -542,8 +542,8 @@ void RayTracingApplicationAdvanced::InitRTDisplayPSO()
 	//shaders to use
 	DX12Shader* vs = new DX12Shader();
 	DX12Shader* ps = new DX12Shader();
-	vs->Init(L"shaders/RTextras/VS.hlsl", DX12Shader::ShaderType::VS);
-	ps->Init(L"shaders/RTextras/PS.hlsl", DX12Shader::ShaderType::PS);
+	vs->Init(L"shaders/RTextras/VS_displayTexOnScreen.hlsl", DX12Shader::ShaderType::VS);
+	ps->Init(L"shaders/RTextras/PS_displayTexOnScreen.hlsl", DX12Shader::ShaderType::PS);
 	basicpsodata.m_shaderstouse.push_back(vs);
 	basicpsodata.m_shaderstouse.push_back(ps);
 
@@ -685,8 +685,8 @@ void RayTracingApplicationAdvanced::InitGBufferDisplayPSO()
 	//shaders to use
 	DX12Shader* vs = new DX12Shader();
 	DX12Shader* ps = new DX12Shader();
-	vs->Init(L"shaders/RTextras/VS.hlsl", DX12Shader::ShaderType::VS);
-	ps->Init(L"shaders/RTextras/PS.hlsl", DX12Shader::ShaderType::PS);
+	vs->Init(L"shaders/RTextras/VS_displayTexOnScreen.hlsl", DX12Shader::ShaderType::VS);
+	ps->Init(L"shaders/RTextras/PS_GBufferDisplay.hlsl", DX12Shader::ShaderType::PS);
 	basicpsodata.m_shaderstouse.push_back(vs);
 	basicpsodata.m_shaderstouse.push_back(ps);
 
