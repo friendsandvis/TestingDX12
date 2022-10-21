@@ -101,7 +101,7 @@ void RayTracingApplicationAdvanced::RenderGbuffer()
 		m_gbufferrendercommandlist->IASetVertexBuffers(0, 1, &vbview);
 		m_gbufferrendercommandlist->IASetIndexBuffer(&ibview);
 		XMMATRIX mvp = m_maincamera.GetMVP();
-		m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvp, 0);
+		m_gbufferrendercommandlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvp, 0);
 		m_gbufferrendercommandlist->DrawIndexedInstanced(m_loadedmodel.GetIndiciesCount(), 1, 0, 0, 0);
 		m_gbufferrendercommandlist.Close();
 	}
