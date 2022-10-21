@@ -11,7 +11,7 @@
 #include"RaytracingUtils.h"
 #include"RTPSO.h"
 #include"DX12RaytracingCommandlist.h"
-
+#define NUMGBUFFERTEXTURES 3
 using namespace DirectX;
 
 class RayTracingApplicationAdvanced :public DX12ApplicationManagerBase

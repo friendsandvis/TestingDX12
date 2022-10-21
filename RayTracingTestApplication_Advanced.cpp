@@ -802,7 +802,7 @@ void RayTracingApplicationAdvanced::InitGBufferDisplayPSO()
 
 		D3D12_DESCRIPTOR_RANGE texsrvrange = {};
 		texsrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		texsrvrange.NumDescriptors = 1;
+		texsrvrange.NumDescriptors = NUMGBUFFERTEXTURES;
 		texsrvrange.BaseShaderRegister = 0;
 		texsrvrange.RegisterSpace = 0;
 		texsrvrange.OffsetInDescriptorsFromTableStart = 0;
