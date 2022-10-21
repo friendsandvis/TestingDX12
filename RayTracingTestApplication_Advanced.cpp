@@ -250,6 +250,7 @@ void RayTracingApplicationAdvanced::Render()
 	{
 		//RenderRaster();
 		RenderGbuffer();
+		RenderTextureOnScreenGBuffer();
 	}
 }
 
@@ -417,6 +418,7 @@ void RayTracingApplicationAdvanced::InitExtras()
 	InitGbufferPSO();
 	InitPSO_RTRaster();
 	InitRTDisplayPSO();
+	InitGBufferDisplayPSO();
 	
 	
 	m_loadedmodel.UploadModelDatatoBuffers();
