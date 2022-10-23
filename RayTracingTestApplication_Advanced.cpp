@@ -1,5 +1,5 @@
 #include"RayTracingTestApplication_Advanced.h"
-
+#define OFFSETGBUFFERSRVTEXTURESINRTGLOBALHEAP 2
 
 
 
@@ -154,9 +154,9 @@ void RayTracingApplicationAdvanced::RenderTextureOnScreenGBuffer()
 	m_primarycmdlist->SetPipelineState(m_psogbufferdisplay.GetPSO());
 	m_primarycmdlist->SetGraphicsRootSignature(m_psogbufferdisplay.GetRootSignature());
 	ID3D12DescriptorHeap* descheapstoset[1];
-	descheapstoset[0] = m_gbuffersrvheap.GetDescHeap();
+	descheapstoset[0] = m_rtresheap_global.GetDescHeap();
 	m_primarycmdlist->SetDescriptorHeaps(1, descheapstoset);
-	m_primarycmdlist->SetGraphicsRootDescriptorTable(0, m_gbuffersrvheap.GetGPUHandlefromstart());
+	m_primarycmdlist->SetGraphicsRootDescriptorTable(0, m_rtresheap_global.GetGPUHandlefromstart());
 	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, &dsvhandle);
 	float clearvalue[4] = { 1.0f,1.0f,1.0f,1.0f };
 	m_primarycmdlist->ClearRenderTargetView(rtvhandle, clearvalue, 0, nullptr);
@@ -319,7 +319,7 @@ void RayTracingApplicationAdvanced::InitExtras()
 	//heap to hold resources used by rt(global)
 	{
 		D3D12_DESCRIPTOR_HEAP_DESC rtglobalheapdesc = {};
-		rtglobalheapdesc.NumDescriptors = 2;//just 1 uav for now and 1 srv.
+		rtglobalheapdesc.NumDescriptors = 2+NUMGBUFFERTEXTURES;//just 1 uav for now and 1 srv and srvs for gbuffer textures
 		rtglobalheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		rtglobalheapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		m_rtresheap_global.Init(rtglobalheapdesc,m_creationdevice);
@@ -410,9 +410,15 @@ void RayTracingApplicationAdvanced::InitExtras()
 	m_gbuffernormal.CreateRTV(m_creationdevice, gbufferrtvdesc, m_gbufferrtvheaps.GetCPUHandleOffseted(1));
 	m_gbufferposition.CreateRTV(m_creationdevice, gbufferrtvdesc, m_gbufferrtvheaps.GetCPUHandleOffseted(2));
 	//create srv for gbuffer
+	/*
+	* old way stored in seperate heap
 	m_gbufferalbedo.CreateSRV(m_creationdevice, gbuffersrvdesc, m_gbuffersrvheap.GetCPUHandleOffseted(0));
 	m_gbuffernormal.CreateSRV(m_creationdevice, gbuffersrvdesc, m_gbuffersrvheap.GetCPUHandleOffseted(1));
 	m_gbufferposition.CreateSRV(m_creationdevice, gbuffersrvdesc, m_gbuffersrvheap.GetCPUHandleOffseted(2));
+	*/
+	m_gbufferalbedo.CreateSRV(m_creationdevice, gbuffersrvdesc, m_rtresheap_global.GetCPUHandleOffseted(OFFSETGBUFFERSRVTEXTURESINRTGLOBALHEAP+0));
+	m_gbuffernormal.CreateSRV(m_creationdevice, gbuffersrvdesc, m_rtresheap_global.GetCPUHandleOffseted(OFFSETGBUFFERSRVTEXTURESINRTGLOBALHEAP + 1));
+	m_gbufferposition.CreateSRV(m_creationdevice, gbuffersrvdesc, m_rtresheap_global.GetCPUHandleOffseted(OFFSETGBUFFERSRVTEXTURESINRTGLOBALHEAP + 2));
 	
 
 	InitGbufferPSO();
@@ -805,7 +811,7 @@ void RayTracingApplicationAdvanced::InitGBufferDisplayPSO()
 		texsrvrange.NumDescriptors = NUMGBUFFERTEXTURES;
 		texsrvrange.BaseShaderRegister = 0;
 		texsrvrange.RegisterSpace = 0;
-		texsrvrange.OffsetInDescriptorsFromTableStart = 0;
+		texsrvrange.OffsetInDescriptorsFromTableStart = OFFSETGBUFFERSRVTEXTURESINRTGLOBALHEAP;
 
 		psimgrootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 		psimgrootparam.DescriptorTable.NumDescriptorRanges = 1;
