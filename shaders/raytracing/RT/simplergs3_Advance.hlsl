@@ -53,6 +53,8 @@ ray.Direction=float3(0.0f,0.0f,-1.0f);
 	TraceRay(basicas,RAY_FLAG_NONE,0xFF,0,0,0,ray,payload);
 	//flipping the output.
 	uint2 outindex=uint2(rayidx.x,raydims.y-rayidx.y);
-	
+	//calculate uv from rayindex for tex sampling(here asuming the dispatch ray dimension ==sampled texture size)
+	float2 uv=rayidx.xy/float2(raydims.xy);
+	//outtex[outindex]=float4(float3(uv,0.0f),1.0f);
 	outtex[outindex]=float4(payload.outcol,1.0f);
 }

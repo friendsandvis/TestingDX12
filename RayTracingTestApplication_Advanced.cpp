@@ -856,7 +856,7 @@ void RayTracingApplicationAdvanced::InitRTPSO()
 		D3D12_ROOT_PARAMETER param1 = {};
 		param1.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 		param1.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		D3D12_DESCRIPTOR_RANGE descranges[2];
+		D3D12_DESCRIPTOR_RANGE descranges[3];
 		descranges[0].NumDescriptors = 1;
 		descranges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
 		descranges[0].NumDescriptors = 1;
@@ -868,6 +868,12 @@ void RayTracingApplicationAdvanced::InitRTPSO()
 		descranges[1].BaseShaderRegister = 0;
 		descranges[1].RegisterSpace = 0;
 		descranges[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+		descranges[2].RangeType= D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		descranges[2].NumDescriptors = NUMGBUFFERTEXTURES;
+		descranges[2].BaseShaderRegister = 1;
+		descranges[2].RegisterSpace = 0;
+		descranges[2].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+		
 		D3D12_ROOT_PARAMETER param2 = {};
 		param2.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
 		param2.Constants.Num32BitValues = sizeof(XMMATRIX) / 4;
@@ -883,11 +889,28 @@ void RayTracingApplicationAdvanced::InitRTPSO()
 
 		
 		param1.DescriptorTable.pDescriptorRanges = descranges;
-		param1.DescriptorTable.NumDescriptorRanges = 2;
+		param1.DescriptorTable.NumDescriptorRanges = 3;
 		rootparams.push_back(param1);
 		rootparams.push_back(param2);
 		rootparams.push_back(param3);
 		vector<D3D12_STATIC_SAMPLER_DESC> staticsamplersused;
+		D3D12_STATIC_SAMPLER_DESC astaticsamplerdescpoint = {};
+		astaticsamplerdescpoint.Filter = D3D12_FILTER::D3D12_FILTER_MIN_MAG_MIP_POINT;
+		astaticsamplerdescpoint.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+		astaticsamplerdescpoint.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+		astaticsamplerdescpoint.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+		astaticsamplerdescpoint.MipLODBias = 0;
+		astaticsamplerdescpoint.MaxAnisotropy = 0;
+		astaticsamplerdescpoint.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+		astaticsamplerdescpoint.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+		astaticsamplerdescpoint.MinLOD = 0.0f;
+		astaticsamplerdescpoint.MaxLOD = D3D12_FLOAT32_MAX;
+		astaticsamplerdescpoint.ShaderRegister = 0;
+		astaticsamplerdescpoint.RegisterSpace = 0;
+		staticsamplersused.push_back(astaticsamplerdescpoint);
+		
+
+		
 
 		rtglobalrootsig.BuidDesc(rootparams, staticsamplersused, D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_NONE);
 		rtglobalrootsig.Init(m_creationdevice);
