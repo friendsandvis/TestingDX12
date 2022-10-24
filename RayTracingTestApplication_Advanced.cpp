@@ -154,9 +154,9 @@ void RayTracingApplicationAdvanced::RenderTextureOnScreenGBuffer()
 	m_primarycmdlist->SetPipelineState(m_psogbufferdisplay.GetPSO());
 	m_primarycmdlist->SetGraphicsRootSignature(m_psogbufferdisplay.GetRootSignature());
 	ID3D12DescriptorHeap* descheapstoset[1];
-	descheapstoset[0] = m_rtresheap_global.GetDescHeap();
+	descheapstoset[0] = m_gbuffersrvheap.GetDescHeap();
 	m_primarycmdlist->SetDescriptorHeaps(1, descheapstoset);
-	m_primarycmdlist->SetGraphicsRootDescriptorTable(0, m_rtresheap_global.GetGPUHandlefromstart());
+	m_primarycmdlist->SetGraphicsRootDescriptorTable(0, m_gbuffersrvheap.GetGPUHandlefromstart());
 	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, &dsvhandle);
 	float clearvalue[4] = { 1.0f,1.0f,1.0f,1.0f };
 	m_primarycmdlist->ClearRenderTargetView(rtvhandle, clearvalue, 0, nullptr);
@@ -243,6 +243,7 @@ void RayTracingApplicationAdvanced::Render()
 	//make sure both the modes are drawing same geometry to view  real-time tooggle diffrence.
 	if (m_rtmode)
 	{
+		RenderGbuffer();
 		 RenderRT();
 		 RenderTextureOnScreenRT();
 	}
@@ -311,7 +312,7 @@ void RayTracingApplicationAdvanced::InitExtras()
 	}
 	{
 		D3D12_DESCRIPTOR_HEAP_DESC gbuffersrvheapdesc = {};
-		gbuffersrvheapdesc.NumDescriptors = 3;
+		gbuffersrvheapdesc.NumDescriptors = NUMGBUFFERTEXTURES;
 		gbuffersrvheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		gbuffersrvheapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		m_gbuffersrvheap.Init(gbuffersrvheapdesc, m_creationdevice);
@@ -344,6 +345,7 @@ void RayTracingApplicationAdvanced::InitExtras()
 	gbuffertextureprops.resdesc.Height = m_swapchain.GetSwapchainHeight();
 	gbuffertextureprops.useclearvalue = true;
 	gbuffertextureprops.resdesc.Flags |= D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+	gbuffertextureprops.resdesc.Flags |= D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 	gbuffertextureprops.optimizedclearvalue.Format = gbuffertextureprops.resdesc.Format;
 	gbuffertextureprops.resinitialstate = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET;
 	
@@ -405,20 +407,25 @@ void RayTracingApplicationAdvanced::InitExtras()
 	gbuffersrvdesc.Texture2D.MipLevels = 1;
 	gbuffersrvdesc.Texture2D.MostDetailedMip = 0;
 	gbuffersrvdesc.Texture2D.ResourceMinLODClamp = 0.0f;
+	D3D12_UNORDERED_ACCESS_VIEW_DESC gbufferuavdesc = {};
+	gbufferuavdesc.Texture2D.MipSlice = 0;
+	gbufferuavdesc.Texture2D.PlaneSlice = 0;
+	gbufferuavdesc.ViewDimension = D3D12_UAV_DIMENSION::D3D12_UAV_DIMENSION_TEXTURE2D;
+	
+
 	//create rtv for gbuffer
 	m_gbufferalbedo.CreateRTV(m_creationdevice, gbufferrtvdesc, m_gbufferrtvheaps.GetCPUHandleOffseted(0));
 	m_gbuffernormal.CreateRTV(m_creationdevice, gbufferrtvdesc, m_gbufferrtvheaps.GetCPUHandleOffseted(1));
 	m_gbufferposition.CreateRTV(m_creationdevice, gbufferrtvdesc, m_gbufferrtvheaps.GetCPUHandleOffseted(2));
 	//create srv for gbuffer
-	/*
-	* old way stored in seperate heap
+	
 	m_gbufferalbedo.CreateSRV(m_creationdevice, gbuffersrvdesc, m_gbuffersrvheap.GetCPUHandleOffseted(0));
 	m_gbuffernormal.CreateSRV(m_creationdevice, gbuffersrvdesc, m_gbuffersrvheap.GetCPUHandleOffseted(1));
 	m_gbufferposition.CreateSRV(m_creationdevice, gbuffersrvdesc, m_gbuffersrvheap.GetCPUHandleOffseted(2));
-	*/
-	m_gbufferalbedo.CreateSRV(m_creationdevice, gbuffersrvdesc, m_rtresheap_global.GetCPUHandleOffseted(OFFSETGBUFFERSRVTEXTURESINRTGLOBALHEAP+0));
-	m_gbuffernormal.CreateSRV(m_creationdevice, gbuffersrvdesc, m_rtresheap_global.GetCPUHandleOffseted(OFFSETGBUFFERSRVTEXTURESINRTGLOBALHEAP + 1));
-	m_gbufferposition.CreateSRV(m_creationdevice, gbuffersrvdesc, m_rtresheap_global.GetCPUHandleOffseted(OFFSETGBUFFERSRVTEXTURESINRTGLOBALHEAP + 2));
+	//create uav for gbuffer
+	m_gbufferalbedo.CreateUAV(m_creationdevice, gbufferuavdesc, m_rtresheap_global.GetCPUHandleOffseted(OFFSETGBUFFERSRVTEXTURESINRTGLOBALHEAP+0));
+	m_gbuffernormal.CreateUAV(m_creationdevice, gbufferuavdesc, m_rtresheap_global.GetCPUHandleOffseted(OFFSETGBUFFERSRVTEXTURESINRTGLOBALHEAP + 1));
+	m_gbufferposition.CreateUAV(m_creationdevice, gbufferuavdesc, m_rtresheap_global.GetCPUHandleOffseted(OFFSETGBUFFERSRVTEXTURESINRTGLOBALHEAP + 2));
 	
 
 	InitGbufferPSO();
@@ -811,7 +818,7 @@ void RayTracingApplicationAdvanced::InitGBufferDisplayPSO()
 		texsrvrange.NumDescriptors = NUMGBUFFERTEXTURES;
 		texsrvrange.BaseShaderRegister = 0;
 		texsrvrange.RegisterSpace = 0;
-		texsrvrange.OffsetInDescriptorsFromTableStart = OFFSETGBUFFERSRVTEXTURESINRTGLOBALHEAP;
+		texsrvrange.OffsetInDescriptorsFromTableStart = 0;
 
 		psimgrootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 		psimgrootparam.DescriptorTable.NumDescriptorRanges = 1;
@@ -868,7 +875,7 @@ void RayTracingApplicationAdvanced::InitRTPSO()
 		descranges[1].BaseShaderRegister = 0;
 		descranges[1].RegisterSpace = 0;
 		descranges[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-		descranges[2].RangeType= D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		descranges[2].RangeType= D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
 		descranges[2].NumDescriptors = NUMGBUFFERTEXTURES;
 		descranges[2].BaseShaderRegister = 1;
 		descranges[2].RegisterSpace = 0;
@@ -894,20 +901,8 @@ void RayTracingApplicationAdvanced::InitRTPSO()
 		rootparams.push_back(param2);
 		rootparams.push_back(param3);
 		vector<D3D12_STATIC_SAMPLER_DESC> staticsamplersused;
-		D3D12_STATIC_SAMPLER_DESC astaticsamplerdescpoint = {};
-		astaticsamplerdescpoint.Filter = D3D12_FILTER::D3D12_FILTER_MIN_MAG_MIP_POINT;
-		astaticsamplerdescpoint.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-		astaticsamplerdescpoint.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-		astaticsamplerdescpoint.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-		astaticsamplerdescpoint.MipLODBias = 0;
-		astaticsamplerdescpoint.MaxAnisotropy = 0;
-		astaticsamplerdescpoint.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-		astaticsamplerdescpoint.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
-		astaticsamplerdescpoint.MinLOD = 0.0f;
-		astaticsamplerdescpoint.MaxLOD = D3D12_FLOAT32_MAX;
-		astaticsamplerdescpoint.ShaderRegister = 0;
-		astaticsamplerdescpoint.RegisterSpace = 0;
-		staticsamplersused.push_back(astaticsamplerdescpoint);
+		
+		
 		
 
 		
