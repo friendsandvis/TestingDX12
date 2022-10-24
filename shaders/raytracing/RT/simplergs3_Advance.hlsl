@@ -2,6 +2,7 @@
 Notes:
 ray origin is calculated based on the dispatch index and a center(this center value is  what test geometry's verticies  refrence to as center)
 */
+#define NUMGBUFFERTEXTURES 3
 struct RTConstants
 {
 //matrix is alias for float4x4
@@ -13,6 +14,7 @@ struct Simpleraypayload
 	float3 outcol;
 };
 RWTexture2D<float4> outtex: register(u0);
+RWTexture2D<float4> gbuffertex[NUMGBUFFERTEXTURES]: register(u1);
 RaytracingAccelerationStructure basicas:register(t0);
 ConstantBuffer<RTConstants> rtconstsprojection:register(b0);
 ConstantBuffer<RTConstants> rtconstsview:register(b1);
@@ -57,4 +59,6 @@ ray.Direction=float3(0.0f,0.0f,-1.0f);
 	float2 uv=rayidx.xy/float2(raydims.xy);
 	//outtex[outindex]=float4(float3(uv,0.0f),1.0f);
 	outtex[outindex]=float4(payload.outcol,1.0f);
+	//output gbuffer img data but assumed dispatch size is same as gbuffer tex size always.
+	//outtex[outindex]=(gbuffertex[2])[outindex];
 }
