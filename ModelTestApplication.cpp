@@ -53,7 +53,7 @@ void ModelTestApplication::Render()
 	XMMATRIX vpmat = m_maincamera.GetVP();
 	//m_trianglemodel.Draw(m_primarycmdlist,vpmat);
 	m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &vpmat, 0);
-	m_loadedmodel.Draw(m_primarycmdlist,vpmat);
+	m_loadedmodel.Draw(m_primarycmdlist,vpmat,0);
 	DXASSERT(m_primarycmdlist->Close())
 	BasicRender();
 }

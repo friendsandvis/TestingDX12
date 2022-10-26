@@ -67,13 +67,21 @@ Model::~Model()
 		}
 	}
 }
-void Model::Draw(DX12Commandlist& renderingcmdlist,XMMATRIX vpmatrix)
+void Model::Draw(DX12Commandlist& renderingcmdlist,XMMATRIX vpmatrix, UINT mvpmatrixrootparamindex, bool usemodelmatrix, bool setmvpmatrix)
 {
 	renderingcmdlist->IASetVertexBuffers(0, 1, &m_vertexbufferview);
 	renderingcmdlist->IASetIndexBuffer(&m_indexbufferview);
+	XMMATRIX mvp = vpmatrix;
+	if (usemodelmatrix)
+	{
+		mvp = XMMatrixMultiply(m_transform, vpmatrix);
+	}
 	
-	//XMMATRIX mvp = XMMatrixMultiply(m_transform,vpmatrix);
-	//renderingcmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvp, 0);
+	if (setmvpmatrix)
+	{
+		renderingcmdlist->SetGraphicsRoot32BitConstants(mvpmatrixrootparamindex, sizeof(XMMATRIX) / 4, &mvp, 0);
+	}
+	
 	renderingcmdlist->DrawIndexedInstanced(GetIndiciesCount(), 1, 0, 0, 0);
 }
 
@@ -321,11 +329,11 @@ CompoundModel::~CompoundModel()
 		delete m_models[i];
 	}
 }
-void CompoundModel::Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix)
+void CompoundModel::Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix, UINT mvpmatrixrootparamindex)
 {
 	for (size_t i = 0; i < m_models.size(); i++)
 	{
-		m_models[i]->Draw(renderingcmdlist,vpmatrix);
+		m_models[i]->Draw(renderingcmdlist,vpmatrix,mvpmatrixrootparamindex);
 	}
 }
 

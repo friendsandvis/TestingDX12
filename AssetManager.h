@@ -30,7 +30,7 @@ class Model
 public:
 	//set ib & vb and issue draw command.
 	
-	void Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix);
+	void Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix,UINT mvpmatrixrootparamindex,bool usemodelmatrix=true,bool setmvpmatrix=true);
 	Model(ModelDataUploadMode uploadmode=NOCOPY);
 	~Model();
 	
@@ -70,7 +70,7 @@ class CompoundModel
 {
 public:
 	//set ib & vb and issue draw command.
-	void Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix);
+	void Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix,UINT mvpmatrixrootparamindex);
 	void UploadModelDatatoBuffers();
 	void UploadModelDatatoGPUBuffers(DX12Commandlist& copycmdlist);
 	CompoundModel(ModelDataUploadMode uploadmode = NOCOPY);
