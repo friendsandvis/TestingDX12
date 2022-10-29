@@ -291,7 +291,10 @@ void RayTracingApplicationAdvanced::InitExtras()
 			void* mapedbuffer=m_blastransform.Map(mapparams);
 			
 			FLOAT transform[12];
-			XMMATRIX m1 = XMMatrixIdentity();
+			
+			//prepare the model's model matrix for us while creating blas for the same.
+			XMMATRIX m1 = m_loadedmodel.GetTransform();
+			
 			RaytracingCommon::XMMatrixToRowMajor3x4(m1, transform);
 			
 			mapparams.range.End = m_blastransform.GetSize();

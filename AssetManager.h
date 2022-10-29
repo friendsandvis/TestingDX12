@@ -28,8 +28,8 @@ class DX12Commandlist;
 class Model
 {
 public:
+	XMMATRIX GetTransform() { return m_transform; }
 	//set ib & vb and issue draw command.
-	
 	void Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix,UINT mvpmatrixrootparamindex,bool usemodelmatrix=true,bool setmvpmatrix=true);
 	Model(ModelDataUploadMode uploadmode=NOCOPY);
 	~Model();

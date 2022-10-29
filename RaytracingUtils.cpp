@@ -178,12 +178,19 @@ void RaytracingCommon::InitAsIdentityMatrix(FLOAT arr[3][4])
 void RaytracingCommon::XMMatrixToRowMajor3x4(XMMATRIX& mat, float* outmat)
 {
 	short finalindex = 0;
-	for (short i = 0; i < 3; i++)
+	/*for (short i = 0; i < 4; i++)
+	{
+		for (short j = 0; j < 3; j++)
+		{
+
+			outmat[finalindex++] = mat.r[j].m128_f32[i];
+		}
+	}*/
+	for (short i = 0; i < 3;i++)
 	{
 		for (short j = 0; j < 4; j++)
 		{
-
-			outmat[finalindex++] = mat.r[i].m128_f32[j];
+			outmat[finalindex++] = mat.r[j].m128_f32[i];
 		}
 	}
 }
