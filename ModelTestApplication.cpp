@@ -7,7 +7,8 @@ ModelTestApplication::ModelTestApplication()
 	:m_planemodel(ModelDataUploadMode::COPY),
 	m_cubemodel(ModelDataUploadMode::COPY),
 	m_loadedmodel(ModelDataUploadMode::COPY),
-	m_trianglemodel(ModelDataUploadMode::COPY)
+	m_trianglemodel(ModelDataUploadMode::COPY),
+	m_loadedcompoundmodel(ModelDataUploadMode::COPY)
 {
 	m_maincameracontroller.SetCameratoControl(&m_maincamera);
 }
@@ -53,7 +54,8 @@ void ModelTestApplication::Render()
 	XMMATRIX vpmat = m_maincamera.GetVP();
 	//m_trianglemodel.Draw(m_primarycmdlist,vpmat);
 	m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &vpmat, 0);
-	m_loadedmodel.Draw(m_primarycmdlist,vpmat,0);
+	m_loadedcompoundmodel.Draw(m_primarycmdlist,vpmat,0);
+	
 	DXASSERT(m_primarycmdlist->Close())
 	BasicRender();
 }
@@ -61,7 +63,7 @@ void ModelTestApplication::Render()
 void ModelTestApplication::InitExtras()
 {
 	BasicModelManager::LoadModel(m_creationdevice,"models/cube.dae",m_loadedmodel,VERTEXVERSION2);
-	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
+	BasicModelManager::LoadModel(m_creationdevice, "models/cubes2.dae", m_loadedcompoundmodel, VERTEXVERSION2);
 	BasicModelManager::InitTriangleModel(m_creationdevice, m_trianglemodel);
 	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
 	BasicModelManager::InitCubeModel(m_creationdevice, m_cubemodel);
@@ -70,10 +72,12 @@ void ModelTestApplication::InitExtras()
 	m_planemodel.UploadModelDatatoBuffers();
 	m_cubemodel.UploadModelDatatoBuffers();
 	m_loadedmodel.UploadModelDatatoBuffers();
+	m_loadedcompoundmodel.UploadModelDatatoBuffers();
 
 	m_uploadcommandlist.Reset();
 	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_loadedmodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
+	m_loadedcompoundmodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_cubemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_trianglemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	DXASSERT(m_uploadcommandlist->Close());
