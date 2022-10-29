@@ -96,13 +96,10 @@ void RayTracingApplicationAdvanced::RenderGbuffer()
 	}
 	{
 		m_gbufferrendercommandlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		D3D12_INDEX_BUFFER_VIEW ibview = m_loadedmodel.GetIBView();
-		D3D12_VERTEX_BUFFER_VIEW vbview = m_loadedmodel.GetVBView();
-		m_gbufferrendercommandlist->IASetVertexBuffers(0, 1, &vbview);
-		m_gbufferrendercommandlist->IASetIndexBuffer(&ibview);
-		XMMATRIX mvp = m_maincamera.GetMVP();
-		m_gbufferrendercommandlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvp, 0);
-		m_gbufferrendercommandlist->DrawIndexedInstanced(m_loadedmodel.GetIndiciesCount(), 1, 0, 0, 0);
+		
+		
+		XMMATRIX vp = m_maincamera.GetMVP();
+		m_loadedmodel.Draw(m_gbufferrendercommandlist, vp, 0);
 		m_gbufferrendercommandlist.Close();
 	}
 	ID3D12CommandList* cmdliststoexecute[1] = { m_gbufferrendercommandlist.GetcmdList() };
@@ -240,17 +237,18 @@ void RayTracingApplicationAdvanced::RenderRT()
 }
 void RayTracingApplicationAdvanced::Render()
 {
+	RenderGbuffer();
 	//make sure both the modes are drawing same geometry to view  real-time tooggle diffrence.
 	if (m_rtmode)
 	{
-		RenderGbuffer();
+		
 		 RenderRT();
 		 RenderTextureOnScreenRT();
 	}
 	else
 	{
-		//RenderRaster();
-		RenderGbuffer();
+		
+		
 		RenderTextureOnScreenGBuffer();
 	}
 }
