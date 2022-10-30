@@ -80,6 +80,12 @@ void ModelAccelerationStructureBLAS::IssueBuild(ComPtr<ID3D12GraphicsCommandList
 	{
 		return;
 	}
+	//first transition transform buffer to non pixel shader resource state
+	if (m_transformbuffer.GetCurrentResourceState() != D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)
+	{
+		D3D12_RESOURCE_BARRIER barrier = m_transformbuffer.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+		buildcmdlist->ResourceBarrier(1, &barrier);
+	}
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC builddesc = {};
 	builddesc.DestAccelerationStructureData = m_accelerationstructure.GetResource()->GetGPUVirtualAddress();
 	builddesc.ScratchAccelerationStructureData = m_accelerationstucturescratch.GetResource()->GetGPUVirtualAddress();

@@ -45,7 +45,7 @@ private:
 	DX12PSO m_psortdisplay,m_psogbufferdisplay;
 	RTPSO m_simplertpso;
 	//shader records
-	DX12Buffer m_rgsrecords,m_missrecords,m_hitrecords,m_blastransform;
+	DX12Buffer m_rgsrecords,m_missrecords,m_hitrecords;
 	
 	//redender in raytracing mode otherwise in rasterization 
 	bool m_rtmode;

@@ -230,22 +230,7 @@ void RayTracingApplication::InitExtras()
 		DX12Buffer::InitResourceCreationProperties(blastransformprops);
 		blastransformprops.resdesc.Width=sizeof(FLOAT)*12;//3x4 matrix
 		blastransformprops.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
-		m_blastransform.Init(m_creationdevice, blastransformprops, ResourceCreationMode::COMMITED);
-		{
-			BufferMapParams mapparams = {};
-			mapparams.range.Begin = 0;
-			mapparams.range.End = 0;
-
-			void* mapedbuffer=m_blastransform.Map(mapparams);
-			
-			FLOAT transform[12];
-			XMMATRIX m1 = XMMatrixIdentity();
-			RaytracingCommon::XMMatrixToRowMajor3x4(m1, transform);
-			
-			mapparams.range.End = m_blastransform.GetSize();
-			std::memcpy(mapedbuffer, transform, sizeof(FLOAT) * 12);
-			m_blastransform.UnMap(mapparams);
-		}
+		
 	}
 
 	//init gbuffer textures
@@ -383,11 +368,7 @@ void RayTracingApplication::InitExtras()
 	{
 		ComPtr<ID3D12GraphicsCommandList4> cmdlist4;
 		DXASSERT(m_uploadcommandlist.GetcmdListComPtr().As(&cmdlist4))
-			if(m_blastransform.GetCurrentResourceState()!= D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)
-		{
-			D3D12_RESOURCE_BARRIER barrier = m_blastransform.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-			m_uploadcommandlist->ResourceBarrier(1, &barrier);
-		}
+		
 		loadedmodelasblas.IssueBuild(cmdlist4);
 		loadedmodelastlas.IssueBuild(cmdlist4);
 	}
@@ -458,8 +439,8 @@ void RayTracingApplication::InitRTDisplayPSO()
 	//shaders to use
 	DX12Shader* vs = new DX12Shader();
 	DX12Shader* ps = new DX12Shader();
-	vs->Init(L"shaders/RTextras/VS.hlsl", DX12Shader::ShaderType::VS);
-	ps->Init(L"shaders/RTextras/PS.hlsl", DX12Shader::ShaderType::PS);
+	vs->Init(L"shaders/RTextras/VS_displayTexOnScreen.hlsl", DX12Shader::ShaderType::VS);
+	ps->Init(L"shaders/RTextras/PS_displayTexOnScreen.hlsl", DX12Shader::ShaderType::PS);
 	basicpsodata.m_shaderstouse.push_back(vs);
 	basicpsodata.m_shaderstouse.push_back(ps);
 

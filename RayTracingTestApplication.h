@@ -44,7 +44,7 @@ private:
 	DX12PSO m_psortdisplay;
 	RTPSO m_simplertpso;
 	//shader records
-	DX12Buffer m_rgsrecords,m_missrecords,m_hitrecords,m_blastransform;
+	DX12Buffer m_rgsrecords,m_missrecords,m_hitrecords;
 	DX12RootSignature m_rootsignature;
 	//device5 is often used in raytracing so retrive it once and keep troughout app lifetime.
 	DX12RaytracingCommandlist m_rtcommandlist;

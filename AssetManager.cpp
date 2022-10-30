@@ -54,6 +54,7 @@ Model::Model(ModelDataUploadMode uploadmode)
 	:m_uploadmode(uploadmode),
 	m_vertexversion(UNKNOWN)
 {
+	m_transform = XMMatrixIdentity();
 }
 
 Model::~Model()
