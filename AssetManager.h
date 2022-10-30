@@ -73,6 +73,7 @@ public:
 	void Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix,UINT mvpmatrixrootparamindex);
 	void UploadModelDatatoBuffers();
 	void UploadModelDatatoGPUBuffers(DX12Commandlist& copycmdlist);
+	const vector<Model*>& GetModels() { return m_models; }
 	CompoundModel(ModelDataUploadMode uploadmode = NOCOPY);
 	~CompoundModel();
 	void Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimpModel, VertexVersion modelvertexversion);

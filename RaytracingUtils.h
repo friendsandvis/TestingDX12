@@ -30,6 +30,22 @@ private:
 	DX12Buffer m_transformbuffer;
 
 };
+class CompoundModelAccelerationStructureBLAS
+{
+public:
+	CompoundModelAccelerationStructureBLAS();
+	~CompoundModelAccelerationStructureBLAS();
+	void Init(ComPtr< ID3D12Device> creationdevice, CompoundModel& modeltoprocess);
+	void Build(ComPtr< ID3D12Device5> device);
+	void IssueBuild(ComPtr<ID3D12GraphicsCommandList4>buildcmdlist);
+
+private:
+	bool m_buildcmdissued;
+	std::vector<ModelAccelerationStructureBLAS*> m_modelblas;
+};
+
+
+
 
 class ModelAccelerationStructureTLAS
 {

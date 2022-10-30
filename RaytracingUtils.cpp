@@ -5,6 +5,17 @@ ModelAccelerationStructureBLAS::ModelAccelerationStructureBLAS()
 {
 
 }
+CompoundModelAccelerationStructureBLAS::CompoundModelAccelerationStructureBLAS()
+	:m_buildcmdissued(false)
+{}
+
+CompoundModelAccelerationStructureBLAS::~CompoundModelAccelerationStructureBLAS()
+{
+	for (ModelAccelerationStructureBLAS* ablas:m_modelblas)
+	{
+		delete ablas;
+	}
+}
 void ModelAccelerationStructureBLAS::Init(ComPtr< ID3D12Device> creationdevice, Model& modeltoprocess)
 {
 	//create & init model's transform buffer
@@ -231,4 +242,29 @@ void ModelAccelerationStructureTLAS::CreateSRV(ComPtr< ID3D12Device> creationdev
 	srvdesc.RaytracingAccelerationStructure.Location = m_accelerationstructure.GetResource()->GetGPUVirtualAddress();
 	srvdesc.ViewDimension = D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
 	creationdevice->CreateShaderResourceView(nullptr, &srvdesc, srvhandle);
+}
+
+void CompoundModelAccelerationStructureBLAS::Init(ComPtr< ID3D12Device> creationdevice, CompoundModel& modeltoprocess)
+{
+	const vector<Model*>& modelsincompoundmodel=modeltoprocess.GetModels();
+	for (Model* model : modelsincompoundmodel)
+	{
+		ModelAccelerationStructureBLAS* modelblas = new ModelAccelerationStructureBLAS();
+		modelblas->Init(creationdevice, *model);
+		m_modelblas.push_back(modelblas);
+	}
+}
+void CompoundModelAccelerationStructureBLAS::Build(ComPtr< ID3D12Device5> device)
+{
+	for (ModelAccelerationStructureBLAS* modelblas : m_modelblas)
+	{
+		modelblas->Build(device);
+	}
+}
+void CompoundModelAccelerationStructureBLAS::IssueBuild(ComPtr<ID3D12GraphicsCommandList4>buildcmdlist)
+{
+	for (ModelAccelerationStructureBLAS* modelblas : m_modelblas)
+	{
+		modelblas->IssueBuild(buildcmdlist);
+	}
 }
