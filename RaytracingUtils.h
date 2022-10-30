@@ -17,7 +17,7 @@ public:
 	AccelerationStructureResource& GetBLAS() { return m_accelerationstructure; }
 	ModelAccelerationStructureBLAS();
 	
-	void Init(Model& modeltoprocess, D3D12_GPU_VIRTUAL_ADDRESS transform=NULL);
+	void Init(ComPtr< ID3D12Device> creationdevice,Model& modeltoprocess);
 	//setup all the needful for building the as
 	void Build(ComPtr< ID3D12Device5> device);
 	void IssueBuild(ComPtr<ID3D12GraphicsCommandList4>buildcmdlist);
@@ -27,6 +27,7 @@ private:
 	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO m_prebuildinfo;
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS m_asinputs;
 	AccelerationStructureResource m_accelerationstucturescratch,m_accelerationstructure;
+	DX12Buffer m_transformbuffer;
 
 };
 

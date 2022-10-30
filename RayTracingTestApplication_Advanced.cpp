@@ -442,7 +442,7 @@ void RayTracingApplicationAdvanced::InitExtras()
 		m_rtcommandlist.Init(D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
 		m_rtcommandlist.SetName(L"RTCommandlist");
 		DXASSERT(m_creationdevice.As(&m_device5))
-		loadedmodelasblas.Init(m_loadedmodel,m_blastransform.GetResource()->GetGPUVirtualAddress());
+		loadedmodelasblas.Init(m_creationdevice,m_loadedmodel);
 		loadedmodelasblas.Build(m_device5); 
 		InitRTPSO();
 

@@ -5,8 +5,31 @@ ModelAccelerationStructureBLAS::ModelAccelerationStructureBLAS()
 {
 
 }
-void ModelAccelerationStructureBLAS::Init(Model& modeltoprocess, D3D12_GPU_VIRTUAL_ADDRESS transform)
+void ModelAccelerationStructureBLAS::Init(ComPtr< ID3D12Device> creationdevice, Model& modeltoprocess)
 {
+	//create & init model's transform buffer
+	{
+		DX12ResourceCreationProperties blastransformprops;
+		DX12Buffer::InitResourceCreationProperties(blastransformprops);
+		blastransformprops.resdesc.Width = sizeof(FLOAT) * 12;//3x4 matrix
+		blastransformprops.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
+		m_transformbuffer.Init(creationdevice, blastransformprops, ResourceCreationMode::COMMITED);
+		//upload transform data
+		BufferMapParams mapparams = {};
+		mapparams.range.Begin = 0;
+		mapparams.range.End = 0;
+
+		void* mapedbuffer = m_transformbuffer.Map(mapparams);
+
+		FLOAT transform[12];
+		XMMATRIX modeltransformmat = modeltoprocess.GetTransform();
+
+		RaytracingCommon::XMMatrixToRowMajor3x4(modeltransformmat, transform);
+
+		mapparams.range.End = m_transformbuffer.GetSize();
+		std::memcpy(mapedbuffer, transform, sizeof(FLOAT) * 12);
+		m_transformbuffer.UnMap(mapparams);
+	}
 	//we need ib &vb in gpu memory.
 	assert(modeltoprocess.GetUploadMode() == ModelDataUploadMode::COPY);
 	m_rtgeometrydesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE::D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
@@ -22,7 +45,7 @@ void ModelAccelerationStructureBLAS::Init(Model& modeltoprocess, D3D12_GPU_VIRTU
 	//a vertex position always has same format no matter the vertex version used
 	m_rtgeometrydesc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
 	m_rtgeometrydesc.Triangles.VertexCount = modeltoprocess.GetVerticiesCount();
-	m_rtgeometrydesc.Triangles.Transform3x4 = transform;
+	m_rtgeometrydesc.Triangles.Transform3x4 = m_transformbuffer.GetResource()->GetGPUVirtualAddress();
 	
 	
 }
