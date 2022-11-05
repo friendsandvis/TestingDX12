@@ -5,6 +5,7 @@
 
 RayTracingApplicationAdvanced::RayTracingApplicationAdvanced()
 	:m_loadedmodel(ModelDataUploadMode::COPY),
+	m_comloadedmodel(ModelDataUploadMode::COPY),
 	m_raytracingsupported(true),
 	m_rtmode(false),
 	m_trianglemodel(ModelDataUploadMode::COPY),
@@ -99,7 +100,8 @@ void RayTracingApplicationAdvanced::RenderGbuffer()
 		
 		
 		XMMATRIX vp = m_maincamera.GetMVP();
-		m_loadedmodel.Draw(m_gbufferrendercommandlist, vp, 0);
+		//m_loadedmodel.Draw(m_gbufferrendercommandlist, vp, 0);
+		m_comloadedmodel.Draw(m_gbufferrendercommandlist, vp, 0);
 		m_gbufferrendercommandlist.Close();
 	}
 	ID3D12CommandList* cmdliststoexecute[1] = { m_gbufferrendercommandlist.GetcmdList() };
@@ -261,6 +263,7 @@ void RayTracingApplicationAdvanced::InitExtras()
 	DXASSERT(m_creationdevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &option5features, sizeof(option5features)))
 		m_raytracingsupported = (option5features.RaytracingTier != D3D12_RAYTRACING_TIER_NOT_SUPPORTED);
 	BasicModelManager::LoadModel(m_creationdevice, "models/cube.dae", m_loadedmodel, VERTEXVERSION2);
+	BasicModelManager::LoadModel(m_creationdevice, "models/cubes2.dae", m_comloadedmodel, VERTEXVERSION2);
 	BasicModelManager::InitTriangleModel(m_creationdevice, m_trianglemodel);
 	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
 	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();
@@ -414,6 +417,7 @@ void RayTracingApplicationAdvanced::InitExtras()
 	
 	
 	m_loadedmodel.UploadModelDatatoBuffers();
+	m_comloadedmodel.UploadModelDatatoBuffers();
 	//ray tracing inits
 	if(m_raytracingsupported)
 	{
@@ -421,19 +425,27 @@ void RayTracingApplicationAdvanced::InitExtras()
 		m_rtcommandlist.SetName(L"RTCommandlist");
 		DXASSERT(m_creationdevice.As(&m_device5))
 		loadedmodelasblas.Init(m_creationdevice,m_loadedmodel);
-		loadedmodelasblas.Build(m_device5); 
+		m_comploadedmodelblas.Init(m_creationdevice, m_comloadedmodel);
+		loadedmodelasblas.Build(m_device5);
+		m_comploadedmodelblas.Build(m_device5);
 		InitRTPSO();
 
 		{
-			D3D12_RAYTRACING_INSTANCE_DESC aninstancedesc = {};
-			aninstancedesc.Flags = D3D12_RAYTRACING_INSTANCE_FLAGS::D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
-			aninstancedesc.AccelerationStructure = loadedmodelasblas.GetBLAS().GetResource()->GetGPUVirtualAddress();
-			aninstancedesc.InstanceID = 0;
-			aninstancedesc.InstanceMask = 1;
-			aninstancedesc.InstanceContributionToHitGroupIndex = 0;
-			RaytracingCommon::InitAsIdentityMatrix(aninstancedesc.Transform);
+			const std::vector<ModelAccelerationStructureBLAS*>& compmodelblas = m_comploadedmodelblas.GetBlas();
 			vector< D3D12_RAYTRACING_INSTANCE_DESC> instancedescs;
-			instancedescs.push_back(aninstancedesc);
+			for (ModelAccelerationStructureBLAS* modelblas : compmodelblas)
+			{
+				D3D12_RAYTRACING_INSTANCE_DESC aninstancedesc = {};
+				aninstancedesc.Flags = D3D12_RAYTRACING_INSTANCE_FLAGS::D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+				aninstancedesc.AccelerationStructure = modelblas->GetBLAS().GetResource()->GetGPUVirtualAddress();
+				aninstancedesc.InstanceID = 0;
+				aninstancedesc.InstanceMask = 1;
+				aninstancedesc.InstanceContributionToHitGroupIndex = 0;
+				RaytracingCommon::InitAsIdentityMatrix(aninstancedesc.Transform);
+				
+				instancedescs.push_back(aninstancedesc);
+			}
+			
 			loadedmodelastlas.Init(m_creationdevice, instancedescs);
 			
 			loadedmodelastlas.Build(m_device5);
@@ -451,12 +463,14 @@ void RayTracingApplicationAdvanced::InitExtras()
 	m_trianglemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_loadedmodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
+	m_comloadedmodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	if (m_raytracingsupported)
 	{
 		ComPtr<ID3D12GraphicsCommandList4> cmdlist4;
 		DXASSERT(m_uploadcommandlist.GetcmdListComPtr().As(&cmdlist4))
 
 		loadedmodelasblas.IssueBuild(cmdlist4);
+		m_comploadedmodelblas.IssueBuild(cmdlist4);
 		loadedmodelastlas.IssueBuild(cmdlist4);
 	}
 	DXASSERT(m_uploadcommandlist->Close());

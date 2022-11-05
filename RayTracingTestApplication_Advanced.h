@@ -54,9 +54,11 @@ private:
 	DX12Commandlist m_gbufferrendercommandlist;
 	ComPtr<ID3D12Device5> m_device5;
 	Model m_loadedmodel,m_trianglemodel,m_planemodel;
+	CompoundModel m_comloadedmodel;
 	bool m_raytracingsupported;
 	DXFPSCameraController m_maincameracontroller;
 	ModelAccelerationStructureBLAS loadedmodelasblas;
+	CompoundModelAccelerationStructureBLAS m_comploadedmodelblas;
 	ModelAccelerationStructureTLAS loadedmodelastlas;
 	void InitGbufferPSO();
 	void InitPSO_RTRaster();

@@ -35,6 +35,7 @@ class CompoundModelAccelerationStructureBLAS
 public:
 	CompoundModelAccelerationStructureBLAS();
 	~CompoundModelAccelerationStructureBLAS();
+	const std::vector<ModelAccelerationStructureBLAS*>& GetBlas() { return m_modelblas; }
 	void Init(ComPtr< ID3D12Device> creationdevice, CompoundModel& modeltoprocess);
 	void Build(ComPtr< ID3D12Device5> device);
 	void IssueBuild(ComPtr<ID3D12GraphicsCommandList4>buildcmdlist);
