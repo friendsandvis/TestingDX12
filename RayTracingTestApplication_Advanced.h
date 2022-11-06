@@ -13,7 +13,12 @@
 #include"DX12RaytracingCommandlist.h"
 #define NUMGBUFFERTEXTURES 3
 using namespace DirectX;
-
+//used to pass constant data to shader
+struct MatrixPair
+{
+	XMMATRIX m1;
+	XMMATRIX m2;
+};
 class RayTracingApplicationAdvanced :public DX12ApplicationManagerBase
 {
 public:

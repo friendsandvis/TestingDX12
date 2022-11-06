@@ -218,9 +218,10 @@ void RayTracingApplicationAdvanced::RenderRT()
 		
 		XMMATRIX invproj= XMMatrixInverse(nullptr, m_maincamera.GetProjection());
 		XMMATRIX invview = XMMatrixInverse(nullptr, m_maincamera.GetView());
-
-		m_rtcommandlist->SetComputeRoot32BitConstants(1, (sizeof(XMMATRIX) / 4),&invproj, 0);
-		m_rtcommandlist->SetComputeRoot32BitConstants(2, (sizeof(XMMATRIX) / 4), &invview, 0);
+		MatrixPair invmatpair;
+		invmatpair.m1 = invproj;
+		invmatpair.m2 = invview;
+		m_rtcommandlist->SetComputeRoot32BitConstants(1, (sizeof(MatrixPair) / 4),&invmatpair, 0);
 		m_rtcommandlist->SetPipelineState1(m_simplertpso.GetPipelineStateObject());
 		float  clearcolour[4] = {1.0f,1.0f,1.0f,1.0f};
 		m_rtcommandlist->ClearUnorderedAccessViewFloat(m_rtresheap_global.GetGPUHandlefromstart(),m_rtresheap_globalupload.GetCPUHandlefromstart(),m_rtouput.GetResource().Get(),clearcolour,0,nullptr);
@@ -872,23 +873,17 @@ void RayTracingApplicationAdvanced::InitRTPSO()
 		
 		D3D12_ROOT_PARAMETER param2 = {};
 		param2.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-		param2.Constants.Num32BitValues = sizeof(XMMATRIX) / 4;
+		param2.Constants.Num32BitValues = sizeof(MatrixPair) / 4;
 		param2.Constants.ShaderRegister = 0;
 		param2.Constants.RegisterSpace = 0;
 		param2.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-		D3D12_ROOT_PARAMETER param3 = {};
-		param3.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-		param3.Constants.Num32BitValues = sizeof(XMMATRIX) / 4;
-		param3.Constants.ShaderRegister = 1;
-		param3.Constants.RegisterSpace = 0;
-		param3.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		
 
 		
 		param1.DescriptorTable.pDescriptorRanges = descranges;
 		param1.DescriptorTable.NumDescriptorRanges = 3;
 		rootparams.push_back(param1);
 		rootparams.push_back(param2);
-		rootparams.push_back(param3);
 		vector<D3D12_STATIC_SAMPLER_DESC> staticsamplersused;
 		
 		

@@ -6,7 +6,8 @@ ray origin is calculated based on the dispatch index and a center(this center va
 struct RTConstants
 {
 //matrix is alias for float4x4
-	matrix mat;
+	matrix mat1;
+	matrix mat2;
 };
 
 struct Simpleraypayload
@@ -16,8 +17,8 @@ struct Simpleraypayload
 RWTexture2D<float4> outtex: register(u0);
 RWTexture2D<float4> gbuffertex[NUMGBUFFERTEXTURES]: register(u1);
 RaytracingAccelerationStructure basicas:register(t0);
-ConstantBuffer<RTConstants> rtconstsprojection:register(b0);
-ConstantBuffer<RTConstants> rtconstsview:register(b1);
+ConstantBuffer<RTConstants> rtconstsinvmatricies:register(b0);//mat1 is invprojection & mat2 is invview
+
 [shader("raygeneration")]
 void rgsmain()
 {
@@ -34,14 +35,14 @@ ray.Direction=float3(0.0f,0.0f,-1.0f);
 	float2 clippointxy=rayidx.xy/float2(raydims.xy);
 	clippointxy=(clippointxy*2.0f)-float2(1.0f,1.0f);
 	float4 clippointnear=float4(clippointxy,0.0f,1.0f);
-	clippointnear=mul(rtconstsprojection.mat,clippointnear);
+	clippointnear=mul(rtconstsinvmatricies.mat1,clippointnear);
 	clippointnear=clippointnear/clippointnear.w;
 	float4 clippointfar=float4(clippointxy,1.0f,1.0f);
-	clippointfar=mul(rtconstsprojection.mat,clippointfar);
+	clippointfar=mul(rtconstsinvmatricies.mat1,clippointfar);
 	clippointfar=clippointfar/clippointfar.w;
 	ray.Origin=clippointnear.xyz;
 	float4 originmod=float4(clippointnear.xyz,1.0f);
-	originmod=mul(rtconstsview.mat,originmod);
+	originmod=mul(rtconstsinvmatricies.mat2,originmod);
 	ray.Origin=originmod.xyz;
 	
 	ray.Direction=(clippointfar.xyz-clippointnear.xyz);
@@ -50,7 +51,7 @@ ray.Direction=float3(0.0f,0.0f,-1.0f);
 	ray.Direction=normalize(ray.Direction);
 	float4 dirmod=float4(ray.Direction.xyz,0.0f);
 	
-	dirmod=mul(rtconstsview.mat,dirmod);
+	dirmod=mul(rtconstsinvmatricies.mat2,dirmod);
 	ray.Direction=dirmod.xyz;
 	TraceRay(basicas,RAY_FLAG_NONE,0xFF,0,0,0,ray,payload);
 	//flipping the output.
