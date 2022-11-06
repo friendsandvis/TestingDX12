@@ -1,5 +1,6 @@
 #include"RayTracingTestApplication_Advanced.h"
 #define OFFSETGBUFFERSRVTEXTURESINRTGLOBALHEAP 2
+#define USESIMPLECLOSESTHITSHADER
 
 
 
@@ -221,7 +222,9 @@ void RayTracingApplicationAdvanced::RenderRT()
 		MatrixPair invmatpair;
 		invmatpair.m1 = invproj;
 		invmatpair.m2 = invview;
+		XMMATRIX vp = m_maincamera.GetVP();
 		m_rtcommandlist->SetComputeRoot32BitConstants(1, (sizeof(MatrixPair) / 4),&invmatpair, 0);
+		m_rtcommandlist->SetComputeRoot32BitConstants(2, (sizeof(XMMATRIX) / 4), &vp, 0);
 		m_rtcommandlist->SetPipelineState1(m_simplertpso.GetPipelineStateObject());
 		float  clearcolour[4] = {1.0f,1.0f,1.0f,1.0f};
 		m_rtcommandlist->ClearUnorderedAccessViewFloat(m_rtresheap_global.GetGPUHandlefromstart(),m_rtresheap_globalupload.GetCPUHandlefromstart(),m_rtouput.GetResource().Get(),clearcolour,0,nullptr);
@@ -837,7 +840,13 @@ void RayTracingApplicationAdvanced::InitRTPSO()
 	m_simplertpso.AddShader(simplemiss, L"missmain", L"SimpleMISS", RTPSOSHADERTYPE::MISS);
 	
 		DX12Shader* simplech = new DX12Shader();
+#ifdef USESIMPLECLOSESTHITSHADER
 		simplech->Init(L"shaders/raytracing/RT/simpleclosesthit.hlsl", DX12Shader::ShaderType::RT);
+#else
+		simplech->Init(L"shaders/raytracing/RT/closesthit_fetchgbuffer.hlsl", DX12Shader::ShaderType::RT);
+#endif // USESIMPLECLOSESTHITSHADER
+
+		
 		m_simplertpso.AddShader(simplech, L"closesthitmain", L"SimpleCH", RTPSOSHADERTYPE::CLOSESTHIT);
 		D3D12_HIT_GROUP_DESC simplehitgroupdesc = {};
 		simplehitgroupdesc.Type = D3D12_HIT_GROUP_TYPE::D3D12_HIT_GROUP_TYPE_TRIANGLES;
@@ -877,6 +886,12 @@ void RayTracingApplicationAdvanced::InitRTPSO()
 		param2.Constants.ShaderRegister = 0;
 		param2.Constants.RegisterSpace = 0;
 		param2.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		D3D12_ROOT_PARAMETER param3 = {};
+		param3.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+		param3.Constants.Num32BitValues = sizeof(XMMATRIX) / 4;
+		param3.Constants.ShaderRegister = 1;
+		param3.Constants.RegisterSpace = 0;
+		param3.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 		
 
 		
@@ -884,6 +899,7 @@ void RayTracingApplicationAdvanced::InitRTPSO()
 		param1.DescriptorTable.NumDescriptorRanges = 3;
 		rootparams.push_back(param1);
 		rootparams.push_back(param2);
+		rootparams.push_back(param3);
 		vector<D3D12_STATIC_SAMPLER_DESC> staticsamplersused;
 		
 		
