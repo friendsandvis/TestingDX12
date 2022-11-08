@@ -35,7 +35,7 @@ void closesthitmain(inout Simpleraypayload payload,in BuiltInTriangleIntersectio
 	
 	
 	
-	float4 col=gbuffertex[2][uv];
+	float4 col=gbuffertex[1][uv];
 	payload.outcol=col.xyz;
 	
 }
