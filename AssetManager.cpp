@@ -85,6 +85,11 @@ void Model::Draw(DX12Commandlist& renderingcmdlist,XMMATRIX vpmatrix, UINT mvpma
 	
 	renderingcmdlist->DrawIndexedInstanced(GetIndiciesCount(), 1, 0, 0, 0);
 }
+void Model::Extratransform(XMMATRIX extratransformmat)
+{
+	//m_transform = XMMatrixMultiply(extratransformmat, m_transform);
+	m_transform = XMMatrixMultiply(m_transform,extratransformmat);
+}
 
 void Model::InitVertexBuffer(ComPtr< ID3D12Device> creationdevice, vector<VertexBase*>& verticies)
 {
@@ -189,6 +194,9 @@ void Model::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimp
 	vector<VertexBase*> verticies;
 	AssimpLoadedMesh& meshtoload = assimpModel.m_meshes[meshindexinassimpmodeltoload];
 	m_transform=AssimpManager::ToXMMatrix(meshtoload.transform);
+	
+	
+	
 	GetVertexArray(verticies,meshtoload, modelvertexversion);
 	//currently taking in first mesh alone
 	InitIndexBuffer(creationdevice, meshtoload.indicies);
@@ -335,6 +343,13 @@ void CompoundModel::Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix, U
 	for (size_t i = 0; i < m_models.size(); i++)
 	{
 		m_models[i]->Draw(renderingcmdlist,vpmatrix,mvpmatrixrootparamindex);
+	}
+}
+void CompoundModel::Extratransform(XMMATRIX extratransformmat)
+{
+	for (size_t i = 0; i < m_models.size(); i++)
+	{
+		m_models[i]->Extratransform(extratransformmat);
 	}
 }
 
