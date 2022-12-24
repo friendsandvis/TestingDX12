@@ -1,6 +1,8 @@
 #include"RayTracingTestApplication_Advanced.h"
 #define OFFSETGBUFFERSRVTEXTURESINRTGLOBALHEAP 2
-#define USESIMPLECLOSESTHITSHADER
+//simple one does not uses featching gbuffer process
+//#define USESIMPLECLOSESTHITSHADER
+#define USECONFERENCEROOMCOMPOUNDMODEL
 
 
 
@@ -267,7 +269,16 @@ void RayTracingApplicationAdvanced::InitExtras()
 	DXASSERT(m_creationdevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &option5features, sizeof(option5features)))
 		m_raytracingsupported = (option5features.RaytracingTier != D3D12_RAYTRACING_TIER_NOT_SUPPORTED);
 	BasicModelManager::LoadModel(m_creationdevice, "models/cube.dae", m_loadedmodel, VERTEXVERSION2);
+#ifdef USECONFERENCEROOMCOMPOUNDMODEL
+	BasicModelManager::LoadModel(m_creationdevice, "models/conference.obj", m_comloadedmodel, VERTEXVERSION2);
+	float scalefactor = 0.01f;
+	XMMATRIX scalemat = XMMatrixScalingFromVector(XMVectorSet(scalefactor, scalefactor, scalefactor, 1.0f));
+	m_comloadedmodel.Extratransform(scalemat);
+#else
 	BasicModelManager::LoadModel(m_creationdevice, "models/cubes2.dae", m_comloadedmodel, VERTEXVERSION2);
+#endif // USECONFERENCEROOMCOMPOUNDMODEL
+
+	
 	BasicModelManager::InitTriangleModel(m_creationdevice, m_trianglemodel);
 	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
 	float aspectratio = m_swapchain.GetSwapchainWidth() / (float)m_swapchain.GetSwapchainHeight();

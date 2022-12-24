@@ -1,4 +1,5 @@
 #include"ModelTestApplication.h"
+//#define USECONFERENCEROOMCOMPOUNDMODEL
 
 
 
@@ -64,11 +65,18 @@ void ModelTestApplication::Render()
 void ModelTestApplication::InitExtras()
 {
 	BasicModelManager::LoadModel(m_creationdevice,"models/cube.dae",m_loadedmodel,VERTEXVERSION2);
-	float scalefactor = 1.f;
+#ifdef USECONFERENCEROOMCOMPOUNDMODEL
+	float scalefactor = 0.01f;
 	XMMATRIX scalemat = XMMatrixScalingFromVector(XMVectorSet(scalefactor, scalefactor, scalefactor, 1.0f));
+	BasicModelManager::LoadModel(m_creationdevice, "models/conference.obj", m_loadedcompoundmodel, VERTEXVERSION2);
+
 	
-	BasicModelManager::LoadModel(m_creationdevice, "models/cubes2.dae", m_loadedcompoundmodel, VERTEXVERSION2);
 	m_loadedcompoundmodel.Extratransform(scalemat);
+#else
+	BasicModelManager::LoadModel(m_creationdevice, "models/cubes2.dae", m_loadedcompoundmodel, VERTEXVERSION2);
+#endif // USECONFERENCEROOMCOMPOUNDMODEL
+
+	
 	BasicModelManager::InitTriangleModel(m_creationdevice, m_trianglemodel);
 	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
 	BasicModelManager::InitCubeModel(m_creationdevice, m_cubemodel);

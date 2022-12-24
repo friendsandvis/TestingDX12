@@ -12,5 +12,5 @@ struct Vout
 float4 main(Vout psin) : SV_TARGET0
 {
 	//return float4(psin.uv,0.0f,1.0f);
-	return image[0].Sample(simplesampler,psin.uv);//outputs albedo only(index 0)
+	return image[2].Sample(simplesampler,psin.uv);//outputs worldpos only(index 2)
 }
