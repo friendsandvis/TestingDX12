@@ -498,12 +498,12 @@ void BasicModelManager::GetTriangleVerticiesV0(vector<VertexBase*>& outverticies
 	//0(center-top)
 	VetexV0* vert = new VetexV0();
 	vert->m_position = { 0.0f, 1.0f, 0.0f };
-	vert->m_uv = { 0.0f,0.0f };
+	vert->m_uv = { 0.5f,0.0f };
 	outverticies.push_back(vert);
 	//1(left-bottom)
 	vert = new VetexV0();
 	vert->m_position = { -1.0f,-1.0f,0.0f };
-	vert->m_uv = { 0.0f,1.0f };
+	vert->m_uv = { 1.0f,1.0f };
 	outverticies.push_back(vert);
 	//2(right-bottom)
 	vert = new VetexV0();

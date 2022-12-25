@@ -337,7 +337,7 @@ void RayTracingApplication2::InitPSO()
 
 	DX12Shader* vs = new DX12Shader();
 	DX12Shader* ps = new DX12Shader();
-	vs->Init(L"shaders/raytracing/GeneralRenderVertexShader.hlsl", DX12Shader::ShaderType::VS);
+	vs->Init(L"shaders/raytracing/2/GeneralRenderVertexShader.hlsl", DX12Shader::ShaderType::VS);
 	ps->Init(L"shaders/raytracing/2/GeneralRenderTestPixelShader.hlsl", DX12Shader::ShaderType::PS);
 	psoinitdata.m_shaderstouse.push_back(vs); psoinitdata.m_shaderstouse.push_back(ps);
 	DX12PSO::DefaultInitPSOData(psoinitdata);
@@ -372,11 +372,11 @@ void RayTracingApplication2::InitPSO()
 		inputelements[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
 		inputelements[0].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
 		inputelements[0].InputSlot = 0;
-		inputelements[1].SemanticName = "NORMAL";
-		inputelements[1].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+		inputelements[1].SemanticName = "VUV";
+		inputelements[1].Format = DXGI_FORMAT_R32G32_FLOAT;
 		inputelements[1].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
 		inputelements[1].InputSlot = 0;
-		inputelements[1].AlignedByteOffset = sizeof(float) * 3;//after three floats is normal
+		inputelements[1].AlignedByteOffset = sizeof(float) * 3;//after three floats is uv
 
 		psoinitdata.psodesc.graphicspsodesc.InputLayout.NumElements = 2;
 		psoinitdata.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = inputelements;
