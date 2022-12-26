@@ -7,7 +7,8 @@ RayTracingApplication2::RayTracingApplication2()
 	:m_loadedmodel(ModelDataUploadMode::COPY),
 	m_raytracingsupported(false),
 	m_trianglemodel(ModelDataUploadMode::COPY),
-	m_planemodel(ModelDataUploadMode::COPY)
+	m_planemodel(ModelDataUploadMode::COPY),
+	m_rtmode(false)
 {
 	m_maincameracontroller.SetCameratoControl(&m_maincamera);
 	
@@ -152,8 +153,16 @@ void RayTracingApplication2::RenderRT()
 }
 void RayTracingApplication2::Render()
 {
-	RenderRaster();
-	//RenderRT();
+	if (m_rtmode)
+	{
+		RenderRT();
+	}
+	else
+	{
+		RenderRaster();
+	}
+	
+	
 }
 
 void RayTracingApplication2::InitExtras()
@@ -707,7 +716,14 @@ void RayTracingApplication2::InitPSO_RTRaster()
 
 void RayTracingApplication2::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-
+	if (uMsg == WM_CHAR)
+	{
+		char charpressed = (char)wParam;
+		if (charpressed == '1')
+		{
+			m_rtmode = !m_rtmode;
+		}
+	}
 	m_maincameracontroller.ProcessWindowProcEvent(hwnd, uMsg, wParam, lParam);
 
 }

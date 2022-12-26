@@ -50,7 +50,7 @@ private:
 	DX12RaytracingCommandlist m_rtcommandlist;
 	ComPtr<ID3D12Device5> m_device5;
 	Model m_loadedmodel,m_trianglemodel,m_planemodel;
-	bool m_raytracingsupported;
+	bool m_raytracingsupported,m_rtmode;
 	DXFPSCameraController m_maincameracontroller;
 	ModelAccelerationStructureBLAS loadedmodelasblas;
 	ModelAccelerationStructureTLAS loadedmodelastlas;
