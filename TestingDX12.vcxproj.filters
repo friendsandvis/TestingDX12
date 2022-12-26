@@ -19,6 +19,9 @@
     <Filter Include="Applications">
       <UniqueIdentifier>{cd5c2f4f-0ea8-4aa7-9628-bb48fee4ba7b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Applications\rt">
+      <UniqueIdentifier>{332d86ed-6412-455a-83c4-60448bc9deb8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -126,9 +129,6 @@
     <ClCompile Include="AssimpManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="RayTracingTestApplication.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="RaytracingUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -138,11 +138,14 @@
     <ClCompile Include="DX12RaytracingCommandlist.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="RayTracingTestApplication_Advanced.cpp">
-      <Filter>Applications</Filter>
-    </ClCompile>
     <ClCompile Include="RayTracingTestApplication2.cpp">
-      <Filter>Applications</Filter>
+      <Filter>Applications\rt</Filter>
+    </ClCompile>
+    <ClCompile Include="RayTracingTestApplication_Advanced.cpp">
+      <Filter>Applications\rt</Filter>
+    </ClCompile>
+    <ClCompile Include="RayTracingTestApplication.cpp">
+      <Filter>Applications\rt</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -254,9 +257,6 @@
     <ClInclude Include="AssimpManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="RayTracingTestApplication.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="RaytracingUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -266,11 +266,14 @@
     <ClInclude Include="DX12RaytracingCommandlist.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="RayTracingTestApplication_Advanced.h">
-      <Filter>Applications</Filter>
-    </ClInclude>
     <ClInclude Include="RayTracingTestApplication2.h">
-      <Filter>Applications</Filter>
+      <Filter>Applications\rt</Filter>
+    </ClInclude>
+    <ClInclude Include="RayTracingTestApplication_Advanced.h">
+      <Filter>Applications\rt</Filter>
+    </ClInclude>
+    <ClInclude Include="RayTracingTestApplication.h">
+      <Filter>Applications\rt</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

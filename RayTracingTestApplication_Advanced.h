@@ -19,6 +19,9 @@ struct MatrixPair
 	XMMATRIX m1;
 	XMMATRIX m2;
 };
+/*
+* in this raytracing app we render a model by raster and rt(full camera movement allowed in rt)
+*/
 class RayTracingApplicationAdvanced :public DX12ApplicationManagerBase
 {
 public:

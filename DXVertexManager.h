@@ -78,3 +78,9 @@ public:
 	static unsigned GetVertexSize(VertexVersion vtype);
 	static void RetriveRawVertexData(vector<float>& outverticiesrawdata, VertexBase* avertex);
 };
+//VertexData structs that can be used to pass vertex data for a model to raytracing(1 for each vertex type)
+struct RTVertexDataV0
+{
+	XMFLOAT3 m_position;
+	XMFLOAT2 m_uv;
+};

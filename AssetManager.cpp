@@ -498,17 +498,31 @@ void BasicModelManager::GetTriangleVerticiesV0(vector<VertexBase*>& outverticies
 	//0(center-top)
 	VetexV0* vert = new VetexV0();
 	vert->m_position = { 0.0f, 1.0f, 0.0f };
-	vert->m_uv = { 0.5f,0.0f };
+	vert->m_uv = { 0.5f,1.0f };
 	outverticies.push_back(vert);
 	//1(left-bottom)
 	vert = new VetexV0();
 	vert->m_position = { -1.0f,-1.0f,0.0f };
-	vert->m_uv = { 1.0f,1.0f };
+	vert->m_uv = { 0.0f,0.0f };
 	outverticies.push_back(vert);
 	//2(right-bottom)
 	vert = new VetexV0();
 	vert->m_position = { 1.0f,-1.0f,0.0f };
-	vert->m_uv = { 1.0f,1.0f };
+	vert->m_uv = { 1.0f,0.0f };
 	outverticies.push_back(vert);
 	
+}
+void BasicModelManager::GetTriangleRTVertexData(vector<RTVertexDataV0>& rtvertexdata)
+{
+	vector<VertexBase*> verticies;
+	GetTriangleVerticiesV0(verticies);
+	for (VertexBase* vertex : verticies)
+	{
+		VetexV0* vertexv0 = dynamic_cast<VetexV0*>(vertex);
+		RTVertexDataV0 rtvert = {};
+		rtvert.m_position = vertexv0->m_position;
+		rtvert.m_uv = vertexv0->m_uv;
+		rtvertexdata.push_back(rtvert);
+		delete vertex;
+	}
 }

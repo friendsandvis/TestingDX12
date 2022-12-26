@@ -13,7 +13,9 @@
 #include"DX12RaytracingCommandlist.h"
 
 using namespace DirectX;
-
+/*
+* in this raytracing app we render a triangle by rt(rt uses closesthit with solid color)
+*/
 class RayTracingApplication :public DX12ApplicationManagerBase
 {
 public:

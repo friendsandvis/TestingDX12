@@ -13,7 +13,9 @@
 #include"DX12RaytracingCommandlist.h"
 
 using namespace DirectX;
-
+/*
+* in this raytracing app we render a triangle by raster and rt(rt uses closesthit which interpolates via barycentrics)
+*/
 class RayTracingApplication2 :public DX12ApplicationManagerBase
 {
 public:
@@ -45,6 +47,8 @@ private:
 	RTPSO m_simplertpso;
 	//shader records
 	DX12Buffer m_rgsrecords,m_missrecords,m_hitrecords;
+	//structured buffer used to pass vertex datato rt shaders
+	DX12Buffer m_modelvertexdatabuffer;
 	DX12RootSignature m_rootsignature;
 	//device5 is often used in raytracing so retrive it once and keep troughout app lifetime.
 	DX12RaytracingCommandlist m_rtcommandlist;

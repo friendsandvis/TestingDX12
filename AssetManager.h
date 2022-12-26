@@ -93,6 +93,7 @@ public:
 	static void InitTriangleModel(ComPtr< ID3D12Device> creationdevice, Model& trianglemodel);
 	static void LoadModel(ComPtr< ID3D12Device> creationdevice,std::string modelfilepath, Model& outmodel, VertexVersion requiredvertexversion);
 	static void LoadModel(ComPtr< ID3D12Device> creationdevice, std::string modelfilepath, CompoundModel& outmodel, VertexVersion requiredvertexversion);
+	static void GetTriangleRTVertexData(vector<RTVertexDataV0>& rtvertexdata);
 
 private:
 	static void GetPlaneVerticiesV0(vector<VertexBase*>& outverticies);

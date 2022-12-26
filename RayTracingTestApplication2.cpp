@@ -189,12 +189,30 @@ void RayTracingApplication2::InitExtras()
 		m_missrecords.Init(m_creationdevice, missshaderrecordsprops, ResourceCreationMode::COMMITED);
 		DX12ResourceCreationProperties hitshaderrecordsprops = rgsrecordsprops;
 		m_hitrecords.Init(m_creationdevice, hitshaderrecordsprops, ResourceCreationMode::COMMITED);
-		//blas transform buffer
-		DX12ResourceCreationProperties blastransformprops;
-		DX12Buffer::InitResourceCreationProperties(blastransformprops);
-		blastransformprops.resdesc.Width=sizeof(FLOAT)*12;//3x4 matrix
-		blastransformprops.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
+		//init structured buffer
+		DX12ResourceCreationProperties modelvertexdatabufferprops;
+		DX12Buffer::InitResourceCreationProperties(modelvertexdatabufferprops);
+		modelvertexdatabufferprops.resheapprop.Type = D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD;
 		
+		modelvertexdatabufferprops.resdesc.Width = m_trianglemodel.GetVerticiesCount() * sizeof(RTVertexDataV0);
+		m_modelvertexdatabuffer.Init(m_creationdevice, modelvertexdatabufferprops, ResourceCreationMode::COMMITED);
+		m_modelvertexdatabuffer.SetName(L"TriangleRTtriangleVertexStructuredbuffer");
+		
+		
+		
+	}
+	
+	{
+		vector<RTVertexDataV0> rtvertexdatatriangle;
+		BasicModelManager::GetTriangleRTVertexData(rtvertexdatatriangle);
+		BufferMapParams params = {};
+		params.range.Begin = 0;
+		params.range.End=0;
+
+		void* m_modelvertexdatabuffermapped=m_modelvertexdatabuffer.Map(params);
+		memcpy(m_modelvertexdatabuffermapped, rtvertexdatatriangle.data(), m_modelvertexdatabuffer.GetSize());
+		params.range.End = m_modelvertexdatabuffer.GetSize();
+		m_modelvertexdatabuffer.UnMap(params);
 	}
 
 	//init gbuffer textures
@@ -208,12 +226,12 @@ void RayTracingApplication2::InitExtras()
 	//heap to hold resources used by rt(global)
 	{
 		D3D12_DESCRIPTOR_HEAP_DESC rtglobalheapdesc = {};
-		rtglobalheapdesc.NumDescriptors = 2;//just 1 uav for now and 1 srv.
+		rtglobalheapdesc.NumDescriptors = 3;//just 1 uav for now and 2 srv.
 		rtglobalheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		rtglobalheapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		m_rtresheap_global.Init(rtglobalheapdesc,m_creationdevice);
 		D3D12_DESCRIPTOR_HEAP_DESC rtglobalheapdescupload = {};
-		rtglobalheapdescupload.NumDescriptors = 1;//just 1 uav for now
+		rtglobalheapdescupload.NumDescriptors = 1;//just 1 uav for now(used for clearing uav resource)
 		rtglobalheapdescupload.Type= D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		rtglobalheapdescupload.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 		m_rtresheap_globalupload.Init(rtglobalheapdescupload, m_creationdevice);
@@ -271,6 +289,8 @@ void RayTracingApplication2::InitExtras()
 			//m_creationdevice->CreateShaderResourceView(nullptr, &tlassrrvdesc, m_rtresheap_global.GetCPUHandleOffseted(1));
 			
 		}
+		//create rtvertexstructuredbuffer srv
+
 		{
 			D3D12_SHADER_RESOURCE_VIEW_DESC srvdesc = {};
 			srvdesc.ViewDimension = D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_TEXTURE2D;
@@ -280,6 +300,21 @@ void RayTracingApplication2::InitExtras()
 			srvdesc.Texture2D.ResourceMinLODClamp = 0.0f;
 
 			m_rtouput.CreateSRV(m_creationdevice, srvdesc, m_rtdisplayresheap.GetCPUHandleOffseted(0));
+		}
+		//create rt triangle vertex structured buffer
+		{
+			D3D12_SHADER_RESOURCE_VIEW_DESC m_modelvertexdatabuffersrvdesc = {};
+			m_modelvertexdatabuffersrvdesc.Format = DXGI_FORMAT::DXGI_FORMAT_UNKNOWN;
+			m_modelvertexdatabuffersrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+			m_modelvertexdatabuffersrvdesc.ViewDimension = D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_BUFFER;
+			m_modelvertexdatabuffersrvdesc.Buffer.FirstElement = 0;
+			m_modelvertexdatabuffersrvdesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAGS::D3D12_BUFFER_SRV_FLAG_NONE;
+			m_modelvertexdatabuffersrvdesc.Buffer.FirstElement = 0;
+			m_modelvertexdatabuffersrvdesc.Buffer.NumElements = m_trianglemodel.GetVerticiesCount();
+			m_modelvertexdatabuffersrvdesc.Buffer.StructureByteStride = sizeof(RTVertexDataV0);
+
+
+			m_modelvertexdatabuffer.CreateSRV(m_creationdevice, m_modelvertexdatabuffersrvdesc, m_rtresheap_global.GetCPUHandleOffseted(2));
 		}
 	}
 	D3D12_RENDER_TARGET_VIEW_DESC gbufferrtvdesc = {};
@@ -552,7 +587,7 @@ void RayTracingApplication2::InitRTPSO()
 	m_simplertpso.AddShader(simplemiss, L"missmain", L"SimpleMISS", RTPSOSHADERTYPE::MISS);
 	
 		DX12Shader* simplech = new DX12Shader();
-		simplech->Init(L"shaders/raytracing/RT/simpleclosesthit.hlsl", DX12Shader::ShaderType::RT);
+		simplech->Init(L"shaders/raytracing/RT/2/simpleclosesthit.hlsl", DX12Shader::ShaderType::RT);
 		m_simplertpso.AddShader(simplech, L"closesthitmain", L"SimpleCH", RTPSOSHADERTYPE::CLOSESTHIT);
 		D3D12_HIT_GROUP_DESC simplehitgroupdesc = {};
 		simplehitgroupdesc.Type = D3D12_HIT_GROUP_TYPE::D3D12_HIT_GROUP_TYPE_TRIANGLES;
@@ -568,7 +603,7 @@ void RayTracingApplication2::InitRTPSO()
 		D3D12_ROOT_PARAMETER param1 = {};
 		param1.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 		param1.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		D3D12_DESCRIPTOR_RANGE descranges[2];
+		D3D12_DESCRIPTOR_RANGE descranges[3];
 		descranges[0].NumDescriptors = 1;
 		descranges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
 		descranges[0].NumDescriptors = 1;
@@ -580,6 +615,11 @@ void RayTracingApplication2::InitRTPSO()
 		descranges[1].BaseShaderRegister = 0;
 		descranges[1].RegisterSpace = 0;
 		descranges[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+		descranges[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		descranges[2].NumDescriptors = 1;
+		descranges[2].BaseShaderRegister = 1;
+		descranges[2].RegisterSpace = 0;
+		descranges[2].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 		D3D12_ROOT_PARAMETER param2 = {};
 		param2.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
 		param2.Constants.Num32BitValues = sizeof(XMMATRIX) / 4;
@@ -589,7 +629,7 @@ void RayTracingApplication2::InitRTPSO()
 
 		
 		param1.DescriptorTable.pDescriptorRanges = descranges;
-		param1.DescriptorTable.NumDescriptorRanges = 2;
+		param1.DescriptorTable.NumDescriptorRanges = 3;
 		rootparams.push_back(param1);
 		rootparams.push_back(param2);
 		vector<D3D12_STATIC_SAMPLER_DESC> staticsamplersused;
