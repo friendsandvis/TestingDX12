@@ -1,0 +1,3 @@
+Components:
+1.m_sfsreservedresourcetex:a reservedresource texture for sampler feedback
+2.

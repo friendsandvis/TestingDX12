@@ -19,13 +19,6 @@ void DX12SamplerfeedbackApplication::InitExtras()
 	{
 		DXImageData& reservedresimgdata = m_sfsreservedresourcetex.GetImageData();
 		DXTexManager::LoadTexture(L"textures/texlargemiped.dds", reservedresimgdata);
-		DX12ResourceCreationProperties reservedrestexprops;
-		DX12ReservedResource::InitResourceCreationProperties(reservedrestexprops);
-		reservedrestexprops.resdesc.Width = reservedresimgdata.m_imagemetadata.width;
-		reservedrestexprops.resdesc.Height = reservedresimgdata.m_imagemetadata.height;
-		reservedrestexprops.resdesc.MipLevels = reservedresimgdata.m_imagemetadata.mipLevels;
-		reservedrestexprops.resdesc.Format = reservedresimgdata.m_imagemetadata.format;
-		reservedrestexprops.resdesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 		m_sfsreservedresourcetex.Init(m_creationdevice,true);
 		m_sfsreservedresourcetex.SetName(L"Greentexreservedresourcesfstest");
 	}

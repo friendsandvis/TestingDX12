@@ -279,4 +279,9 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="SamplerFeedbackAppDoc.txt">
+      <Filter>Applications</Filter>
+    </Text>
+  </ItemGroup>
 </Project>
