@@ -22,6 +22,9 @@
     <Filter Include="Applications\rt">
       <UniqueIdentifier>{332d86ed-6412-455a-83c4-60448bc9deb8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="utils">
+      <UniqueIdentifier>{2c984680-cb1a-4b59-ac0b-c9d3bf92bd37}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -146,6 +149,9 @@
     </ClCompile>
     <ClCompile Include="RayTracingTestApplication.cpp">
       <Filter>Applications\rt</Filter>
+    </ClCompile>
+    <ClCompile Include="StreamableTextureFileCreator.cpp">
+      <Filter>utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -274,6 +280,9 @@
     </ClInclude>
     <ClInclude Include="RayTracingTestApplication.h">
       <Filter>Applications\rt</Filter>
+    </ClInclude>
+    <ClInclude Include="StreamableTextureFileCreator.h">
+      <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

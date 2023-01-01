@@ -74,6 +74,7 @@ void DX12ReservedResourceMemoryManager::Init(ComPtr< ID3D12Device> creationdevic
 	//initialize upload data upload utils
 	DXImageData& resimgdata = m_restomanage->GetImageData();
 	resimgdata.GetSubresData(creationdevice, m_reservedresourcesubresdata);
+	//TODO:is this uploadbuffer needed?
 	UINT64 uploadbuffersize=GetRequiredIntermediateSize(m_restomanage->GetResource().Get(), 0, m_reservedresourcesubresdata.size());
 	
 	//UINT64 uploadbuffersize = GetRequiredIntermediateSize(m_restomanage->GetResource().Get(), 0, 1);

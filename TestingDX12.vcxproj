@@ -193,6 +193,7 @@
     <ClCompile Include="RTPSO.cpp" />
     <ClCompile Include="SamplerFeedbackManager.cpp" />
     <ClCompile Include="ShaderManager.cpp" />
+    <ClCompile Include="StreamableTextureFileCreator.cpp" />
     <ClCompile Include="windmaker.cpp" />
     <ClCompile Include="WindowProcHook.cpp" />
   </ItemGroup>
@@ -237,6 +238,7 @@
     <ClInclude Include="RTPSO.h" />
     <ClInclude Include="SamplerFeedbackManager.h" />
     <ClInclude Include="ShaderManager.h" />
+    <ClInclude Include="StreamableTextureFileCreator.h" />
     <ClInclude Include="windmaker.h" />
     <ClInclude Include="WindowProcHook.h" />
   </ItemGroup>

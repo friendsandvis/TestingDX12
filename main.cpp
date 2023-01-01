@@ -11,6 +11,7 @@
 #include"RayTracingTestApplication2.h"
 #include"RayTracingTestApplication_Advanced.h"
 #include<iostream>
+#include"StreamableTextureFileCreator.h"
 #define ENABLEDEBUGLAYER true
 
 typedef HRESULT(__stdcall* fPtr)(const IID&, void**);
@@ -24,6 +25,7 @@ int main()
 	std::cout << "3.ModelTestApplication.\n";
 	std::cout << "4.RaytracingApplicationAdvanced.\n";
 	std::cout << "5.SamplerFeedbackApplication.\n";
+	std::cout << "6.run stf creator.\n";
 	std::cout << "Enter application number  to run:\n";
 	int appnumber;
 	std::cin >> appnumber;
@@ -40,6 +42,12 @@ int main()
 		appmanager = new RayTracingApplicationAdvanced(); break;
 	case 5:
 		appmanager = new DX12SamplerfeedbackApplication(); break;
+	case 6:
+	{
+		StreamableTextureFileCreator stfcreator;
+		int res=stfcreator.ExportToSTF(L"textures/texlargemiped.dds", "textures/stf/texlargemiped.stf");
+		assert(res != 0);
+	}
 	default:
 		std::cout << "Invalid App number choosen";
 		return 1;

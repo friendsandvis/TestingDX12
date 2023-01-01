@@ -17,8 +17,12 @@ void DX12SamplerfeedbackApplication::InitExtras()
 {
 	//init sampler feedback reserved resorce
 	{
+		//fetch the details of the image to use for texture.
 		DXImageData& reservedresimgdata = m_sfsreservedresourcetex.GetImageData();
+		
 		DXTexManager::LoadTexture(L"textures/texlargemiped.dds", reservedresimgdata);
+		
+		//create texture from the texture data fetched
 		m_sfsreservedresourcetex.Init(m_creationdevice,true);
 		m_sfsreservedresourcetex.SetName(L"Greentexreservedresourcesfstest");
 	}
@@ -61,9 +65,7 @@ void DX12SamplerfeedbackApplication::InitExtras()
 
 	//init assets
 	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
-	DXTexManager::LoadTexture(L"textures/tex3_miped.dds", m_redtexture.GetDXImageData());
-	bool initsuccess = m_redtexture.Init(m_creationdevice);
-	m_redtexture.SetName(L"GREENTEX");
+	
 
 	{
 		

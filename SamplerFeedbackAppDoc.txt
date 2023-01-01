@@ -1,3 +1,6 @@
 Components:
-1.m_sfsreservedresourcetex:a reservedresource texture for sampler feedback
-2.
+1.m_sfsreservedresourcetex:a reservedresource texture for using sampler feedback on.
+2.m_redtexfeedbackunit: the main feedback unit of app.
+Steps:
+- Start by initializing the "m_sfsreservedresourcetex" with the texture we need to use.
+-Initialize m_redtexfeedbackunit with properties to be used by feedbacktexture.
