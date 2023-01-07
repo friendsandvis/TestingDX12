@@ -13,6 +13,11 @@ struct SubResDataBlocks
 /*
 * creates .stf files which atre binary file containing texture data and subresource data to allow them to be streamed(typically by mipstreamer.
 */
+/*
+* STF data format:
+* - first metadata block
+* - then 
+*/
 class StreamableTextureFileCreator
 {
 public:
