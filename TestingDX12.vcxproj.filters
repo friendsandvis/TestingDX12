@@ -153,6 +153,12 @@
     <ClCompile Include="StreamableTextureFileCreator.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="StreamableTextureFileReader.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="StreamableTextureFileCommon.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="windmaker.h">
@@ -282,6 +288,12 @@
       <Filter>Applications\rt</Filter>
     </ClInclude>
     <ClInclude Include="StreamableTextureFileCreator.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="StreamableTextureFileReader.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="StreamableTextureFileCommon.h">
       <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>

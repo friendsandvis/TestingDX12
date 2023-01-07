@@ -12,6 +12,7 @@
 #include"RayTracingTestApplication_Advanced.h"
 #include<iostream>
 #include"StreamableTextureFileCreator.h"
+#include"StreamableTextureFileReader.h"
 #define ENABLEDEBUGLAYER true
 
 typedef HRESULT(__stdcall* fPtr)(const IID&, void**);
@@ -26,6 +27,7 @@ int main()
 	std::cout << "4.RaytracingApplicationAdvanced.\n";
 	std::cout << "5.SamplerFeedbackApplication.\n";
 	std::cout << "6.run stf creator.\n";
+	std::cout << "7.run stf reader.\n";
 	std::cout << "Enter application number  to run:\n";
 	int appnumber;
 	std::cin >> appnumber;
@@ -47,6 +49,11 @@ int main()
 		StreamableTextureFileCreator stfcreator;
 		int res=stfcreator.ExportToSTF(L"textures/texlargemiped.dds", "textures/stf/texlargemiped.stf");
 		assert(res != 0);
+	}
+	case 7:
+	{
+		StreamableTextureFileReader stfreader;
+		int res=stfreader.Init("textures/stf/texlargemiped.stf");
 	}
 	default:
 		std::cout << "Invalid App number choosen";
