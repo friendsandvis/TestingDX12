@@ -23,8 +23,10 @@ int StreamableTextureFileReader::Init(const char* stffilepath)
 	for (uint64_t i = 0; i < numsubres; i++)
 	{
 		SubResourceData subresdata = {};
-		char* data = reinterpret_cast<char*>(&subresdata.subresdatablock);
+		SubResDataBlock subresdatablock = {};
+		char* data = reinterpret_cast<char*>(&subresdatablock);
 		m_stfinput.read(data, sizeof(SubResDataBlock));
+		subresdata.SetSubResDataBlock(subresdatablock);
 		m_subresdata.push_back(subresdata);
 
 
@@ -33,8 +35,43 @@ int StreamableTextureFileReader::Init(const char* stffilepath)
 	streampos currentstreampos = m_stfinput.tellg();
 	for (uint64_t i = 0; i < numsubres; i++)
 	{
-		m_subresdata[i].pixeldatastreampos = currentstreampos;
-		currentstreampos += m_subresdata[i].subresdatablock.SlicePitch;
+		m_subresdata[i].SetPixelDataStreamPos(currentstreampos);
+		currentstreampos += m_subresdata[i].GetSubResDataBlock().SlicePitch;
 	}
 	return 1;
+}
+void StreamableTextureFileReader::PreparePixelDataForSubResource(size_t subresidx)
+{
+	m_subresdata[subresidx].BuildStorageForPixelData();
+	char* pixeldata = reinterpret_cast<char*>(m_subresdata[subresidx].GetPixelData());
+	streampos pixeldatastreampos=m_subresdata[subresidx].GetPixelDataStreamPos();
+	assert(m_stfinput.is_open());
+	m_stfinput.seekg(pixeldatastreampos);
+	m_stfinput.read(pixeldata, m_subresdata[subresidx].GetSubResDataBlock().SlicePitch);
+}
+void StreamableTextureFileReader::PrepSubResPixData()
+{
+	for (size_t i = 0; i < m_subresdata.size(); i++)
+	{
+		PreparePixelDataForSubResource(i);
+	}
+}
+
+StreamableTextureFileReader::SubResourceData::SubResourceData()
+	:m_pixeldata(nullptr),
+	m_pixeldatastreampos(0)
+{
+}
+StreamableTextureFileReader::SubResourceData::~SubResourceData()
+{
+	if (m_pixeldata)
+	{
+		delete[] m_pixeldata;
+	}
+}
+void StreamableTextureFileReader::SubResourceData::BuildStorageForPixelData()
+{
+	uint64_t pixeldatasize= m_subresdatablock.SlicePitch;
+	assert(pixeldatasize != 0);
+	m_pixeldata = new uint8_t[pixeldatasize];
 }

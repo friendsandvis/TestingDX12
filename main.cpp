@@ -54,6 +54,7 @@ int main()
 	{
 		StreamableTextureFileReader stfreader;
 		int res=stfreader.Init("textures/stf/texlargemiped.stf");
+		stfreader.PrepSubResPixData();
 	}
 	default:
 		std::cout << "Invalid App number choosen";
