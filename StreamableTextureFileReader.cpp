@@ -1,4 +1,5 @@
 #include"StreamableTextureFileReader.h"
+
 StreamableTextureFileReader::StreamableTextureFileReader()
 {
 }
@@ -55,6 +56,14 @@ void StreamableTextureFileReader::PrepSubResPixData()
 	{
 		PreparePixelDataForSubResource(i);
 	}
+}
+void StreamableTextureFileReader::GetSubResourceData(size_t subresidx, D3D12_SUBRESOURCE_DATA& outsubresdata)
+{
+	PreparePixelDataForSubResource(subresidx);
+	outsubresdata.pData = m_subresdata[subresidx].GetPixelData();
+	outsubresdata.RowPitch = m_subresdata[subresidx].GetSubResDataBlock().rowpitch;
+	outsubresdata.SlicePitch = m_subresdata[subresidx].GetSubResDataBlock().SlicePitch;
+	
 }
 
 StreamableTextureFileReader::SubResourceData::SubResourceData()

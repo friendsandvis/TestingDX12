@@ -40,5 +40,6 @@ private:
 	void PreparePixelDataForSubResource(size_t subresidx);
 public:
 	void PrepSubResPixData();
+	void GetSubResourceData(size_t subresidx, D3D12_SUBRESOURCE_DATA& outsubresdata);
 };
 

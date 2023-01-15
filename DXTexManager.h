@@ -4,6 +4,7 @@
 
 
 class DX12Commandlist;
+class StreamableTextureFileReader;
 
 //does not represents a generic dx12 texture but just a dx12 texture resource representing a directxtex loaded textre(the init creates commited resource as it calls DXTex createtexture fuction)
 class DXTexture:public DX12ResourceBase
@@ -39,6 +40,7 @@ public:
 	DXTexManager();
 	~DXTexManager();
 	static bool LoadTexture(const wchar_t* imagefile, DXImageData& outloadedImagedata);
+	static StreamableTextureFileReader* LoadSTFTexture(const char* imagefile);
 
 private:
 

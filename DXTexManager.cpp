@@ -1,5 +1,6 @@
 #include"DXTexManager.h"
 #include"DX12CommandList.h"
+#include"StreamableTextureFileReader.h"
 #pragma comment(lib,"DirectXTex.lib")
 
 
@@ -18,6 +19,16 @@ bool DXTexManager::LoadTexture(const wchar_t* imagefile, DXImageData& outloadedI
 	
 
 	return(res == S_OK);
+}
+StreamableTextureFileReader* DXTexManager::LoadSTFTexture(const char* imagefile)
+{
+	StreamableTextureFileReader* outstfreader = new StreamableTextureFileReader();
+	int res = outstfreader->Init(imagefile);
+	if (res == 1)
+	{
+		return outstfreader;
+	}
+	return nullptr;
 }
 
 

@@ -18,12 +18,20 @@ void DX12SamplerfeedbackApplication::InitExtras()
 	//init sampler feedback reserved resorce
 	{
 		//fetch the details of the image to use for texture.
+#ifdef USESTFTEXTURE
+		StreamableTextureFileReader* stfreader=DXTexManager::LoadSTFTexture("textures/stf/texlargemiped.stf");
+		assert(stfreader != nullptr);
+		m_sfsreservedresourcetex.InitStreamable(m_creationdevice, stfreader,true);
+#else
 		DXImageData& reservedresimgdata = m_sfsreservedresourcetex.GetImageData();
-		
+
 		DXTexManager::LoadTexture(L"textures/texlargemiped.dds", reservedresimgdata);
-		
+
 		//create texture from the texture data fetched
-		m_sfsreservedresourcetex.Init(m_creationdevice,true);
+		m_sfsreservedresourcetex.Init(m_creationdevice, true);
+#endif // USESTFTEXTURE
+
+		
 		m_sfsreservedresourcetex.SetName(L"Greentexreservedresourcesfstest");
 	}
 	//check sampler feedback support

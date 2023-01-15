@@ -86,7 +86,7 @@ private:
 	vector<UINT> m_dirtysubres;
 	//a vector holding intermidiate buffer(used for upload).
 	vector<D3D12_SUBRESOURCE_DATA> m_reservedresourcesubresdata;
-	DX12Buffer m_uploadbuffer;
+	bool subresdatastreamable;
 	DX12DESCHEAP m_uavheap,m_uavheapupload;
 	vector<UINT> m_subrestoupload;
 	bool m_allowuploadonmapping;

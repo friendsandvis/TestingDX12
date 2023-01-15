@@ -1,5 +1,6 @@
 #include"DX12ReservedResource.h"
 #include"DX12Resource.h"
+#include"StreamableTextureFileReader.h"
 
 void DX12ReservedResource::Init(ComPtr< ID3D12Device> creationdevice, DX12ResourceCreationProperties resprops)
 {
@@ -57,9 +58,16 @@ void DX12ReservedResource::CreateUAV(ComPtr< ID3D12Device> creationdevice, D3D12
 	creationdevice->CreateUnorderedAccessView(m_resource.Get(), nullptr, &uavdesc, uavhandle);
 }
 DX12ReservedResource::DX12ReservedResource()
+	:m_stfreader(nullptr)
 {}
 DX12ReservedResource::~DX12ReservedResource()
-{}
+{
+	//if stfreader if not null must be init with stfreader so delete it(stfreader ptr passed,it's memory is  managed by resource itself)
+	if (m_stfreader)
+	{
+		delete m_stfreader;
+	}
+}
 
 void DX12ReservedResource::InitResourceCreationProperties(DX12ResourceCreationProperties& rescreationprops)
 {
@@ -67,4 +75,26 @@ void DX12ReservedResource::InitResourceCreationProperties(DX12ResourceCreationPr
 	DX12Resource::InitResourceCreationProperties(rescreationprops);
 	//some special properties for reserved resource
 	rescreationprops.resdesc.Layout = D3D12_TEXTURE_LAYOUT_64KB_UNDEFINED_SWIZZLE;
+}
+void DX12ReservedResource::InitStreamable(ComPtr< ID3D12Device> creationdevice, StreamableTextureFileReader* stfreadertoinitwith, bool forceallowunorderedaccess)
+{
+	m_stfreader = stfreadertoinitwith;
+	m_rescreationmode = ResourceCreationMode::RESERVED;
+	SetResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST);
+	//prepare resource creation props from dx data & create resource from it.
+	InitResourceCreationProperties(m_creationproperties);
+	TexMetadata metadata=m_stfreader->GetMetaData();
+	m_creationproperties.resdesc.Format = metadata.format;
+	m_creationproperties.resdesc.Width = metadata.width;
+	m_creationproperties.resdesc.Height = metadata.height;
+	m_creationproperties.resdesc.MipLevels = metadata.mipLevels;
+	if (forceallowunorderedaccess)
+	{
+		m_creationproperties.resdesc.Flags |= D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	}
+	
+	DXASSERT((creationdevice->CreateReservedResource(&m_creationproperties.resdesc, m_currentresstate, nullptr, IID_PPV_ARGS(m_resource.GetAddressOf()))))
+		InitTilingInfo(creationdevice);
+
+
 }

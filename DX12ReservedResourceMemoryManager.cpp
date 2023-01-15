@@ -1,10 +1,12 @@
 #include"DX12ReservedResourceMemoryManager.h"
+#include"StreamableTextureFileReader.h"
 #include<iostream>
 
 
 DX12ReservedResourceMemoryManager::DX12ReservedResourceMemoryManager()
 	:m_restomanage(nullptr),
-	m_allowuploadonmapping(true)
+	m_allowuploadonmapping(true),
+	subresdatastreamable(false)
 {
 }
 
@@ -73,19 +75,12 @@ void DX12ReservedResourceMemoryManager::Init(ComPtr< ID3D12Device> creationdevic
 	}
 	//initialize upload data upload utils
 	DXImageData& resimgdata = m_restomanage->GetImageData();
-	resimgdata.GetSubresData(creationdevice, m_reservedresourcesubresdata);
-	//TODO:is this uploadbuffer needed?
-	UINT64 uploadbuffersize=GetRequiredIntermediateSize(m_restomanage->GetResource().Get(), 0, m_reservedresourcesubresdata.size());
+	subresdatastreamable = (m_restomanage->GetStfReader() != nullptr);
+	if (!subresdatastreamable)
+	{
+		resimgdata.GetSubresData(creationdevice, m_reservedresourcesubresdata);
+	}
 	
-	//UINT64 uploadbuffersize = GetRequiredIntermediateSize(m_restomanage->GetResource().Get(), 0, 1);
-
-	DX12ResourceCreationProperties uploadbufferprops;
-	DX12Buffer::InitResourceCreationProperties(uploadbufferprops);
-	uploadbufferprops.resdesc.Width = uploadbuffersize;
-	uploadbufferprops.resheapprop.Type = D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD;
-	uploadbufferprops.resinitialstate = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_GENERIC_READ;
-	m_uploadbuffer.Init(creationdevice, uploadbufferprops, ResourceCreationMode::COMMITED);
-
 	if (inituav)
 	{
 		D3D12_DESCRIPTOR_HEAP_DESC uavheapdesc = {};
@@ -129,9 +124,20 @@ void DX12ReservedResourceMemoryManager::UploadData(ComPtr< ID3D12Device> creatio
 	{
 		UINT subresidx = m_subrestoupload[i];
 		//create un upload buffer
+
 		UINT64 uploadbuffersize = GetRequiredIntermediateSize(m_restomanage->GetResource().Get(), subresidx, 1);
 		DX12Buffer* uploadbuffer = CreateUploadBuffer(creationdevice, uploadbuffersize);
-		UpdateSubresources(uploadcmdlist.GetcmdList(), m_restomanage->GetResource().Get(),uploadbuffer->GetResource().Get(), 0, subresidx, 1, &m_reservedresourcesubresdata[subresidx]);
+		if (subresdatastreamable)
+		{
+			D3D12_SUBRESOURCE_DATA subresdata;
+			m_restomanage->GetStfReader()->GetSubResourceData(subresidx,subresdata);
+			UpdateSubresources(uploadcmdlist.GetcmdList(), m_restomanage->GetResource().Get(), uploadbuffer->GetResource().Get(), 0, subresidx, 1, &subresdata);
+		}
+		else
+		{
+			UpdateSubresources(uploadcmdlist.GetcmdList(), m_restomanage->GetResource().Get(), uploadbuffer->GetResource().Get(), 0, subresidx, 1, &m_reservedresourcesubresdata[subresidx]);
+		}
+		
 	}
 	m_subrestoupload.clear();
 	if (m_restomanage->GetCurrentResourceState() != D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
@@ -224,7 +230,6 @@ void DX12ReservedResourceMemoryManager::InitHeap(size_t indexinheapvector, ComPt
 	heapdesc.Properties.CreationNodeMask = 0;
 	heapdesc.Properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
 	heapdesc.Properties.Type = D3D12_HEAP_TYPE_DEFAULT;
-
 	DXASSERT(creationdevice->CreateHeap(&heapdesc, IID_PPV_ARGS(m_heaps[indexinheapvector].heap.GetAddressOf())))
 		DXASSERT(m_heaps[indexinheapvector].heap->SetName(L"ReservedResourceheap"))
 		m_heaps[indexinheapvector].usagecount++;

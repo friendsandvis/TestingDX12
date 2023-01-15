@@ -5,7 +5,7 @@
 #include"DXTexManager.h"
 #include"SamplerFeedbackManager.h"
 #include"DXCamera.h"
-
+#define USESTFTEXTURE
 
 class DX12SamplerfeedbackApplication :public DX12ApplicationManagerBase
 {
