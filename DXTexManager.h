@@ -1,8 +1,9 @@
 #pragma once
 #include"DXTextureUtils.h"
 #include"DX12Buffer.h"
+#include<memory>
 
-
+using namespace std;
 class DX12Commandlist;
 class StreamableTextureFileReader;
 
@@ -40,7 +41,7 @@ public:
 	DXTexManager();
 	~DXTexManager();
 	static bool LoadTexture(const wchar_t* imagefile, DXImageData& outloadedImagedata);
-	static StreamableTextureFileReader* LoadSTFTexture(const char* imagefile);
+	static shared_ptr<StreamableTextureFileReader> LoadSTFTexture(const char* imagefile);
 
 private:
 

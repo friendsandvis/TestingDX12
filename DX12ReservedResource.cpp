@@ -62,11 +62,6 @@ DX12ReservedResource::DX12ReservedResource()
 {}
 DX12ReservedResource::~DX12ReservedResource()
 {
-	//if stfreader if not null must be init with stfreader so delete it(stfreader ptr passed,it's memory is  managed by resource itself)
-	if (m_stfreader)
-	{
-		delete m_stfreader;
-	}
 }
 
 void DX12ReservedResource::InitResourceCreationProperties(DX12ResourceCreationProperties& rescreationprops)
@@ -76,7 +71,7 @@ void DX12ReservedResource::InitResourceCreationProperties(DX12ResourceCreationPr
 	//some special properties for reserved resource
 	rescreationprops.resdesc.Layout = D3D12_TEXTURE_LAYOUT_64KB_UNDEFINED_SWIZZLE;
 }
-void DX12ReservedResource::InitStreamable(ComPtr< ID3D12Device> creationdevice, StreamableTextureFileReader* stfreadertoinitwith, bool forceallowunorderedaccess)
+void DX12ReservedResource::InitStreamable(ComPtr< ID3D12Device> creationdevice, shared_ptr<StreamableTextureFileReader> stfreadertoinitwith, bool forceallowunorderedaccess)
 {
 	m_stfreader = stfreadertoinitwith;
 	m_rescreationmode = ResourceCreationMode::RESERVED;

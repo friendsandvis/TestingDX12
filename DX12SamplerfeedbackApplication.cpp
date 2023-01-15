@@ -19,7 +19,7 @@ void DX12SamplerfeedbackApplication::InitExtras()
 	{
 		//fetch the details of the image to use for texture.
 #ifdef USESTFTEXTURE
-		StreamableTextureFileReader* stfreader=DXTexManager::LoadSTFTexture("textures/stf/texlargemiped.stf");
+		shared_ptr<StreamableTextureFileReader> stfreader=DXTexManager::LoadSTFTexture("textures/stf/texlargemiped.stf");
 		assert(stfreader != nullptr);
 		m_sfsreservedresourcetex.InitStreamable(m_creationdevice, stfreader,true);
 #else

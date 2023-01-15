@@ -20,9 +20,9 @@ bool DXTexManager::LoadTexture(const wchar_t* imagefile, DXImageData& outloadedI
 
 	return(res == S_OK);
 }
-StreamableTextureFileReader* DXTexManager::LoadSTFTexture(const char* imagefile)
+shared_ptr<StreamableTextureFileReader> DXTexManager::LoadSTFTexture(const char* imagefile)
 {
-	StreamableTextureFileReader* outstfreader = new StreamableTextureFileReader();
+	shared_ptr<StreamableTextureFileReader> outstfreader = make_shared<StreamableTextureFileReader>();
 	int res = outstfreader->Init(imagefile);
 	if (res == 1)
 	{
