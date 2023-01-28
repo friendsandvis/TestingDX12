@@ -13,7 +13,13 @@
 #include<iostream>
 #include"StreamableTextureFileCreator.h"
 #include"StreamableTextureFileReader.h"
+#ifdef _DEBUG
 #define ENABLEDEBUGLAYER true
+#else
+#define ENABLEDEBUGLAYER false
+#endif // _DEBUG
+
+
 
 typedef HRESULT(__stdcall* fPtr)(const IID&, void**);
 

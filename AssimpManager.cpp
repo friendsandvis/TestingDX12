@@ -1,6 +1,6 @@
 #include"AssimpManager.h"
 #include<assert.h>
-#pragma comment(lib,"assimp-vc140-mt.lib")
+#pragma comment(lib,"assimp-vc143-mt.lib")
 
 
 

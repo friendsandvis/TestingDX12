@@ -1,7 +1,8 @@
 #include"ModelTestApplication.h"
+//only 1 model define to be active at a time
 //#define USECONFERENCEROOMCOMPOUNDMODEL
-
-
+//#define USESPHONZAMODEL
+#define USECUBEMODEL
 
 
 ModelTestApplication::ModelTestApplication()
@@ -69,12 +70,22 @@ void ModelTestApplication::InitExtras()
 	float scalefactor = 0.01f;
 	XMMATRIX scalemat = XMMatrixScalingFromVector(XMVectorSet(scalefactor, scalefactor, scalefactor, 1.0f));
 	BasicModelManager::LoadModel(m_creationdevice, "models/conference.obj", m_loadedcompoundmodel, VERTEXVERSION2);
+	m_loadedcompoundmodel.Extratransform(scalemat);
+#endif // USECONFERENCEROOMCOMPOUNDMODEL
+	
+	
+#if defined(USESPHONZAMODEL)
+	float scalefactor = 1.0f;
+	XMMATRIX scalemat = XMMatrixScalingFromVector(XMVectorSet(scalefactor, scalefactor, scalefactor, 1.0f));
+	BasicModelManager::LoadModel(m_creationdevice, "models/Sponza.gltf", m_loadedcompoundmodel, VERTEXVERSION2);
+#endif//defined(USESPHONZAMODEL)
+#ifdef USECUBEMODEL
+	BasicModelManager::LoadModel(m_creationdevice, "models/cubes2.dae", m_loadedcompoundmodel, VERTEXVERSION2);
+#endif // USECUBEMODEL
+
 
 	
-	m_loadedcompoundmodel.Extratransform(scalemat);
-#else
-	BasicModelManager::LoadModel(m_creationdevice, "models/cubes2.dae", m_loadedcompoundmodel, VERTEXVERSION2);
-#endif // USECONFERENCEROOMCOMPOUNDMODEL
+
 
 	
 	BasicModelManager::InitTriangleModel(m_creationdevice, m_trianglemodel);
@@ -137,9 +148,8 @@ void ModelTestApplication::InitPSO()
 
 		m_rootsignature.Init(m_creationdevice, D3D_ROOT_SIGNATURE_VERSION_1);
 		psoinitdata.psodesc.graphicspsodesc.pRootSignature = m_rootsignature.GetRootSignature();
+		//psoinitdata.psodesc.graphicspsodesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
 	}
-	
-	
 	m_pso.Init(m_creationdevice, psoinitdata);
 }
 
