@@ -82,6 +82,36 @@ void AssimpManager::ProcessMesh(aiMesh* amesh, aiMatrix4x4 finaltrasform)
 			aprocessedmesh.indicies.push_back(face.mIndices[i]);
 		}
 	}
+	if (amesh->mMaterialIndex > 0)
+	{
+		const aiMaterial* const mat=m_scene->mMaterials[amesh->mMaterialIndex];
+		
+		
+		//retrive diffuse textures.
+		unsigned diffusetexcount = mat->GetTextureCount(aiTextureType_DIFFUSE);
+		for (unsigned i = 0; i < diffusetexcount; i++)
+		{
+			aiString texname;
+			mat->GetTexture(aiTextureType_DIFFUSE, i, &texname);
+			aprocessedmesh.material.AddDiffuseTexture(texname.C_Str());
+		}
+		//retrive ambient textures
+		unsigned ambienttexcount = mat->GetTextureCount(aiTextureType_AMBIENT);
+		for (unsigned i = 0; i < ambienttexcount; i++)
+		{
+			aiString texname;
+			mat->GetTexture(aiTextureType_AMBIENT, i, &texname);
+			aprocessedmesh.material.AddAmbientTexture(texname.C_Str());
+		}
+		//retrive normal map textures
+		unsigned normaltexcount = mat->GetTextureCount(aiTextureType_NORMALS);
+		for (unsigned i = 0; i < normaltexcount; i++)
+		{
+			aiString texname;
+			mat->GetTexture(aiTextureType_NORMALS, i, &texname);
+			aprocessedmesh.material.AddNormalTexture(texname.C_Str());
+		}
+	}
 
 }
 

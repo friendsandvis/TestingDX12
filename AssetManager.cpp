@@ -194,6 +194,7 @@ void Model::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimp
 	vector<VertexBase*> verticies;
 	AssimpLoadedMesh& meshtoload = assimpModel.m_meshes[meshindexinassimpmodeltoload];
 	m_transform=AssimpManager::ToXMMatrix(meshtoload.transform);
+	m_material = meshtoload.material;
 	
 	
 	
@@ -340,7 +341,7 @@ CompoundModel::~CompoundModel()
 }
 void CompoundModel::Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix, UINT mvpmatrixrootparamindex)
 {
-	for (size_t i = 0; i < m_models.size(); i++)
+	for (size_t i = 0; i < 1; i++)
 	{
 		m_models[i]->Draw(renderingcmdlist,vpmatrix,mvpmatrixrootparamindex);
 	}
