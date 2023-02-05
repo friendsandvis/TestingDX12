@@ -1,7 +1,6 @@
 #include"RayTracingTestApplication_AdvancedAOTest.h"
 #define OFFSETGBUFFERSRVTEXTURESINRTGLOBALHEAP 2
-//simple one does not uses featching gbuffer process
-//#define USESIMPLECLOSESTHITSHADER
+#define NUMSHADERRECORDS 2
 #define USECONFERENCEROOMCOMPOUNDMODEL
 
 
@@ -287,8 +286,7 @@ void RayTracingTestApplication_AdvancedAOTest::InitExtras()
 	{
 		DX12ResourceCreationProperties rgsrecordsprops = {};
 		DX12Buffer::InitResourceCreationProperties(rgsrecordsprops);
-		//rgs records will contain only 1 record for now.
-		rgsrecordsprops.resdesc.Width = sizeof(BasicShaderRecord) * 1;
+		rgsrecordsprops.resdesc.Width = sizeof(BasicShaderRecord) * NUMSHADERRECORDS;
 		rgsrecordsprops.resheapprop.Type = D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD;
 		m_rgsrecords.Init(m_creationdevice, rgsrecordsprops, ResourceCreationMode::COMMITED);
 		DX12ResourceCreationProperties missshaderrecordsprops = rgsrecordsprops;
@@ -851,18 +849,18 @@ void RayTracingTestApplication_AdvancedAOTest::InitRTPSO()
 	m_simplertpso.AddShader(simplemiss, L"missmain", L"SimpleMISS", RTPSOSHADERTYPE::MISS);
 	
 		DX12Shader* simplech = new DX12Shader();
-#ifdef USESIMPLECLOSESTHITSHADER
 		simplech->Init(L"shaders/raytracing/RT/simpleclosesthit.hlsl", DX12Shader::ShaderType::RT);
-#else
-		simplech->Init(L"shaders/raytracing/RT/closesthit_fetchgbuffer.hlsl", DX12Shader::ShaderType::RT);
-#endif // USESIMPLECLOSESTHITSHADER
-
-		
 		m_simplertpso.AddShader(simplech, L"closesthitmain", L"SimpleCH", RTPSOSHADERTYPE::CLOSESTHIT);
+		DX12Shader* chfetchgbuffer = new DX12Shader();
+		chfetchgbuffer->Init(L"shaders/raytracing/RT/closesthit_fetchgbuffer.hlsl", DX12Shader::ShaderType::RT);
+		m_simplertpso.AddShader(chfetchgbuffer, L"closesthitmain", L"CHFETCHGBUFFER", RTPSOSHADERTYPE::CLOSESTHIT);
+
 		D3D12_HIT_GROUP_DESC simplehitgroupdesc = {};
 		simplehitgroupdesc.Type = D3D12_HIT_GROUP_TYPE::D3D12_HIT_GROUP_TYPE_TRIANGLES;
 		simplehitgroupdesc.HitGroupExport = L"SimpleHIT";
-		simplehitgroupdesc.ClosestHitShaderImport = L"SimpleCH";
+		simplehitgroupdesc.ClosestHitShaderImport = L"CHFETCHGBUFFER";
+
+		
 
 		m_simplertpso.AddHitGroup(simplehitgroupdesc);
 	
