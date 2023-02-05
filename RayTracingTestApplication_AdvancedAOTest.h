@@ -13,22 +13,22 @@
 #include"DX12RaytracingCommandlist.h"
 #define NUMGBUFFERTEXTURES 3
 using namespace DirectX;
+//used to pass constant data to shader
 
 /*
 * in this raytracing app we render a model by raster and rt(full camera movement allowed in rt)
 */
-class RayTracingApplicationAdvanced :public DX12ApplicationManagerBase
+class RayTracingTestApplication_AdvancedAOTest :public DX12ApplicationManagerBase
 {
 public:
-	RayTracingApplicationAdvanced();
-	~RayTracingApplicationAdvanced();
+	RayTracingTestApplication_AdvancedAOTest();
+	~RayTracingTestApplication_AdvancedAOTest();
 	void PreRenderUpdate()override;
 	void Render()override;
 	void ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)override;
 
 protected:
 	void InitExtras()override;
-	//used to pass constant data to shader
 	struct MatrixPair
 	{
 		XMMATRIX m1;

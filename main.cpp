@@ -10,6 +10,7 @@
 #include"RayTracingTestApplication.h"
 #include"RayTracingTestApplication2.h"
 #include"RayTracingTestApplication_Advanced.h"
+#include"RayTracingTestApplication_AdvancedAOTest.h"
 #include<iostream>
 #include"StreamableTextureFileCreator.h"
 #include"StreamableTextureFileReader.h"
@@ -34,6 +35,7 @@ int main()
 	std::cout << "5.SamplerFeedbackApplication.\n";
 	std::cout << "6.run stf creator.\n";
 	std::cout << "7.run stf reader.\n";
+	std::cout << "8.RaytracingApplicationAdvancedAOTest.\n";
 	std::cout << "Enter application number  to run:\n";
 	int appnumber;
 	std::cin >> appnumber;
@@ -62,6 +64,8 @@ int main()
 		int res=stfreader.Init("textures/stf/texlargemiped.stf");
 		stfreader.PrepSubResPixData();
 	}
+	case 8:
+		appmanager = new RayTracingTestApplication_AdvancedAOTest(); break;
 	default:
 		std::cout << "Invalid App number choosen";
 		return 1;

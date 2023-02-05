@@ -189,6 +189,7 @@
     <ClCompile Include="RayTracingTestApplication.cpp" />
     <ClCompile Include="RayTracingTestApplication2.cpp" />
     <ClCompile Include="RayTracingTestApplication_Advanced.cpp" />
+    <ClCompile Include="RayTracingTestApplication_AdvancedAOTest.cpp" />
     <ClCompile Include="RaytracingUtils.cpp" />
     <ClCompile Include="RTPSO.cpp" />
     <ClCompile Include="SamplerFeedbackManager.cpp" />
@@ -235,6 +236,7 @@
     <ClInclude Include="RayTracingTestApplication.h" />
     <ClInclude Include="RayTracingTestApplication2.h" />
     <ClInclude Include="RayTracingTestApplication_Advanced.h" />
+    <ClInclude Include="RayTracingTestApplication_AdvancedAOTest.h" />
     <ClInclude Include="RaytracingUtils.h" />
     <ClInclude Include="Renderable.h" />
     <ClInclude Include="RTPSO.h" />

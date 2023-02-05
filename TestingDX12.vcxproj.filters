@@ -159,6 +159,9 @@
     <ClCompile Include="StreamableTextureFileCommon.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="RayTracingTestApplication_AdvancedAOTest.cpp">
+      <Filter>Applications\rt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="windmaker.h">
@@ -295,6 +298,9 @@
     </ClInclude>
     <ClInclude Include="StreamableTextureFileCommon.h">
       <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="RayTracingTestApplication_AdvancedAOTest.h">
+      <Filter>Applications\rt</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
