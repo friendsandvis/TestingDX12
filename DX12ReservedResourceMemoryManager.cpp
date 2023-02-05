@@ -337,7 +337,7 @@ DX12Buffer* DX12ReservedResourceMemoryManager::CreateUploadBuffer(ComPtr< ID3D12
 	DX12Buffer::InitResourceCreationProperties(uploadbufferprops);
 	uploadbufferprops.resdesc.Width = size;
 	uploadbufferprops.resheapprop.Type = D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD;
-	uploadbufferprops.resinitialstate = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_GENERIC_READ;
+	uploadbufferprops.resinitialstate = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COMMON;
 	anuplodbuffer->Init(creationdevice, uploadbufferprops, ResourceCreationMode::COMMITED);
 	m_uploadbuffers.push_back(anuplodbuffer);
 	return anuplodbuffer;

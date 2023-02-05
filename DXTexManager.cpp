@@ -48,7 +48,7 @@ bool DXTexture::Init(ComPtr< ID3D12Device> creationdevice)
 
 		DX12ResourceCreationProperties uploadbuffproperties;
 		uploadbuffproperties.resheapflags = D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE;
-		uploadbuffproperties.resinitialstate = D3D12_RESOURCE_STATE_GENERIC_READ;
+		uploadbuffproperties.resinitialstate = D3D12_RESOURCE_STATE_COMMON;
 		uploadbuffproperties.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
 		uploadbuffproperties.resheapprop.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
 		uploadbuffproperties.resheapprop.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;

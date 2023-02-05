@@ -98,7 +98,7 @@ void Model::InitVertexBuffer(ComPtr< ID3D12Device> creationdevice, vector<Vertex
 	BuildVertexRawData();
 	DX12ResourceCreationProperties vbproperties;
 	vbproperties.resheapflags = D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE;
-	vbproperties.resinitialstate = D3D12_RESOURCE_STATE_GENERIC_READ;
+	vbproperties.resinitialstate = D3D12_RESOURCE_STATE_COMMON;
 	vbproperties.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
 	vbproperties.resheapprop.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
 	vbproperties.resheapprop.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
@@ -146,7 +146,7 @@ void Model::InitIndexBuffer(ComPtr< ID3D12Device> creationdevice,vector<unsigned
 	m_indicies = indicies;
 	DX12ResourceCreationProperties ibproperties;
 	ibproperties.resheapflags = D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE;
-	ibproperties.resinitialstate = D3D12_RESOURCE_STATE_GENERIC_READ;
+	ibproperties.resinitialstate = D3D12_RESOURCE_STATE_COMMON;
 	ibproperties.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
 	ibproperties.resheapprop.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
 	ibproperties.resheapprop.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
