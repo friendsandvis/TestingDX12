@@ -855,14 +855,17 @@ void RayTracingTestApplication_AdvancedAOTest::InitRTPSO()
 		chfetchgbuffer->Init(L"shaders/raytracing/RT/closesthit_fetchgbuffer.hlsl", DX12Shader::ShaderType::RT);
 		m_simplertpso.AddShader(chfetchgbuffer, L"closesthitmain", L"CHFETCHGBUFFER", RTPSOSHADERTYPE::CLOSESTHIT);
 
+		D3D12_HIT_GROUP_DESC gbufferfetchhitgroupdesc = {};
+		gbufferfetchhitgroupdesc.Type = D3D12_HIT_GROUP_TYPE::D3D12_HIT_GROUP_TYPE_TRIANGLES;
+		gbufferfetchhitgroupdesc.HitGroupExport = L"HITFETCHGBUFFER";
+		gbufferfetchhitgroupdesc.ClosestHitShaderImport = L"CHFETCHGBUFFER";
+		m_simplertpso.AddHitGroup(gbufferfetchhitgroupdesc);
 		D3D12_HIT_GROUP_DESC simplehitgroupdesc = {};
 		simplehitgroupdesc.Type = D3D12_HIT_GROUP_TYPE::D3D12_HIT_GROUP_TYPE_TRIANGLES;
-		simplehitgroupdesc.HitGroupExport = L"SimpleHIT";
-		simplehitgroupdesc.ClosestHitShaderImport = L"CHFETCHGBUFFER";
-
-		
-
+		simplehitgroupdesc.HitGroupExport = L"SIMPLEHIT";
+		simplehitgroupdesc.ClosestHitShaderImport = L"SimpleCH";
 		m_simplertpso.AddHitGroup(simplehitgroupdesc);
+
 	
 	m_simplertpso.SetPipelineConfig();
 	{
@@ -961,17 +964,20 @@ void RayTracingTestApplication_AdvancedAOTest::InitRTPSO()
 		//pass hit group records to buffer
 		{
 			
-			BasicShaderRecord record = {};
-			void* shaderidentifier = m_simplertpso.GetIdentifier(L"SimpleHIT",true);
-			assert(shaderidentifier != nullptr);
-			record.SetShaderidentifier(shaderidentifier);
+			BasicShaderRecord records[2] = {};
+			void* shaderidentifiersimplehitgroup = m_simplertpso.GetIdentifier(L"SIMPLEHIT",true);
+			assert(shaderidentifiersimplehitgroup != nullptr);
+			records[1].SetShaderidentifier(shaderidentifiersimplehitgroup);
+			void* shaderidentifierfetchgbufferhitgroup = m_simplertpso.GetIdentifier(L"HITFETCHGBUFFER", true);
+			assert(shaderidentifierfetchgbufferhitgroup != nullptr);
+			records[0].SetShaderidentifier(shaderidentifierfetchgbufferhitgroup);
 			BufferMapParams mapparams = {};
 			mapparams.range.Begin = 0;
 			mapparams.range.End = 0;
 			void* mappedbuffer = m_hitrecords.Map(mapparams);
 			assert(mappedbuffer != nullptr);
 			//copy over hit group records
-			memcpy(mappedbuffer, &record, sizeof(BasicShaderRecord));
+			memcpy(mappedbuffer, &records, sizeof(records) / sizeof(records[0]));
 			mapparams.range.End = m_hitrecords.GetSize();
 			m_hitrecords.UnMap(mapparams);
 		}
