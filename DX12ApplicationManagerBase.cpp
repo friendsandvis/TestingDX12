@@ -145,7 +145,7 @@ void DX12ApplicationManagerBase::ClearBackBuffer(unsigned backbufferindex, DX12C
 	
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(backbufferindex);
 	D3D12_RESOURCE_BARRIER barrier=m_swapchain.TransitionBackBuffer(backbufferindex, D3D12_RESOURCE_STATE_RENDER_TARGET);
-	if(barrier.Transition.StateAfter != barrier.Transition.StateBefore);
+	if(DXUtils::IsBarrierSafeToExecute(barrier));
 	{
 		cmdlisttouse->ResourceBarrier(1, &barrier);
 	}
