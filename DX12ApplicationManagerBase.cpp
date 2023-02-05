@@ -140,4 +140,17 @@ void DX12ApplicationManagerBase::BasicRender()
 	m_primarycmdlist = m_primarycmdlists[m_cmdlistidxinuse];
 	m_uploadcommandlist = m_uploadcommandlists[m_cmdlistidxinuse];
 }
+void DX12ApplicationManagerBase::ClearBackBuffer(unsigned backbufferindex, DX12Commandlist& cmdlisttouse,float clearvalue[4])
+{
+	
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(backbufferindex);
+	D3D12_RESOURCE_BARRIER barrier=m_swapchain.TransitionBackBuffer(backbufferindex, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	if(barrier.Transition.StateAfter != barrier.Transition.StateBefore);
+	{
+		cmdlisttouse->ResourceBarrier(1, &barrier);
+	}
+	cmdlisttouse->ClearRenderTargetView(rtvhandle, clearvalue, 0, nullptr);
+	barrier = m_swapchain.TransitionBackBuffer(backbufferindex, D3D12_RESOURCE_STATE_COMMON);
+	cmdlisttouse->ResourceBarrier(1, &barrier);
+}
 	

@@ -34,6 +34,7 @@ protected:
 	//a camera object representing the main camera for a basic application
 	DXCamera m_maincamera;
 	 virtual void InitExtras() {}
+	 void ClearBackBuffer(unsigned backbufferindex, DX12Commandlist& cmdlisttouse, float clearvalue[4]);
 	
 
 	ComPtr< ID3D12Device> m_creationdevice;
