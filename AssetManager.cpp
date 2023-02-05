@@ -341,7 +341,7 @@ CompoundModel::~CompoundModel()
 }
 void CompoundModel::Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix, UINT mvpmatrixrootparamindex)
 {
-	for (size_t i = 0; i < 1; i++)
+	for (size_t i = 0; i < m_models.size(); i++)
 	{
 		m_models[i]->Draw(renderingcmdlist,vpmatrix,mvpmatrixrootparamindex);
 	}
