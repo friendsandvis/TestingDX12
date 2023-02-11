@@ -5,7 +5,8 @@
 DX12ApplicationManagerBase::DX12ApplicationManagerBase()
 	:m_cmdlistidxinuse(0),
 	m_primarycmdlist(m_primarycmdlists[0]),
-	m_uploadcommandlist(m_uploadcommandlists[0])
+	m_uploadcommandlist(m_uploadcommandlists[0]),
+	m_prepresentcommandlist(m_prepresentcommandlists[0])
 {
 }
 
@@ -103,11 +104,14 @@ void DX12ApplicationManagerBase::InitBase(ComPtr< ID3D12Device> creationdevice)
 		
 		m_uploadcommandlists[i].Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
 		m_uploadcommandlists[i].SetName(L"uploadcmd");
-		m_uploadcommandlist = m_uploadcommandlists[0];
+
+		m_prepresentcommandlists[i].Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
+		m_prepresentcommandlists[i].SetName(L"prepresentcmd");
 		
 	}
 	m_primarycmdlist = m_primarycmdlists[0];
 	m_uploadcommandlist = m_uploadcommandlists[0];
+	m_prepresentcommandlist = m_prepresentcommandlists[0];
 	m_cmdlistidxinuse = 0;
 
 	//dsv heap
@@ -123,9 +127,19 @@ void DX12ApplicationManagerBase::InitBase(ComPtr< ID3D12Device> creationdevice)
 
 void DX12ApplicationManagerBase::BasicRender()
 {
+	m_prepresentcommandlist.Reset();
+	UINT currentbackbufferidx=m_swapchain.GetCurrentbackbufferIndex();
+	D3D12_RESOURCE_BARRIER barrier=m_swapchain.TransitionBackBuffer(currentbackbufferidx, D3D12_RESOURCE_STATE_COMMON);
+	if (DXUtils::IsBarrierSafeToExecute(barrier))
+	{
+		m_prepresentcommandlist->ResourceBarrier(1,&barrier );
+	}
+	m_prepresentcommandlist.Close();
+	
 	std::vector<ID3D12CommandList*> commandliststoexecute;
 	commandliststoexecute.push_back(m_uploadcommandlist.GetcmdList());
 	commandliststoexecute.push_back(m_primarycmdlist.GetcmdList());
+	commandliststoexecute.push_back(m_prepresentcommandlist.GetcmdList());
 	m_mainqueue.GetQueue()->ExecuteCommandLists(commandliststoexecute.size(), commandliststoexecute.data());
 
 	UINT64 fencevalue = m_syncunitprime.GetCurrentValue();
@@ -145,12 +159,13 @@ void DX12ApplicationManagerBase::ClearBackBuffer(unsigned backbufferindex, DX12C
 	
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(backbufferindex);
 	D3D12_RESOURCE_BARRIER barrier=m_swapchain.TransitionBackBuffer(backbufferindex, D3D12_RESOURCE_STATE_RENDER_TARGET);
-	if(DXUtils::IsBarrierSafeToExecute(barrier));
+	bool shouldexecutebarriertransitiontoRT = DXUtils::IsBarrierSafeToExecute(barrier);
+	if(shouldexecutebarriertransitiontoRT)
 	{
 		cmdlisttouse->ResourceBarrier(1, &barrier);
 	}
+	//issue clear rtv call
 	cmdlisttouse->ClearRenderTargetView(rtvhandle, clearvalue, 0, nullptr);
-	barrier = m_swapchain.TransitionBackBuffer(backbufferindex, D3D12_RESOURCE_STATE_COMMON);
-	cmdlisttouse->ResourceBarrier(1, &barrier);
+	
 }
 	

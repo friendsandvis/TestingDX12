@@ -27,7 +27,13 @@ void ModelTestApplication::Render()
 {
 	m_primarycmdlist.Reset();
 	//set rtv
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
+	UINT currentbackbufferidx=m_swapchain.GetCurrentbackbufferIndex();
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(currentbackbufferidx);
+	D3D12_RESOURCE_BARRIER barrier=m_swapchain.TransitionBackBuffer(currentbackbufferidx, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	if (DXUtils::IsBarrierSafeToExecute(barrier))
+	{
+		m_primarycmdlist->ResourceBarrier(1, &barrier);
+	}
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
 	m_primarycmdlist->SetPipelineState(m_pso.GetPSO());
 	m_primarycmdlist->SetGraphicsRootSignature(m_rootsignature.GetRootSignature());
@@ -38,7 +44,7 @@ void ModelTestApplication::Render()
 	m_primarycmdlist->SetGraphicsRoot32BitConstants(0,sizeof(XMMATRIX)/4, &mvp, 0);
 	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE,&dsvhandle);
 	float clearvalue[4] = {1.0f,1.0f,1.0f,1.0f};
-	ClearBackBuffer(m_swapchain.GetCurrentbackbufferIndex(),m_primarycmdlist, clearvalue);
+	ClearBackBuffer(currentbackbufferidx,m_primarycmdlist, clearvalue);
 	m_primarycmdlist->ClearDepthStencilView(dsvhandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	{
 		m_primarycmdlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
