@@ -842,7 +842,7 @@ void RayTracingTestApplication_AdvancedAOTest::InitRTPSO()
 	simplertshaderconfig.MaxAttributeSizeInBytes = D3D12_RAYTRACING_MAX_ATTRIBUTE_SIZE_IN_BYTES;
 	m_simplertpso.AddShaderConfig(simplertshaderconfig, "simpleshaderconfig");
 	DX12Shader* rgs = new DX12Shader();
-	rgs->Init(L"shaders/raytracing/RT/simplergs3_Advance.hlsl", DX12Shader::ShaderType::RT);
+	rgs->Init(L"shaders/raytracing/RT/simplergs3_Advance_AOTest.hlsl", DX12Shader::ShaderType::RT);
 	m_simplertpso.AddShader(rgs, L"rgsmain", L"SimpleRGS",RTPSOSHADERTYPE::RAYGEN);
 	DX12Shader* simplemiss = new DX12Shader();
 	simplemiss->Init(L"shaders/raytracing/RT/simplemiss.hlsl", DX12Shader::ShaderType::RT);
@@ -965,19 +965,23 @@ void RayTracingTestApplication_AdvancedAOTest::InitRTPSO()
 		{
 			
 			BasicShaderRecord records[2] = {};
+			
 			void* shaderidentifiersimplehitgroup = m_simplertpso.GetIdentifier(L"SIMPLEHIT",true);
 			assert(shaderidentifiersimplehitgroup != nullptr);
 			records[1].SetShaderidentifier(shaderidentifiersimplehitgroup);
 			void* shaderidentifierfetchgbufferhitgroup = m_simplertpso.GetIdentifier(L"HITFETCHGBUFFER", true);
 			assert(shaderidentifierfetchgbufferhitgroup != nullptr);
 			records[0].SetShaderidentifier(shaderidentifierfetchgbufferhitgroup);
+			//records[1].SetShaderidentifier(shaderidentifierfetchgbufferhitgroup);
 			BufferMapParams mapparams = {};
 			mapparams.range.Begin = 0;
 			mapparams.range.End = 0;
 			void* mappedbuffer = m_hitrecords.Map(mapparams);
 			assert(mappedbuffer != nullptr);
 			//copy over hit group records
-			memcpy(mappedbuffer, &records, sizeof(records) / sizeof(records[0]));
+			unsigned memsizetocpy = sizeof(records) / sizeof(records[0]);
+			memsizetocpy *= sizeof(BasicShaderRecord);
+			memcpy(mappedbuffer, &records,memsizetocpy);
 			mapparams.range.End = m_hitrecords.GetSize();
 			m_hitrecords.UnMap(mapparams);
 		}
