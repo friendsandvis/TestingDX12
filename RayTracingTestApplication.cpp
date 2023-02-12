@@ -171,6 +171,11 @@ void RayTracingApplication::RenderRT()
 		m_rtcommandlist->SetComputeRoot32BitConstants(1, (sizeof(XMMATRIX) / 4),&invprojmat, 0);
 		m_rtcommandlist->SetPipelineState1(m_simplertpso.GetPipelineStateObject());
 		float  clearcolour[4] = {1.0f,1.0f,1.0f,1.0f};
+		if (m_rtouput.GetCurrentResourceState() != D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
+		{
+			D3D12_RESOURCE_BARRIER barrier = m_rtouput.TransitionResState(D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+			m_rtcommandlist->ResourceBarrier(1, &barrier);
+		}
 		m_rtcommandlist->ClearUnorderedAccessViewFloat(m_rtresheap_global.GetGPUHandlefromstart(),m_rtresheap_globalupload.GetCPUHandlefromstart(),m_rtouput.GetResource().Get(),clearcolour,0,nullptr);
 		m_rtcommandlist->DispatchRays(&dispatchraysdesc);
 		m_rtcommandlist.Close();
