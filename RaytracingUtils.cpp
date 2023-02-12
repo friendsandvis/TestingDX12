@@ -1,7 +1,8 @@
 #include"RaytracingUtils.h"
 
 ModelAccelerationStructureBLAS::ModelAccelerationStructureBLAS()
-	:m_buildcmdissued(false)
+	:m_buildcmdissued(false),
+	m_modelused(nullptr)
 {
 
 }
@@ -18,6 +19,7 @@ CompoundModelAccelerationStructureBLAS::~CompoundModelAccelerationStructureBLAS(
 }
 void ModelAccelerationStructureBLAS::Init(ComPtr< ID3D12Device> creationdevice, Model& modeltoprocess)
 {
+	m_modelused = &modeltoprocess;
 	//create & init model's transform buffer
 	{
 		DX12ResourceCreationProperties blastransformprops;
@@ -96,6 +98,10 @@ void ModelAccelerationStructureBLAS::IssueBuild(ComPtr<ID3D12GraphicsCommandList
 	{
 		D3D12_RESOURCE_BARRIER barrier = m_transformbuffer.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 		buildcmdlist->ResourceBarrier(1, &barrier);
+	}
+	if (m_modelused != nullptr)
+	{
+		m_modelused->TransitionVextexAndIndexBufferState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, buildcmdlist);
 	}
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC builddesc = {};
 	builddesc.DestAccelerationStructureData = m_accelerationstructure.GetResource()->GetGPUVirtualAddress();

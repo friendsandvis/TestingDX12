@@ -28,6 +28,7 @@ private:
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS m_asinputs;
 	AccelerationStructureResource m_accelerationstucturescratch,m_accelerationstructure;
 	DX12Buffer m_transformbuffer;
+	Model* m_modelused;
 
 };
 class CompoundModelAccelerationStructureBLAS

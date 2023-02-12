@@ -326,6 +326,21 @@ void Model::UploadModelDatatoGPUBuffers(DX12Commandlist& copycmdlist)
 	copycmdlist->ResourceBarrier(1, &barrier);
 
 }
+void Model::TransitionVextexAndIndexBufferState(D3D12_RESOURCE_STATES state, ComPtr<ID3D12GraphicsCommandList4>cmdlist)
+{
+	//transition vertexbuffer to state
+	D3D12_RESOURCE_BARRIER barrier=m_vertexbuffer.TransitionResState(state);
+	if (DXUtils::IsBarrierSafeToExecute(barrier))
+	{
+		cmdlist->ResourceBarrier(1, &barrier);
+	}
+	//transition indexbuffer to state
+	barrier = m_indexbuffer.TransitionResState(state);
+	if (DXUtils::IsBarrierSafeToExecute(barrier))
+	{
+		cmdlist->ResourceBarrier(1, &barrier);
+	}
+}
 
 CompoundModel::CompoundModel(ModelDataUploadMode uploadmode)
 	:m_datauploadmode(uploadmode)

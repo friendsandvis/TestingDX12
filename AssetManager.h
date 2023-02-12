@@ -50,6 +50,7 @@ public:
 	inline ModelDataUploadMode GetUploadMode() { return m_uploadmode; }
 	inline VertexVersion GetVertexVersionUsed() { return m_vertexversion; }
 	inline void SetVertexVersionUsed(VertexVersion vvused) { m_vertexversion=vvused; }
+	void TransitionVextexAndIndexBufferState(D3D12_RESOURCE_STATES state, ComPtr<ID3D12GraphicsCommandList4>cmdlist);
 
 private:
 	XMMATRIX m_transform;
