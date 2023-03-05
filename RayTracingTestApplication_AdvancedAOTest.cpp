@@ -1,8 +1,13 @@
 #include"RayTracingTestApplication_AdvancedAOTest.h"
 #define OFFSETGBUFFERSRVTEXTURESINRTGLOBALHEAP 2
-#define NUMSHADERRECORDS 2
-#define USECONFERENCEROOMCOMPOUNDMODEL
 
+#define USECONFERENCEROOMCOMPOUNDMODEL
+/*
+* hitrecord0:fetchgbuffer
+* hitrecord1:simplehit
+* hitrecord2:aohit
+*/
+#define NUMSHADERRECORDS 3
 
 
 RayTracingTestApplication_AdvancedAOTest::RayTracingTestApplication_AdvancedAOTest()
@@ -855,18 +860,32 @@ void RayTracingTestApplication_AdvancedAOTest::InitRTPSO()
 		chfetchgbuffer->Init(L"shaders/raytracing/RT/closesthit_fetchgbuffer.hlsl", DX12Shader::ShaderType::RT);
 		m_simplertpso.AddShader(chfetchgbuffer, L"closesthitmain", L"CHFETCHGBUFFER", RTPSOSHADERTYPE::CLOSESTHIT);
 
-		D3D12_HIT_GROUP_DESC gbufferfetchhitgroupdesc = {};
-		gbufferfetchhitgroupdesc.Type = D3D12_HIT_GROUP_TYPE::D3D12_HIT_GROUP_TYPE_TRIANGLES;
-		gbufferfetchhitgroupdesc.HitGroupExport = L"HITFETCHGBUFFER";
-		gbufferfetchhitgroupdesc.ClosestHitShaderImport = L"CHFETCHGBUFFER";
-		m_simplertpso.AddHitGroup(gbufferfetchhitgroupdesc);
-		D3D12_HIT_GROUP_DESC simplehitgroupdesc = {};
-		simplehitgroupdesc.Type = D3D12_HIT_GROUP_TYPE::D3D12_HIT_GROUP_TYPE_TRIANGLES;
-		simplehitgroupdesc.HitGroupExport = L"SIMPLEHIT";
-		simplehitgroupdesc.ClosestHitShaderImport = L"SimpleCH";
-		m_simplertpso.AddHitGroup(simplehitgroupdesc);
+		
 
-	
+		DX12Shader* aocalcch = new DX12Shader();
+		aocalcch->Init(L"shaders/raytracing/RT/closesthit_aocalculation.hlsl", DX12Shader::ShaderType::RT);
+		m_simplertpso.AddShader(aocalcch, L"closesthitmain", L"AOCALCCH", RTPSOSHADERTYPE::CLOSESTHIT);
+	//hit groups
+		{
+			//fetch gbuffer hitgroup
+			D3D12_HIT_GROUP_DESC gbufferfetchhitgroupdesc = {};
+			gbufferfetchhitgroupdesc.Type = D3D12_HIT_GROUP_TYPE::D3D12_HIT_GROUP_TYPE_TRIANGLES;
+			gbufferfetchhitgroupdesc.HitGroupExport = L"HITFETCHGBUFFER";
+			gbufferfetchhitgroupdesc.ClosestHitShaderImport = L"CHFETCHGBUFFER";
+			m_simplertpso.AddHitGroup(gbufferfetchhitgroupdesc);
+			//simple hitgroup
+			D3D12_HIT_GROUP_DESC simplehitgroupdesc = {};
+			simplehitgroupdesc.Type = D3D12_HIT_GROUP_TYPE::D3D12_HIT_GROUP_TYPE_TRIANGLES;
+			simplehitgroupdesc.HitGroupExport = L"SIMPLEHIT";
+			simplehitgroupdesc.ClosestHitShaderImport = L"SimpleCH";
+			m_simplertpso.AddHitGroup(simplehitgroupdesc);
+			//ao calculation hit group
+			D3D12_HIT_GROUP_DESC aocalchitgroupdesc = {};
+			aocalchitgroupdesc.Type = D3D12_HIT_GROUP_TYPE::D3D12_HIT_GROUP_TYPE_TRIANGLES;
+			aocalchitgroupdesc.HitGroupExport = L"AOCALCHIT";
+			aocalchitgroupdesc.ClosestHitShaderImport = L"AOCALCCH";
+			m_simplertpso.AddHitGroup(aocalchitgroupdesc);
+		}
 	m_simplertpso.SetPipelineConfig();
 	{
 		DX12RootSignature rtglobalrootsig;
@@ -964,15 +983,22 @@ void RayTracingTestApplication_AdvancedAOTest::InitRTPSO()
 		//pass hit group records to buffer
 		{
 			
-			BasicShaderRecord records[2] = {};
-			
-			void* shaderidentifiersimplehitgroup = m_simplertpso.GetIdentifier(L"SIMPLEHIT",true);
-			assert(shaderidentifiersimplehitgroup != nullptr);
-			records[1].SetShaderidentifier(shaderidentifiersimplehitgroup);
-			void* shaderidentifierfetchgbufferhitgroup = m_simplertpso.GetIdentifier(L"HITFETCHGBUFFER", true);
-			assert(shaderidentifierfetchgbufferhitgroup != nullptr);
-			records[0].SetShaderidentifier(shaderidentifierfetchgbufferhitgroup);
-			//records[1].SetShaderidentifier(shaderidentifierfetchgbufferhitgroup);
+			BasicShaderRecord records[3] = {};
+			{
+				void* shaderidentifier = m_simplertpso.GetIdentifier(L"HITFETCHGBUFFER", true);
+				assert(shaderidentifier != nullptr);
+				records[0].SetShaderidentifier(shaderidentifier);
+			}
+			{
+				void* shaderidentifier = m_simplertpso.GetIdentifier(L"SIMPLEHIT", true);
+				assert(shaderidentifier != nullptr);
+				records[1].SetShaderidentifier(shaderidentifier);
+			}
+			{
+				void* shaderidentifier = m_simplertpso.GetIdentifier(L"AOCALCHIT", true);
+				assert(shaderidentifier != nullptr);
+				records[2].SetShaderidentifier(shaderidentifier);
+			}
 			BufferMapParams mapparams = {};
 			mapparams.range.Begin = 0;
 			mapparams.range.End = 0;
