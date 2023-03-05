@@ -1,14 +1,20 @@
-
+#define AORAY 3
 struct Simpleraypayload
 {
 
 	float3 outcol;
+};
+struct AOraypayload
+{
+
+	float occlussionresult;
 };
 struct RTConstantSimple
 {
 //matrix is alias for float4x4
 	matrix mat;
 };
+RaytracingAccelerationStructure basicas:register(t0);
 ConstantBuffer<RTConstantSimple> rtconstmatrix:register(b1);
 RWTexture2D<float4> gbuffertex[3]: register(u1);
 [shader("closesthit")]
@@ -34,8 +40,28 @@ void closesthitmain(inout Simpleraypayload payload,in BuiltInTriangleIntersectio
 	
 	
 	
-	
+	//fetch normal from gbuffer
 	float4 normal=gbuffertex[1][uv];
-	payload.outcol=float3(0.0f,1.0f,0.0f);
+	//fetch world pos
+	float4 worldpos=gbuffertex[2][uv];
+	float3 finalcol=float3(1.0f,1.0f,1.0f);
+	//launch ao rays to find total occusion
+	AOraypayload aopayload;
+	//initialize no occlussion
+	aopayload.occlussionresult=1.0f;
+	
+	{
+		RayDesc ray;
+		ray.Origin=worldpos.xyz;
+		ray.Direction=normal.xyz;
+		ray.TMin=0.001f;
+ray.TMax=100.0f;
+		TraceRay(basicas,
+
+RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH
+,0xFF,AORAY,1,0,ray,aopayload);
+	}
+	
+	payload.outcol = aopayload.occlussionresult*finalcol;
 	
 }

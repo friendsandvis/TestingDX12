@@ -5,7 +5,9 @@ ray origin is calculated based on the dispatch index and a center(this center va
 //ray types defines
 #define FETCHGBUFFERRAY 0
 #define SIMPLEHITRAY 1
-#define AORAY 2
+//ao calc ray type triggers accumulation & calculation of ao 
+#define AOCALCRAY 2
+#define NUMRAYTTYPES 3
 #define NUMGBUFFERTEXTURES 3
 struct RTConstants
 {
@@ -57,7 +59,7 @@ ray.Direction=float3(0.0f,0.0f,-1.0f);
 	
 	dirmod=mul(rtconstsinvmatricies.mat2,dirmod);
 	ray.Direction=dirmod.xyz;
-	TraceRay(basicas,RAY_FLAG_NONE,0xFF,FETCHGBUFFERRAY,2,0,ray,payload);
+	TraceRay(basicas,RAY_FLAG_NONE,0xFF,AOCALCRAY,NUMRAYTTYPES,0,ray,payload);
 	//flipping the output.
 	uint2 outindex=uint2(rayidx.x,raydims.y-rayidx.y);
 	//calculate uv from rayindex for tex sampling(here asuming the dispatch ray dimension ==sampled texture size)

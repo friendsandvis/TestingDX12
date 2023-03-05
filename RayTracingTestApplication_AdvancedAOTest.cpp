@@ -3,11 +3,12 @@
 
 #define USECONFERENCEROOMCOMPOUNDMODEL
 /*
-* hitrecord0:fetchgbuffer
-* hitrecord1:simplehit
-* hitrecord2:aohit
+* hitrecord1:fetchgbuffer
+* hitrecord2:simplehit
+* hitrecord3:aocalchit
+* hitrecord4:aorayhit
 */
-#define NUMSHADERRECORDS 3
+#define NUMSHADERRECORDS 4
 
 
 RayTracingTestApplication_AdvancedAOTest::RayTracingTestApplication_AdvancedAOTest()
@@ -865,6 +866,11 @@ void RayTracingTestApplication_AdvancedAOTest::InitRTPSO()
 		DX12Shader* aocalcch = new DX12Shader();
 		aocalcch->Init(L"shaders/raytracing/RT/closesthit_aocalculation.hlsl", DX12Shader::ShaderType::RT);
 		m_simplertpso.AddShader(aocalcch, L"closesthitmain", L"AOCALCCH", RTPSOSHADERTYPE::CLOSESTHIT);
+
+		DX12Shader* aoraych = new DX12Shader();
+		aoraych->Init(L"shaders/raytracing/RT/closesthit_ao.hlsl", DX12Shader::ShaderType::RT);
+		m_simplertpso.AddShader(aoraych, L"closesthitmain", L"AORAYCH", RTPSOSHADERTYPE::CLOSESTHIT);
+
 	//hit groups
 		{
 			//fetch gbuffer hitgroup
@@ -885,8 +891,14 @@ void RayTracingTestApplication_AdvancedAOTest::InitRTPSO()
 			aocalchitgroupdesc.HitGroupExport = L"AOCALCHIT";
 			aocalchitgroupdesc.ClosestHitShaderImport = L"AOCALCCH";
 			m_simplertpso.AddHitGroup(aocalchitgroupdesc);
+		//ao ray hit group
+			D3D12_HIT_GROUP_DESC aorayhitgroupdesc = {};
+			aorayhitgroupdesc.Type = D3D12_HIT_GROUP_TYPE::D3D12_HIT_GROUP_TYPE_TRIANGLES;
+			aorayhitgroupdesc.HitGroupExport = L"AORAYHIT";
+			aorayhitgroupdesc.ClosestHitShaderImport = L"AORAYCH";
+			m_simplertpso.AddHitGroup(aorayhitgroupdesc);
 		}
-	m_simplertpso.SetPipelineConfig();
+	m_simplertpso.SetPipelineConfig(2);
 	{
 		DX12RootSignature rtglobalrootsig;
 		vector<D3D12_ROOT_PARAMETER> rootparams;
@@ -983,7 +995,7 @@ void RayTracingTestApplication_AdvancedAOTest::InitRTPSO()
 		//pass hit group records to buffer
 		{
 			
-			BasicShaderRecord records[3] = {};
+			BasicShaderRecord records[NUMSHADERRECORDS] = {};
 			{
 				void* shaderidentifier = m_simplertpso.GetIdentifier(L"HITFETCHGBUFFER", true);
 				assert(shaderidentifier != nullptr);
@@ -998,6 +1010,11 @@ void RayTracingTestApplication_AdvancedAOTest::InitRTPSO()
 				void* shaderidentifier = m_simplertpso.GetIdentifier(L"AOCALCHIT", true);
 				assert(shaderidentifier != nullptr);
 				records[2].SetShaderidentifier(shaderidentifier);
+			}
+			{
+				void* shaderidentifier = m_simplertpso.GetIdentifier(L"AORAYHIT", true);
+				assert(shaderidentifier != nullptr);
+				records[3].SetShaderidentifier(shaderidentifier);
 			}
 			BufferMapParams mapparams = {};
 			mapparams.range.Begin = 0;
