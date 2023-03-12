@@ -2,7 +2,6 @@
 
 D3D12_RESOURCE_BARRIER DX12ResourceBase::TransitionResState(D3D12_RESOURCE_STATES targetstate)
 {
-	assert(targetstate != m_currentresstate);
 	D3D12_RESOURCE_BARRIER transitionbarrier = {};
 	//return a default barrier struct if target state is same as current state
 	if (targetstate != m_currentresstate)

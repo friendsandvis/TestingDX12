@@ -120,7 +120,8 @@ void RayTracingTestApplication_AdvancedAOTest::RenderTextureOnScreenRT()
 {
 	m_primarycmdlist.Reset();
 	//set rtv
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
+	UINT currentBackBufferidx = m_swapchain.GetCurrentbackbufferIndex();
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(currentBackBufferidx);
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
 	m_primarycmdlist->SetPipelineState(m_psortdisplay.GetPSO());
 	m_primarycmdlist->SetGraphicsRootSignature(m_psortdisplay.GetRootSignature());
@@ -130,7 +131,7 @@ void RayTracingTestApplication_AdvancedAOTest::RenderTextureOnScreenRT()
 	m_primarycmdlist->SetGraphicsRootDescriptorTable(0, m_rtdisplayresheap.GetGPUHandlefromstart());
 	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, &dsvhandle);
 	float clearvalue[4] = { 1.0f,1.0f,1.0f,1.0f };
-	m_primarycmdlist->ClearRenderTargetView(rtvhandle, clearvalue, 0, nullptr);
+	ClearBackBuffer(currentBackBufferidx, m_primarycmdlist, clearvalue);
 	m_primarycmdlist->ClearDepthStencilView(dsvhandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	
 		m_primarycmdlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -156,7 +157,8 @@ void RayTracingTestApplication_AdvancedAOTest::RenderTextureOnScreenGBuffer()
 {
 	m_primarycmdlist.Reset();
 	//set rtv
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
+	UINT currentBackBufferIdx=m_swapchain.GetCurrentbackbufferIndex();
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(currentBackBufferIdx);
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
 	m_primarycmdlist->SetPipelineState(m_psogbufferdisplay.GetPSO());
 	m_primarycmdlist->SetGraphicsRootSignature(m_psogbufferdisplay.GetRootSignature());
@@ -164,9 +166,13 @@ void RayTracingTestApplication_AdvancedAOTest::RenderTextureOnScreenGBuffer()
 	descheapstoset[0] = m_gbuffersrvheap.GetDescHeap();
 	m_primarycmdlist->SetDescriptorHeaps(1, descheapstoset);
 	m_primarycmdlist->SetGraphicsRootDescriptorTable(0, m_gbuffersrvheap.GetGPUHandlefromstart());
+	{
+		//back buffer resource state transition
+		
+	}
 	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, &dsvhandle);
 	float clearvalue[4] = { 1.0f,1.0f,1.0f,1.0f };
-	m_primarycmdlist->ClearRenderTargetView(rtvhandle, clearvalue, 0, nullptr);
+	ClearBackBuffer(currentBackBufferIdx, m_primarycmdlist, clearvalue);
 	m_primarycmdlist->ClearDepthStencilView(dsvhandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	m_primarycmdlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -234,6 +240,13 @@ void RayTracingTestApplication_AdvancedAOTest::RenderRT()
 		m_rtcommandlist->SetComputeRoot32BitConstants(2, (sizeof(XMMATRIX) / 4), &vp, 0);
 		m_rtcommandlist->SetPipelineState1(m_simplertpso.GetPipelineStateObject());
 		float  clearcolour[4] = {1.0f,1.0f,1.0f,1.0f};
+		{
+			D3D12_RESOURCE_BARRIER barrier=m_rtouput.TransitionResState(D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+			if (DXUtils::IsBarrierSafeToExecute(barrier))
+			{
+				m_rtcommandlist->ResourceBarrier(1, &barrier);
+			}
+		}
 		m_rtcommandlist->ClearUnorderedAccessViewFloat(m_rtresheap_global.GetGPUHandlefromstart(),m_rtresheap_globalupload.GetCPUHandlefromstart(),m_rtouput.GetResource().Get(),clearcolour,0,nullptr);
 		m_rtcommandlist->DispatchRays(&dispatchraysdesc);
 		m_rtcommandlist.Close();
