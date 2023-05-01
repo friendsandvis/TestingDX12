@@ -81,6 +81,9 @@ void Model::Draw(DX12Commandlist& renderingcmdlist,XMMATRIX vpmatrix, UINT mvpma
 	if (setmvpmatrix)
 	{
 		renderingcmdlist->SetGraphicsRoot32BitConstants(mvpmatrixrootparamindex, sizeof(XMMATRIX) / 4, &mvp, 0);
+		//should we send transform this way to the shaders(Investigate,seems very specific to rt_aotest app,maybe can be generalized better).
+		renderingcmdlist->SetGraphicsRoot32BitConstants(mvpmatrixrootparamindex+1, sizeof(XMMATRIX) / 4, &m_transform,0);
+
 	}
 	
 	renderingcmdlist->DrawIndexedInstanced(GetIndiciesCount(), 1, 0, 0, 0);

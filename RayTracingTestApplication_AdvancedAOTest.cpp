@@ -8,7 +8,12 @@
 * hitrecord3:aocalchit
 * hitrecord4:aorayhit
 */
-#define NUMSHADERRECORDS 4
+#define NUMHITGROUPRECORDS 4
+/*
+* missrecord 1: simplemiss
+* missrecord 2:ao miss
+*/
+#define NUMMISSSHADERRECORDS 2
 
 
 RayTracingTestApplication_AdvancedAOTest::RayTracingTestApplication_AdvancedAOTest()
@@ -78,7 +83,7 @@ void RayTracingTestApplication_AdvancedAOTest::RenderGbuffer()
 {
 	m_gbufferrendercommandlist.Reset();
 	m_gbufferrendercommandlist->SetPipelineState(m_gbufferpso.GetPSO());
-	m_gbufferrendercommandlist->SetGraphicsRootSignature(m_pso.GetRootSignature());
+	m_gbufferrendercommandlist->SetGraphicsRootSignature(m_gbufferpso.GetRootSignature());
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandlestoset[3] =
 	{
@@ -305,10 +310,11 @@ void RayTracingTestApplication_AdvancedAOTest::InitExtras()
 	{
 		DX12ResourceCreationProperties rgsrecordsprops = {};
 		DX12Buffer::InitResourceCreationProperties(rgsrecordsprops);
-		rgsrecordsprops.resdesc.Width = sizeof(BasicShaderRecord) * NUMSHADERRECORDS;
+		rgsrecordsprops.resdesc.Width = sizeof(BasicShaderRecord) * NUMHITGROUPRECORDS;
 		rgsrecordsprops.resheapprop.Type = D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD;
 		m_rgsrecords.Init(m_creationdevice, rgsrecordsprops, ResourceCreationMode::COMMITED);
 		DX12ResourceCreationProperties missshaderrecordsprops = rgsrecordsprops;
+		missshaderrecordsprops.resdesc.Width = sizeof(BasicShaderRecord) * NUMMISSSHADERRECORDS;
 		m_missrecords.Init(m_creationdevice, missshaderrecordsprops, ResourceCreationMode::COMMITED);
 		DX12ResourceCreationProperties hitshaderrecordsprops = rgsrecordsprops;
 		m_hitrecords.Init(m_creationdevice, hitshaderrecordsprops, ResourceCreationMode::COMMITED);
@@ -534,15 +540,26 @@ void RayTracingTestApplication_AdvancedAOTest::InitGbufferPSO()
 		{
 			std::vector< D3D12_ROOT_PARAMETER>rootparams;
 			std::vector<D3D12_STATIC_SAMPLER_DESC> staticsamplers;
-			
-			D3D12_ROOT_PARAMETER arootparam = {};
-			arootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-			arootparam.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-			arootparam.Constants.Num32BitValues = sizeof(XMMATRIX) / 4;
-			arootparam.Constants.RegisterSpace = 0;
-			arootparam.Constants.ShaderRegister = 0;
-			rootparams.push_back(arootparam);
-			
+			//for mvp matrix
+			{
+				D3D12_ROOT_PARAMETER arootparam = {};
+				arootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+				arootparam.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+				arootparam.Constants.Num32BitValues = sizeof(XMMATRIX) / 4;
+				arootparam.Constants.RegisterSpace = 0;
+				arootparam.Constants.ShaderRegister = 0;
+				rootparams.push_back(arootparam);
+			}
+			//for model matrix
+			{
+				D3D12_ROOT_PARAMETER arootparam = {};
+				arootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+				arootparam.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+				arootparam.Constants.Num32BitValues = sizeof(XMMATRIX) / 4;
+				arootparam.Constants.RegisterSpace = 0;
+				arootparam.Constants.ShaderRegister = 1;
+				rootparams.push_back(arootparam);
+			}
 			psoinitdata.rootsignature.BuidDesc(rootparams, staticsamplers);
 
 
@@ -862,11 +879,20 @@ void RayTracingTestApplication_AdvancedAOTest::InitRTPSO()
 	m_simplertpso.AddShaderConfig(simplertshaderconfig, "simpleshaderconfig");
 	DX12Shader* rgs = new DX12Shader();
 	rgs->Init(L"shaders/raytracing/RT/simplergs3_Advance_AOTest.hlsl", DX12Shader::ShaderType::RT);
-	m_simplertpso.AddShader(rgs, L"rgsmain", L"SimpleRGS",RTPSOSHADERTYPE::RAYGEN);
-	DX12Shader* simplemiss = new DX12Shader();
-	simplemiss->Init(L"shaders/raytracing/RT/simplemiss.hlsl", DX12Shader::ShaderType::RT);
-	m_simplertpso.AddShader(simplemiss, L"missmain", L"SimpleMISS", RTPSOSHADERTYPE::MISS);
-	
+	m_simplertpso.AddShader(rgs, L"rgsmain", L"SimpleRGS", RTPSOSHADERTYPE::RAYGEN);
+	//miss shaders
+	{
+		{
+			DX12Shader* simplemiss = new DX12Shader();
+			simplemiss->Init(L"shaders/raytracing/RT/simplemiss.hlsl", DX12Shader::ShaderType::RT);
+			m_simplertpso.AddShader(simplemiss, L"missmain", L"SIMPLEMISS", RTPSOSHADERTYPE::MISS);
+		}
+		{
+			DX12Shader* aomiss = new DX12Shader();
+			aomiss->Init(L"shaders/raytracing/RT/miss_ao.hlsl", DX12Shader::ShaderType::RT);
+			m_simplertpso.AddShader(aomiss, L"missmain", L"AOMISS", RTPSOSHADERTYPE::MISS);
+		}
+	}
 		DX12Shader* simplech = new DX12Shader();
 		simplech->Init(L"shaders/raytracing/RT/simpleclosesthit.hlsl", DX12Shader::ShaderType::RT);
 		m_simplertpso.AddShader(simplech, L"closesthitmain", L"SimpleCH", RTPSOSHADERTYPE::CLOSESTHIT);
@@ -911,7 +937,7 @@ void RayTracingTestApplication_AdvancedAOTest::InitRTPSO()
 			aorayhitgroupdesc.ClosestHitShaderImport = L"AORAYCH";
 			m_simplertpso.AddHitGroup(aorayhitgroupdesc);
 		}
-	m_simplertpso.SetPipelineConfig(2);
+	m_simplertpso.SetPipelineConfig(5);
 	{
 		DX12RootSignature rtglobalrootsig;
 		vector<D3D12_ROOT_PARAMETER> rootparams;
@@ -990,25 +1016,31 @@ void RayTracingTestApplication_AdvancedAOTest::InitRTPSO()
 		}
 		//pass missshader records to buffer
 		{
-			//rgs
-			BasicShaderRecord record = {};
-			void* shaderidentifier = m_simplertpso.GetIdentifier(L"SimpleMISS");
-			assert(shaderidentifier != nullptr);
-			record.SetShaderidentifier(shaderidentifier);
+			BasicShaderRecord records[NUMMISSSHADERRECORDS] = {};
+			{
+				void* shaderidentifier = m_simplertpso.GetIdentifier(L"SIMPLEMISS");
+				assert(shaderidentifier != nullptr);
+				records[0].SetShaderidentifier(shaderidentifier);
+			}
+			{
+				void* shaderidentifier = m_simplertpso.GetIdentifier(L"AOMISS");
+				assert(shaderidentifier != nullptr);
+				records[1].SetShaderidentifier(shaderidentifier);
+			}
 			BufferMapParams mapparams = {};
 			mapparams.range.Begin = 0;
 			mapparams.range.End = 0;
 			void* mappedbuffer = m_missrecords.Map(mapparams);
 			assert(mappedbuffer != nullptr);
 			//copy over miss records
-			memcpy(mappedbuffer, &record, sizeof(BasicShaderRecord));
+			memcpy(mappedbuffer, records, sizeof(records));
 			mapparams.range.End = m_missrecords.GetSize();
 			m_missrecords.UnMap(mapparams);
 		}
 		//pass hit group records to buffer
 		{
 			
-			BasicShaderRecord records[NUMSHADERRECORDS] = {};
+			BasicShaderRecord records[NUMHITGROUPRECORDS] = {};
 			{
 				void* shaderidentifier = m_simplertpso.GetIdentifier(L"HITFETCHGBUFFER", true);
 				assert(shaderidentifier != nullptr);
@@ -1035,9 +1067,8 @@ void RayTracingTestApplication_AdvancedAOTest::InitRTPSO()
 			void* mappedbuffer = m_hitrecords.Map(mapparams);
 			assert(mappedbuffer != nullptr);
 			//copy over hit group records
-			unsigned memsizetocpy = sizeof(records) / sizeof(records[0]);
-			memsizetocpy *= sizeof(BasicShaderRecord);
-			memcpy(mappedbuffer, &records,memsizetocpy);
+			unsigned memsizetocpy = sizeof(records);
+			memcpy(mappedbuffer, records,memsizetocpy);
 			mapparams.range.End = m_hitrecords.GetSize();
 			m_hitrecords.UnMap(mapparams);
 		}

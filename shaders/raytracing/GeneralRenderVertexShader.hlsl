@@ -10,6 +10,7 @@ struct VSConstants
 	matrix mvp;
 };
 ConstantBuffer<VSConstants> vertexconsts:register(b0);
+ConstantBuffer<VSConstants> vertexconsts2:register(b1);
 
 struct VSOut
 {
@@ -25,8 +26,8 @@ VSOut main(VSIn input)
 		
 		
 		output.pos =mul(vertexconsts.mvp,float4(input.vpos,1.0f));
-		output.normal=input.normal;
-		output.position=input.vpos;
+		output.normal=(mul(vertexconsts2.mvp,float4(input.normal,0.0f))).xyz;
+		output.position=(mul(vertexconsts2.mvp,float4(input.vpos,1.0f))).xyz;
 
     return output;
 }

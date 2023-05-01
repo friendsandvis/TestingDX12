@@ -1,4 +1,5 @@
 #define AORAY 3
+#define NUMRAYTTYPES 3
 struct Simpleraypayload
 {
 
@@ -45,7 +46,7 @@ float nextRand(inout uint s)
 	s = (1664525u * s + 1013904223u);
 	return float(s & 0x00FFFFFF) / float(0x01000000);
 }
-float3 getCosHemisphereSample(inout uint randSeed, float3 hitNorm)
+float3 GetCosHemisphereSample(inout uint randSeed, float3 hitNorm)
 {
 	// Get 2 random numbers to select our sample with
 	float2 randVal = float2(nextRand(randSeed), nextRand(randSeed));
@@ -90,20 +91,34 @@ void closesthitmain(inout Simpleraypayload payload,in BuiltInTriangleIntersectio
 	//launch ao rays to find total occusion
 	AOraypayload aopayload;
 	//initialize no occlussion
-	aopayload.occlussionresult=1.0f;
-	
+	aopayload.occlussionresult=5.0f;
+
 	{
 		RayDesc ray;
 		ray.Origin=worldpos.xyz;
 		ray.Direction=normal.xyz;
-		ray.TMin=0.001f;
-ray.TMax=100.0f;
-		TraceRay(basicas,
+		ray.TMin=0.1f;
+ray.TMax=10000.0f;
+TraceRay(basicas,RAY_FLAG_NONE,0xFF,AORAY,NUMRAYTTYPES,1,ray,aopayload);
 
-RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH
-,0xFF,AORAY,1,0,ray,aopayload);
+		
+	}
+	//debug purpose if changed to value expected from hit(mark final colour)
+	if(aopayload.occlussionresult ==8.0f)
+	{
+	payload.outcol = finalcol;
+	
+	}
+	//debug purpose if unchanged(mark red colour)
+	else if(aopayload.occlussionresult ==5.0f)
+	{
+	payload.outcol = float3(1.0f,0.0f,0.0f);
+	}
+	//debug purpose if no condition satisfied then (mark green colour)
+	else
+	{
+	payload.outcol = float3(0.0f,1.0f,0.0f);
 	}
 	
-	payload.outcol = aopayload.occlussionresult*finalcol;
 	
 }
