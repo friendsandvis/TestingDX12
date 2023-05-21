@@ -9,7 +9,8 @@ enum RTPSOSHADERTYPE
 {
 	CLOSESTHIT,
 	RAYGEN,
-	MISS
+	MISS,
+	ANYHIT
 };
 class RTPSOShader
 {

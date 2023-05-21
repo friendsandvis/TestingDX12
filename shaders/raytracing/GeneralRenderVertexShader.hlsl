@@ -26,7 +26,7 @@ VSOut main(VSIn input)
 		
 		
 		output.pos =mul(vertexconsts.mvp,float4(input.vpos,1.0f));
-		output.normal=(mul(vertexconsts2.mvp,float4(input.normal,0.0f))).xyz;
+		output.normal=input.normal;
 		output.position=(mul(vertexconsts2.mvp,float4(input.vpos,1.0f))).xyz;
 
     return output;
