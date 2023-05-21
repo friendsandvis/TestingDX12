@@ -15,6 +15,11 @@ struct RTConstants
 	matrix mat1;
 	matrix mat2;
 };
+struct AOConstants
+{
+	uint frameidx;
+	float aoradius;
+};
 
 struct SimpleAOpayload
 {
@@ -23,7 +28,8 @@ struct SimpleAOpayload
 RWTexture2D<float4> outtex: register(u0);
 RWTexture2D<float4> gbuffertex[NUMGBUFFERTEXTURES]: register(u1);
 RaytracingAccelerationStructure basicas:register(t0);
-ConstantBuffer<RTConstants> rtconstsinvmatricies:register(b0);//mat1 is invprojection & mat2 is invview
+ConstantBuffer<AOConstants> aoconstants:register(b0);
+
 //util functions for ao ray generation(taken from "http://cwyman.org/code/dxrTutors/tutors/Tutor5/tutorial05")
 uint InitRand(uint val0, uint val1, uint backoff = 16)
 {
@@ -84,14 +90,8 @@ float2 center=float2(-0.5f,-0.5f);
 //ray.Origin=float3(0.0f,0.0,1.0f);
 	float2 clippointxy=rayidx.xy/float2(raydims.xy);
 	clippointxy=(clippointxy*2.0f)-float2(1.0f,1.0f);
-	float4 clippointnear=float4(clippointxy,0.0f,1.0f);
-	clippointnear=mul(rtconstsinvmatricies.mat1,clippointnear);
-	clippointnear=clippointnear/clippointnear.w;
-	float4 clippointfar=float4(clippointxy,1.0f,1.0f);
-	clippointfar=mul(rtconstsinvmatricies.mat1,clippointfar);
-	clippointfar=clippointfar/clippointfar.w;
-	float4 originmod=float4(clippointnear.xyz,1.0f);
-	originmod=mul(rtconstsinvmatricies.mat2,originmod);
+
+
 	//flipping the output.
 	
 	//calculate uv from rayindex for tex sampling(here asuming the dispatch ray dimension ==sampled texture size)
@@ -102,15 +102,15 @@ float2 center=float2(-0.5f,-0.5f);
 	
 	if(albedo.w==1.0f)//non-background( geometry in gbuffer mark white(ao calc)
 	{
-	uint randseed= InitRand((rayidx.x+ rayidx.y*raydims.x),0);
+	uint randseed= InitRand((rayidx.x+ rayidx.y*raydims.x),aoconstants.frameidx);
 	float3 dir = GetCosHemisphereSample(randseed,normalize(worldnormal.xyz));
 	RayDesc ray;
 	ray.Origin=worldpos.xyz;
 	ray.Direction=normalize(dir);
 	ray.TMin=0.001f;
-	ray.TMax=0.1f;
+	ray.TMax=aoconstants.aoradius;
 	SimpleAOpayload payload;
-payload.aoresult=0.0f;//initialize as hit.
+payload.aoresult=1.0f;//initialize as hit.
 		TraceRay(basicas,RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH|RAY_FLAG_SKIP_CLOSEST_HIT_SHADER,0xFF,AOCALCRAY,NUMRAYTTYPES,1,ray,payload);
 		//outtex[outindex]=float4(normalize(worldnormal.xyz),1.0f);
 		outtex[outindex]=float4(payload.aoresult,payload.aoresult,payload.aoresult,1.0f);

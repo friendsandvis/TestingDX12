@@ -29,6 +29,8 @@ RayTracingTestApplication_AdvancedAOTest::RayTracingTestApplication_AdvancedAOTe
 	m_planemodel(ModelDataUploadMode::COPY)
 {
 	m_maincameracontroller.SetCameratoControl(&m_maincamera);
+	m_aoconstants.aoradius = 0.1f;
+	m_aoconstants.frameindex = 0;
 	
 }
 RayTracingTestApplication_AdvancedAOTest::~RayTracingTestApplication_AdvancedAOTest()
@@ -245,8 +247,7 @@ void RayTracingTestApplication_AdvancedAOTest::RenderRT()
 		invmatpair.m1 = invproj;
 		invmatpair.m2 = invview;
 		XMMATRIX vp = m_maincamera.GetVP();
-		m_rtcommandlist->SetComputeRoot32BitConstants(1, (sizeof(MatrixPair) / 4),&invmatpair, 0);
-		m_rtcommandlist->SetComputeRoot32BitConstants(2, (sizeof(XMMATRIX) / 4), &vp, 0);
+		m_rtcommandlist->SetComputeRoot32BitConstants(1, (sizeof(DirectAOConstants) / 4),&m_aoconstants, 0);
 		m_rtcommandlist->SetPipelineState1(m_simplertpso.GetPipelineStateObject());
 		float  clearcolour[4] = {1.0f,1.0f,1.0f,1.0f};
 		{
@@ -268,7 +269,7 @@ void RayTracingTestApplication_AdvancedAOTest::RenderRT()
 		ID3D12CommandList* cmdliststoexecute[1] = {m_rtcommandlist.GetcmdList()};
 		m_mainqueue.GetQueue()->ExecuteCommandLists(1, cmdliststoexecute);
 	}
-		
+	m_aoconstants.frameindex++;
 }
 void RayTracingTestApplication_AdvancedAOTest::Render()
 {
@@ -972,7 +973,7 @@ void RayTracingTestApplication_AdvancedAOTest::InitRTPSO()
 		
 		D3D12_ROOT_PARAMETER param2 = {};
 		param2.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-		param2.Constants.Num32BitValues = sizeof(MatrixPair) / 4;
+		param2.Constants.Num32BitValues = sizeof(DirectAOConstants) / 4;
 		param2.Constants.ShaderRegister = 0;
 		param2.Constants.RegisterSpace = 0;
 		param2.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;

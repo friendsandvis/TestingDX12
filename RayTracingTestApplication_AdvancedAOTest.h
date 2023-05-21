@@ -34,6 +34,11 @@ protected:
 		XMMATRIX m1;
 		XMMATRIX m2;
 	};
+	struct DirectAOConstants
+	{
+		unsigned int frameindex;
+		float aoradius;
+	};
 
 private:
 	struct BasicShaderRecord
@@ -69,6 +74,7 @@ private:
 	ModelAccelerationStructureBLAS loadedmodelasblas;
 	CompoundModelAccelerationStructureBLAS m_comploadedmodelblas;
 	ModelAccelerationStructureTLAS loadedmodelastlas;
+	DirectAOConstants m_aoconstants;
 	void InitGbufferPSO();
 	void InitPSO_RTRaster();
 	void InitRTDisplayPSO();
