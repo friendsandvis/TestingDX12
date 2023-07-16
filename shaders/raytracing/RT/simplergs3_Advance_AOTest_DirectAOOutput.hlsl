@@ -2,6 +2,7 @@
 Notes:
 ray origin is calculated based on the dispatch index and a center(this center value is  what test geometry's verticies  refrence to as center)
 */
+#define NUMSPP 1
 //ray types defines
 #define FETCHGBUFFERRAY 0
 #define SIMPLEHITRAY 1
@@ -100,9 +101,10 @@ float2 center=float2(-0.5f,-0.5f);
 	//outtex[outindex]=float4(payload.outcol,1.0f);
 	//output gbuffer img data but assumed dispatch size is same as gbuffer tex size always.
 	
-	if(albedo.w==1.0f)//non-background( geometry in gbuffer mark white(ao calc)
+	float finalaoval = 0;
+	for(uint i=0;i<NUMSPP;i++)
 	{
-	uint randseed= InitRand((rayidx.x+ rayidx.y*raydims.x),aoconstants.frameidx);
+	uint randseed= InitRand((rayidx.x+ rayidx.y*raydims.x)*NUMSPP+i,aoconstants.frameidx);
 	float3 dir = GetCosHemisphereSample(randseed,normalize(worldnormal.xyz));
 	RayDesc ray;
 	ray.Origin=worldpos.xyz;
@@ -113,11 +115,10 @@ float2 center=float2(-0.5f,-0.5f);
 payload.aoresult=1.0f;//initialize as hit.
 		TraceRay(basicas,RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH|RAY_FLAG_SKIP_CLOSEST_HIT_SHADER,0xFF,AOCALCRAY,NUMRAYTTYPES,1,ray,payload);
 		//outtex[outindex]=float4(normalize(worldnormal.xyz),1.0f);
-		outtex[outindex]=float4(payload.aoresult,payload.aoresult,payload.aoresult,1.0f);
+		finalaoval += payload.aoresult;
+		
 	}
-	else//background(no geometry in gbuffer mark black(no ao calc)
-	{
-		outtex[outindex]=float4(0.0f,0.0f,0.0f,1.0f);
-	}
-	//outtex[outindex]=float4(payload.aoresult,payload.aoresult,payload.aoresult,1.0f);
+	finalaoval	/=NUMSPP;
+	finalaoval *= albedo.w;
+	outtex[outindex]=float4(finalaoval,finalaoval,finalaoval,1.0f);
 }

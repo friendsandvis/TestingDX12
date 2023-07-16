@@ -31,6 +31,7 @@ RayTracingTestApplication_AdvancedAOTest::RayTracingTestApplication_AdvancedAOTe
 	m_maincameracontroller.SetCameratoControl(&m_maincamera);
 	m_aoconstants.aoradius = 0.1f;
 	m_aoconstants.frameindex = 0;
+	m_aoaccumconstants.framecount = 0;
 	
 }
 RayTracingTestApplication_AdvancedAOTest::~RayTracingTestApplication_AdvancedAOTest()
@@ -140,6 +141,14 @@ void RayTracingTestApplication_AdvancedAOTest::RenderTextureOnScreenRT()
 	descheapstoset[0] = m_rtdisplayresheap.GetDescHeap();
 	m_primarycmdlist->SetDescriptorHeaps(1, descheapstoset);
 	m_primarycmdlist->SetGraphicsRootDescriptorTable(0, m_rtdisplayresheap.GetGPUHandlefromstart());
+	//transition rtoutput texture to srv
+	{
+		D3D12_RESOURCE_BARRIER barrier = m_rtouput.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		if (DXUtils::IsBarrierSafeToExecute(barrier))
+		{
+			m_primarycmdlist->ResourceBarrier(1, &barrier);
+		}
+	}
 	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, &dsvhandle);
 	float clearvalue[4] = { 1.0f,1.0f,1.0f,1.0f };
 	ClearBackBuffer(currentBackBufferidx, m_primarycmdlist, clearvalue);
@@ -176,6 +185,7 @@ void RayTracingTestApplication_AdvancedAOTest::RenderTextureOnScreenGBuffer()
 	ID3D12DescriptorHeap* descheapstoset[1];
 	descheapstoset[0] = m_gbuffersrvheap.GetDescHeap();
 	m_primarycmdlist->SetDescriptorHeaps(1, descheapstoset);
+	
 	m_primarycmdlist->SetGraphicsRootDescriptorTable(0, m_gbuffersrvheap.GetGPUHandlefromstart());
 	{
 		//back buffer resource state transition
@@ -204,6 +214,86 @@ void RayTracingTestApplication_AdvancedAOTest::RenderTextureOnScreenGBuffer()
 	m_primarycmdlist->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
 	DXASSERT(m_primarycmdlist->Close())
 		BasicRender();
+}
+void RayTracingTestApplication_AdvancedAOTest::RTAccumulation()
+{
+	m_accumulationcommandlist.Reset();
+	m_accumulationcommandlist->SetPipelineState(m_psortaccumulation.GetPSO());
+	m_accumulationcommandlist->SetGraphicsRootSignature(m_psortaccumulation.GetRootSignature());
+	D3D12_CPU_DESCRIPTOR_HANDLE accumresultrtv = m_rtaccumrtvheap.GetCPUHandleOffseted(0);
+	{
+		D3D12_RESOURCE_BARRIER barrier = m_accumresultdata.TransitionResState(D3D12_RESOURCE_STATE_RENDER_TARGET);
+		if (DXUtils::IsBarrierSafeToExecute(barrier))
+		{
+			m_accumulationcommandlist->ResourceBarrier(1, &barrier);
+		}
+		
+	}
+	m_accumulationcommandlist->OMSetRenderTargets(1, &accumresultrtv,FALSE,NULL);
+	D3D12_VIEWPORT aviewport = GetViewport();
+	D3D12_VIEWPORT viewportstoset[3] =
+	{ aviewport,aviewport,aviewport };
+	D3D12_RECT ascissorrect = GetScissorRect();
+	D3D12_RECT scissorrectstoset[3] =
+	{ ascissorrect,ascissorrect,ascissorrect };
+	ID3D12DescriptorHeap* heapstoset[1] = { m_rtaccumresheap.GetDescHeap() };
+	m_accumulationcommandlist->SetDescriptorHeaps(1,heapstoset);
+	m_accumulationcommandlist->SetGraphicsRootDescriptorTable(0, m_rtaccumresheap.GetGPUHandlefromstart());
+	m_accumulationcommandlist->SetGraphicsRoot32BitConstants(1, sizeof(m_aoaccumconstants) / 4, &m_aoaccumconstants, 0);
+	m_accumulationcommandlist->RSSetViewports(3, viewportstoset);
+	m_accumulationcommandlist->RSSetScissorRects(3, scissorrectstoset);
+	m_accumulationcommandlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	D3D12_INDEX_BUFFER_VIEW ibview = m_planemodel.GetIBView();
+	D3D12_VERTEX_BUFFER_VIEW vbview = m_planemodel.GetVBView();
+	m_accumulationcommandlist->IASetVertexBuffers(0, 1, &vbview);
+	m_accumulationcommandlist->IASetIndexBuffer(&ibview);
+	//transition rtoutput to pixel resource state
+	{
+		D3D12_RESOURCE_BARRIER barrier = m_rtouput.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		if (DXUtils::IsBarrierSafeToExecute(barrier))
+		{
+			m_accumulationcommandlist->ResourceBarrier(1, &barrier);
+		}
+	}
+	//transition lastframetexture to pixel resource state
+	{
+		D3D12_RESOURCE_BARRIER barrier = m_accumLastframedata.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		if (DXUtils::IsBarrierSafeToExecute(barrier))
+		{
+			m_accumulationcommandlist->ResourceBarrier(1, &barrier);
+		}
+	}
+	m_accumulationcommandlist->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
+	//transition rtoutput texture state to copy dest
+	{
+		D3D12_RESOURCE_BARRIER barrier = m_rtouput.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST);
+		if (DXUtils::IsBarrierSafeToExecute(barrier))
+		{
+			m_accumulationcommandlist->ResourceBarrier(1, &barrier);
+		}
+	}
+	//transition rtaccumresult texture state to copy src
+	{
+		D3D12_RESOURCE_BARRIER barrier = m_accumresultdata.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_SOURCE);
+		if (DXUtils::IsBarrierSafeToExecute(barrier))
+		{
+			m_accumulationcommandlist->ResourceBarrier(1, &barrier);
+		}
+	}
+	m_accumulationcommandlist->CopyResource(m_rtouput.GetResource().Get(), m_accumresultdata.GetResource().Get());
+	//transition lastframedata texture state to copy dest
+	{
+		D3D12_RESOURCE_BARRIER barrier = m_accumLastframedata.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST);
+		if (DXUtils::IsBarrierSafeToExecute(barrier))
+		{
+			m_accumulationcommandlist->ResourceBarrier(1, &barrier);
+		}
+	}
+	m_accumulationcommandlist->CopyResource(m_accumLastframedata.GetResource().Get(), m_accumresultdata.GetResource().Get());
+	m_accumulationcommandlist.Close();
+	ID3D12CommandList* cmdliststoexecute[1] = { m_accumulationcommandlist.GetcmdList() };
+	m_mainqueue.GetQueue()->ExecuteCommandLists(1, cmdliststoexecute);
+	m_aoaccumconstants.framecount++;
 }
 
 
@@ -271,6 +361,7 @@ void RayTracingTestApplication_AdvancedAOTest::RenderRT()
 	}
 	m_aoconstants.frameindex++;
 }
+
 void RayTracingTestApplication_AdvancedAOTest::Render()
 {
 	RenderGbuffer();
@@ -279,6 +370,7 @@ void RayTracingTestApplication_AdvancedAOTest::Render()
 	{
 		
 		 RenderRT();
+		 RTAccumulation();
 		 RenderTextureOnScreenRT();
 	}
 	else
@@ -365,6 +457,21 @@ void RayTracingTestApplication_AdvancedAOTest::InitExtras()
 		heapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		m_rtdisplayresheap.Init(heapdesc, m_creationdevice);
 	}
+	//heap to hold resources used by rt accumulation pass
+	{
+		D3D12_DESCRIPTOR_HEAP_DESC heapdesc = {};
+		heapdesc.NumDescriptors = 2;//2 srv for now(one for last frame one for current).
+		heapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		heapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		m_rtaccumresheap.Init(heapdesc, m_creationdevice);
+	}
+	//heap to hold rtvs for rt accumulation
+	{
+		D3D12_DESCRIPTOR_HEAP_DESC heapdesc = {};
+		heapdesc.NumDescriptors = 1;//just 1 rtv needed for rt accum
+		heapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+		m_rtaccumrtvheap.Init(heapdesc, m_creationdevice);
+	}
 	DX12ResourceCreationProperties gbuffertextureprops;
 	DX12TextureSimple::InitResourceCreationProperties(gbuffertextureprops);
 	gbuffertextureprops.resdesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -424,6 +531,57 @@ void RayTracingTestApplication_AdvancedAOTest::InitExtras()
 			m_rtouput.CreateSRV(m_creationdevice, srvdesc, m_rtdisplayresheap.GetCPUHandleOffseted(0));
 		}
 	}
+	//init accumulation resources
+	{
+		DX12ResourceCreationProperties accumlastframedatatexprops = {};
+		DX12TextureSimple::InitResourceCreationProperties(accumlastframedatatexprops);
+		//accumulation last frame data identical to rt output texture to allow accumulation denoising on rt output.
+		accumlastframedatatexprops.resdesc.Height = m_swapchain.GetSwapchainHeight();
+		accumlastframedatatexprops.resdesc.Width = m_swapchain.GetSwapchainWidth();
+		accumlastframedatatexprops.resdesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+		accumlastframedatatexprops.useclearvalue = false;
+		m_accumLastframedata.Init(m_creationdevice, accumlastframedatatexprops, ResourceCreationMode::COMMITED);
+		m_accumLastframedata.SetName(L"AccumLastframeData");
+		DX12ResourceCreationProperties accumresultdatatexprops = {};
+		DX12TextureSimple::InitResourceCreationProperties(accumresultdatatexprops);
+		//accumulation last frame data identical to rt output texture to allow accumulation denoising on rt output.
+		accumresultdatatexprops.resdesc.Height = m_swapchain.GetSwapchainHeight();
+		accumresultdatatexprops.resdesc.Width = m_swapchain.GetSwapchainWidth();
+		accumresultdatatexprops.resdesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+		accumresultdatatexprops.useclearvalue = false;
+		accumresultdatatexprops.resdesc.Flags |= D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+		m_accumresultdata.Init(m_creationdevice, accumresultdatatexprops, ResourceCreationMode::COMMITED);
+		m_accumresultdata.SetName(L"AccumResultData");
+		//create rtv for accum result texture
+		D3D12_RENDER_TARGET_VIEW_DESC accumresultdatartvdesc = {};
+		accumresultdatartvdesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+		accumresultdatartvdesc.Texture2D.MipSlice = 0;
+		accumresultdatartvdesc.Texture2D.PlaneSlice = 0;
+		m_accumresultdata.CreateRTV(m_creationdevice, accumresultdatartvdesc, m_rtaccumrtvheap.GetCPUHandleOffseted(0));
+		{
+			D3D12_SHADER_RESOURCE_VIEW_DESC srvdesc = {};
+			srvdesc.ViewDimension = D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_TEXTURE2D;
+			srvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+			srvdesc.Texture2D.MipLevels = 1;
+			srvdesc.Texture2D.MostDetailedMip = 0;
+			srvdesc.Texture2D.ResourceMinLODClamp = 0.0f;
+			m_accumLastframedata.CreateSRV(m_creationdevice, srvdesc, m_rtaccumresheap.GetCPUHandleOffseted(0));
+		}
+		{
+			D3D12_SHADER_RESOURCE_VIEW_DESC srvdesc = {};
+			srvdesc.ViewDimension = D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_TEXTURE2D;
+			srvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+			srvdesc.Texture2D.MipLevels = 1;
+			srvdesc.Texture2D.MostDetailedMip = 0;
+			srvdesc.Texture2D.ResourceMinLODClamp = 0.0f;
+
+			m_rtouput.CreateSRV(m_creationdevice, srvdesc, m_rtaccumresheap.GetCPUHandleOffseted(1));
+		}
+		
+
+
+		
+	}
 	D3D12_RENDER_TARGET_VIEW_DESC gbufferrtvdesc = {};
 	gbufferrtvdesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 	gbufferrtvdesc.Texture2D.MipSlice = 0;
@@ -459,6 +617,7 @@ void RayTracingTestApplication_AdvancedAOTest::InitExtras()
 	InitPSO_RTRaster();
 	InitRTDisplayPSO();
 	InitGBufferDisplayPSO();
+	InitRTAccumulationPSO();
 	
 	
 	m_loadedmodel.UploadModelDatatoBuffers();
@@ -502,6 +661,10 @@ void RayTracingTestApplication_AdvancedAOTest::InitExtras()
 	{
 		m_gbufferrendercommandlist.Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
 		m_gbufferrendercommandlist.SetName(L"Gbuffer render commandlist");
+	}
+	{
+		m_accumulationcommandlist.Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
+		m_accumulationcommandlist.SetName(L"Accumulation commandlist");
 	}
 
 	m_uploadcommandlist.Reset();
@@ -586,6 +749,8 @@ void RayTracingTestApplication_AdvancedAOTest::InitGbufferPSO()
 
 		psoinitdata.psodesc.graphicspsodesc.InputLayout.NumElements = 2;
 		psoinitdata.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = inputelements;
+		psoinitdata.psodesc.graphicspsodesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+		psoinitdata.psodesc.graphicspsodesc.RasterizerState.FrontCounterClockwise = TRUE;
 
 		
 		
@@ -665,15 +830,6 @@ void RayTracingTestApplication_AdvancedAOTest::InitRTDisplayPSO()
 	psimgrootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	psimgrootparam.DescriptorTable.NumDescriptorRanges = 1;
 	psimgrootparam.DescriptorTable.pDescriptorRanges = &texsrvrange;
-
-	CD3DX12_ROOT_SIGNATURE_DESC emptyrootsignaturedesc = {};
-	emptyrootsignaturedesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-	emptyrootsignaturedesc.NumParameters = 1;
-	emptyrootsignaturedesc.pParameters = &psimgrootparam;
-	emptyrootsignaturedesc.NumStaticSamplers = 1;
-	emptyrootsignaturedesc.pStaticSamplers = &simplesampler;
-	
-
 	//inputlayoutsetup
 	{
 		D3D12_INPUT_ELEMENT_DESC simplevsinputelementdesc[2] = {};
@@ -713,18 +869,6 @@ void RayTracingTestApplication_AdvancedAOTest::InitRTDisplayPSO()
 		D3D12_STATIC_SAMPLER_DESC asampler = StaticSamplerManager::GetDefaultStaticSamplerDesc();
 		asampler.Filter = D3D12_FILTER::D3D12_FILTER_MIN_MAG_MIP_LINEAR;
 		staticsamplers.push_back(asampler);
-		D3D12_ROOT_PARAMETER psimgrootparam = {};
-
-		D3D12_DESCRIPTOR_RANGE texsrvrange = {};
-		texsrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		texsrvrange.NumDescriptors = 1;
-		texsrvrange.BaseShaderRegister = 0;
-		texsrvrange.RegisterSpace = 0;
-		texsrvrange.OffsetInDescriptorsFromTableStart = 0;
-
-		psimgrootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		psimgrootparam.DescriptorTable.NumDescriptorRanges = 1;
-		psimgrootparam.DescriptorTable.pDescriptorRanges = &texsrvrange;
 		rootparams.push_back(psimgrootparam);
 
 
@@ -800,7 +944,7 @@ void RayTracingTestApplication_AdvancedAOTest::InitGBufferDisplayPSO()
 
 	D3D12_DESCRIPTOR_RANGE texsrvrange = {};
 	texsrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	texsrvrange.NumDescriptors = 1;
+	texsrvrange.NumDescriptors = NUMGBUFFERTEXTURES;
 	texsrvrange.BaseShaderRegister = 0;
 	texsrvrange.RegisterSpace = 0;
 	texsrvrange.OffsetInDescriptorsFromTableStart = 0;
@@ -808,15 +952,6 @@ void RayTracingTestApplication_AdvancedAOTest::InitGBufferDisplayPSO()
 	psimgrootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	psimgrootparam.DescriptorTable.NumDescriptorRanges = 1;
 	psimgrootparam.DescriptorTable.pDescriptorRanges = &texsrvrange;
-
-	CD3DX12_ROOT_SIGNATURE_DESC emptyrootsignaturedesc = {};
-	emptyrootsignaturedesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-	emptyrootsignaturedesc.NumParameters = 1;
-	emptyrootsignaturedesc.pParameters = &psimgrootparam;
-	emptyrootsignaturedesc.NumStaticSamplers = 1;
-	emptyrootsignaturedesc.pStaticSamplers = &simplesampler;
-
-
 	//inputlayoutsetup
 	{
 		D3D12_INPUT_ELEMENT_DESC simplevsinputelementdesc[2] = {};
@@ -856,18 +991,6 @@ void RayTracingTestApplication_AdvancedAOTest::InitGBufferDisplayPSO()
 		D3D12_STATIC_SAMPLER_DESC asampler = StaticSamplerManager::GetDefaultStaticSamplerDesc();
 		asampler.Filter = D3D12_FILTER::D3D12_FILTER_MIN_MAG_MIP_LINEAR;
 		staticsamplers.push_back(asampler);
-		D3D12_ROOT_PARAMETER psimgrootparam = {};
-
-		D3D12_DESCRIPTOR_RANGE texsrvrange = {};
-		texsrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		texsrvrange.NumDescriptors = NUMGBUFFERTEXTURES;
-		texsrvrange.BaseShaderRegister = 0;
-		texsrvrange.RegisterSpace = 0;
-		texsrvrange.OffsetInDescriptorsFromTableStart = 0;
-
-		psimgrootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		psimgrootparam.DescriptorTable.NumDescriptorRanges = 1;
-		psimgrootparam.DescriptorTable.pDescriptorRanges = &texsrvrange;
 		rootparams.push_back(psimgrootparam);
 
 
@@ -1129,6 +1252,144 @@ void RayTracingTestApplication_AdvancedAOTest::InitPSO_RTRaster()
 
 
 	m_pso.Init(m_creationdevice, psoinitdata);
+}
+void RayTracingTestApplication_AdvancedAOTest::InitRTAccumulationPSO()
+{
+	PSOInitData rtaccumpsodata = {};
+	rtaccumpsodata.type = GRAPHICS;
+
+	//shaders to use
+	DX12Shader* vs = new DX12Shader();
+	DX12Shader* ps = new DX12Shader();
+	vs->Init(L"shaders/RTextras/VS_RTAOAccumulation.hlsl", DX12Shader::ShaderType::VS);
+	ps->Init(L"shaders/RTextras/PS_RTAOAccumulation.hlsl", DX12Shader::ShaderType::PS);
+	rtaccumpsodata.m_shaderstouse.push_back(vs);
+	rtaccumpsodata.m_shaderstouse.push_back(ps);
+
+	//build up graphic pso desc
+
+	//shaderdesc
+	rtaccumpsodata.psodesc.graphicspsodesc.VS.pShaderBytecode = vs->GetCompiledCode();
+	rtaccumpsodata.psodesc.graphicspsodesc.VS.BytecodeLength = vs->GetCompiledCodeSize();
+	rtaccumpsodata.psodesc.graphicspsodesc.PS.pShaderBytecode = ps->GetCompiledCode();
+	rtaccumpsodata.psodesc.graphicspsodesc.PS.BytecodeLength = ps->GetCompiledCodeSize();
+
+	//primitive setup
+	rtaccumpsodata.psodesc.graphicspsodesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+
+	//rasterizer setup
+	rtaccumpsodata.psodesc.graphicspsodesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	rtaccumpsodata.psodesc.graphicspsodesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+	rtaccumpsodata.psodesc.graphicspsodesc.RasterizerState.DepthClipEnable = FALSE;
+	rtaccumpsodata.psodesc.graphicspsodesc.RasterizerState.AntialiasedLineEnable = FALSE;
+
+	//rtv&sample setup
+	rtaccumpsodata.psodesc.graphicspsodesc.SampleMask = UINT_MAX;
+	rtaccumpsodata.psodesc.graphicspsodesc.SampleDesc.Count = 1;
+	rtaccumpsodata.psodesc.graphicspsodesc.SampleDesc.Quality = 0;
+	rtaccumpsodata.psodesc.graphicspsodesc.RTVFormats[0] = DXGI_FORMAT_B8G8R8A8_UNORM;
+	rtaccumpsodata.psodesc.graphicspsodesc.NumRenderTargets = 1;
+
+	//raster state
+	rtaccumpsodata.psodesc.graphicspsodesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	rtaccumpsodata.psodesc.graphicspsodesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+	rtaccumpsodata.psodesc.graphicspsodesc.RasterizerState.DepthClipEnable = FALSE;
+	rtaccumpsodata.psodesc.graphicspsodesc.RasterizerState.AntialiasedLineEnable = FALSE;
+
+	//root signature
+
+	//1 root param for ps texture & sampler 
+	D3D12_STATIC_SAMPLER_DESC simplesampler = {};
+	simplesampler.Filter = D3D12_FILTER::D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	simplesampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	simplesampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	simplesampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	simplesampler.MipLODBias = 0;
+	simplesampler.MaxAnisotropy = 0;
+	simplesampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+	simplesampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+	simplesampler.MinLOD = 0.0f;
+	simplesampler.MaxLOD = D3D12_FLOAT32_MAX;
+	simplesampler.ShaderRegister = 0;
+	simplesampler.RegisterSpace = 0;
+	simplesampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+	D3D12_DESCRIPTOR_RANGE texsrvrange[2] = {};
+	//1st tex srv(last frame)
+	{
+		texsrvrange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		texsrvrange[0].NumDescriptors = 1;
+		texsrvrange[0].BaseShaderRegister = 0;
+		texsrvrange[0].RegisterSpace = 0;
+		texsrvrange[0].OffsetInDescriptorsFromTableStart = 0;
+	}
+	//2nd tex srv(current frame)
+	{
+		texsrvrange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		texsrvrange[1].NumDescriptors = 1;
+		texsrvrange[1].BaseShaderRegister = 1;
+		texsrvrange[1].RegisterSpace = 0;
+		texsrvrange[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	}
+	D3D12_ROOT_PARAMETER psimgrootparam = {};
+	psimgrootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	psimgrootparam.DescriptorTable.NumDescriptorRanges = 2;
+	psimgrootparam.DescriptorTable.pDescriptorRanges = texsrvrange;
+	D3D12_ROOT_PARAMETER accumulationconstantsrootparam = {};
+	accumulationconstantsrootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+	accumulationconstantsrootparam.Constants.Num32BitValues = sizeof(m_aoaccumconstants) / 4;
+	accumulationconstantsrootparam.Constants.ShaderRegister = 0;
+	accumulationconstantsrootparam.Constants.RegisterSpace = 0;
+	accumulationconstantsrootparam.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	//inputlayoutsetup
+	{
+		D3D12_INPUT_ELEMENT_DESC simplevsinputelementdesc[2] = {};
+		simplevsinputelementdesc[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+		simplevsinputelementdesc[0].InputSlot = 0;
+		simplevsinputelementdesc[0].SemanticName = "POS";
+		simplevsinputelementdesc[0].SemanticIndex = 0;
+		simplevsinputelementdesc[0].InstanceDataStepRate = 0;
+		simplevsinputelementdesc[0].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+		simplevsinputelementdesc[1].Format = DXGI_FORMAT_R32G32_FLOAT;
+		simplevsinputelementdesc[1].InputSlot = 0;
+		simplevsinputelementdesc[1].SemanticName = "VUV";
+		simplevsinputelementdesc[1].SemanticIndex = 0;
+		simplevsinputelementdesc[1].InstanceDataStepRate = 0;
+		simplevsinputelementdesc[1].InstanceDataStepRate = 0;
+		simplevsinputelementdesc[1].AlignedByteOffset = sizeof(float) * 3;//uv after 3 pos floats
+		rtaccumpsodata.psodesc.graphicspsodesc.InputLayout.NumElements = 2;
+		rtaccumpsodata.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = simplevsinputelementdesc;
+
+	}
+
+
+
+	//blendstate setup
+	//blend state has fixed rt count of 8
+	for (size_t i = 0; i < 8; i++)
+	{
+		//same for all 8 rtvs
+		rtaccumpsodata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].BlendEnable = FALSE;
+		rtaccumpsodata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	}
+	//root signature
+	{
+		vector<D3D12_ROOT_PARAMETER> rootparams;
+
+		vector<D3D12_STATIC_SAMPLER_DESC> staticsamplers;
+		D3D12_STATIC_SAMPLER_DESC asampler = StaticSamplerManager::GetDefaultStaticSamplerDesc();
+		asampler.Filter = D3D12_FILTER::D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+		staticsamplers.push_back(asampler);
+		rootparams.push_back(psimgrootparam);
+		rootparams.push_back(accumulationconstantsrootparam);
+
+
+
+
+		rtaccumpsodata.rootsignature.BuidDesc(rootparams, staticsamplers, D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+	}
+
+	m_psortaccumulation.Init(m_creationdevice, rtaccumpsodata);
 }
 
 

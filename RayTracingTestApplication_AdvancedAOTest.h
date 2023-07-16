@@ -39,6 +39,10 @@ protected:
 		unsigned int frameindex;
 		float aoradius;
 	};
+	struct AOAccumulationConstants
+	{
+		unsigned int framecount;
+	};
 
 private:
 	struct BasicShaderRecord
@@ -51,12 +55,17 @@ private:
 	};
 	
 	DX12DESCHEAP m_gbufferrtvheaps,m_gbuffersrvheap;
+	DX12DESCHEAP m_rtaccumrtvheap;
+	DX12DESCHEAP m_rtaccumresheap;
 	DX12DESCHEAP m_rtresheap_global, m_rtresheap_globalupload;
 	DX12DESCHEAP m_rtdisplayresheap;
 	DX12TextureSimple m_gbuffernormal,m_gbufferposition, m_gbufferalbedo,m_rtouput;
+	DX12TextureSimple m_accumLastframedata,m_accumresultdata;
 	DX12PSO m_pso,m_gbufferpso;
 	//renderes the rt output texture as a full screen quad.
 	DX12PSO m_psortdisplay,m_psogbufferdisplay;
+	//accumulation for rt texture
+	DX12PSO m_psortaccumulation;
 	RTPSO m_simplertpso;
 	//shader records
 	DX12Buffer m_rgsrecords,m_missrecords,m_hitrecords;
@@ -65,7 +74,7 @@ private:
 	bool m_rtmode;
 	//device5 is often used in raytracing so retrive it once and keep troughout app lifetime.
 	DX12RaytracingCommandlist m_rtcommandlist;
-	DX12Commandlist m_gbufferrendercommandlist;
+	DX12Commandlist m_gbufferrendercommandlist,m_accumulationcommandlist;
 	ComPtr<ID3D12Device5> m_device5;
 	Model m_loadedmodel,m_trianglemodel,m_planemodel;
 	CompoundModel m_comloadedmodel;
@@ -75,14 +84,17 @@ private:
 	CompoundModelAccelerationStructureBLAS m_comploadedmodelblas;
 	ModelAccelerationStructureTLAS loadedmodelastlas;
 	DirectAOConstants m_aoconstants;
+	AOAccumulationConstants m_aoaccumconstants;
 	void InitGbufferPSO();
 	void InitPSO_RTRaster();
 	void InitRTDisplayPSO();
 	void InitGBufferDisplayPSO();
 	void InitRTPSO();
+	void InitRTAccumulationPSO();
 	void RenderRT();
 	void RenderRaster();
 	void RenderGbuffer();
 	void RenderTextureOnScreenRT();
 	void RenderTextureOnScreenGBuffer();
+	void RTAccumulation();
 };

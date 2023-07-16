@@ -175,7 +175,7 @@ void ExportAssociation::PrepareSubObject(D3D12_STATE_SUBOBJECT& outassociationsu
 }
 bool RTPSOShader::IsShaderIdentifierRetriveable()
 {
-	bool result = (m_type!=RTPSOSHADERTYPE::CLOSESTHIT);
+	bool result = (m_type!=RTPSOSHADERTYPE::CLOSESTHIT && m_type != RTPSOSHADERTYPE::ANYHIT);
 	return result;
 }
 void RTPSOShader::Init(DX12Shader* shader, wstring hlslentry, wstring uniquename, RTPSOSHADERTYPE shadertype)
