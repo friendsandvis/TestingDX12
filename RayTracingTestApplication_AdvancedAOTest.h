@@ -85,6 +85,7 @@ private:
 	ModelAccelerationStructureTLAS loadedmodelastlas;
 	DirectAOConstants m_aoconstants;
 	AOAccumulationConstants m_aoaccumconstants;
+	XMMATRIX m_lastviewmat;
 	void InitGbufferPSO();
 	void InitPSO_RTRaster();
 	void InitRTDisplayPSO();
@@ -97,4 +98,6 @@ private:
 	void RenderTextureOnScreenRT();
 	void RenderTextureOnScreenGBuffer();
 	void RTAccumulation();
+	void ResetAccumulation();
+	bool MatrixEqual(XMMATRIX& mata, XMMATRIX& matb);
 };

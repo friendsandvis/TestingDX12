@@ -16,7 +16,11 @@ struct Vout
 
 float4 main(Vout psin) : SV_TARGET0
 {
+	float4  currentframedata = imagecurrentframe.Sample(simplesampler,psin.uv);
+	float4  lastframedata = imagelastframe.Sample(simplesampler,psin.uv);
+	float4 result = (aoaccumconstants.framecount*lastframedata + currentframedata)/(aoaccumconstants.framecount+1);
 	//return float4(psin.uv,0.0f,1.0f);
-	return imagecurrentframe.Sample(simplesampler,psin.uv);
+	return result;
+	//return currentframedata;
 	return float4(1.0f,0.0f,0.0f,1.0f);
 }

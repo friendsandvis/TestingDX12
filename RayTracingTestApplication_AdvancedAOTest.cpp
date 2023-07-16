@@ -29,9 +29,10 @@ RayTracingTestApplication_AdvancedAOTest::RayTracingTestApplication_AdvancedAOTe
 	m_planemodel(ModelDataUploadMode::COPY)
 {
 	m_maincameracontroller.SetCameratoControl(&m_maincamera);
-	m_aoconstants.aoradius = 0.1f;
+	m_aoconstants.aoradius = 0.07f;
 	m_aoconstants.frameindex = 0;
 	m_aoaccumconstants.framecount = 0;
+	m_lastviewmat = XMMatrixIdentity();
 	
 }
 RayTracingTestApplication_AdvancedAOTest::~RayTracingTestApplication_AdvancedAOTest()
@@ -215,8 +216,36 @@ void RayTracingTestApplication_AdvancedAOTest::RenderTextureOnScreenGBuffer()
 	DXASSERT(m_primarycmdlist->Close())
 		BasicRender();
 }
+void RayTracingTestApplication_AdvancedAOTest::ResetAccumulation()
+{
+	m_aoaccumconstants.framecount = 0;
+	m_lastviewmat = m_maincamera.GetView();
+
+}
+bool RayTracingTestApplication_AdvancedAOTest::MatrixEqual(XMMATRIX& mata, XMMATRIX& matb)
+{
+	XMFLOAT4X4 matatype2;
+	float* rawmata = reinterpret_cast<float*>(&matatype2);
+	XMStoreFloat4x4(&matatype2, mata);
+	XMFLOAT4X4 matbtype2;
+	float* rawmatb = reinterpret_cast<float*>(&matbtype2);
+	XMStoreFloat4x4(&matbtype2, matb);
+	for (int i = 0; i < 16; i++)
+	{
+		if (rawmata[i] != rawmatb[i])
+		{
+			return false;
+		}
+	}
+	return true;
+}
 void RayTracingTestApplication_AdvancedAOTest::RTAccumulation()
 {
+	XMMATRIX currentviewmat = m_maincamera.GetView();
+	if (!MatrixEqual(m_lastviewmat, currentviewmat))
+	{
+		ResetAccumulation();
+	}
 	m_accumulationcommandlist.Reset();
 	m_accumulationcommandlist->SetPipelineState(m_psortaccumulation.GetPSO());
 	m_accumulationcommandlist->SetGraphicsRootSignature(m_psortaccumulation.GetRootSignature());
@@ -383,7 +412,9 @@ void RayTracingTestApplication_AdvancedAOTest::Render()
 
 void RayTracingTestApplication_AdvancedAOTest::InitExtras()
 {
-	
+	/*XMMATRIX m1 = XMMatrixScaling(1.0f, 1.0f, 1.0f);
+	XMMATRIX m2 = XMMatrixIdentity();
+	bool equalmat = MatrixEqual(m1, m2);*/
 	//check ray tracing  support
 	D3D12_FEATURE_DATA_D3D12_OPTIONS5 option5features = {};
 	DXASSERT(m_creationdevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &option5features, sizeof(option5features)))
