@@ -21,6 +21,13 @@ enum ModelDataUploadMode
 	NOCOPY,//using uploadbuffer directly as vb & ib
 	COPY	//using an upload buffer to copy vb & ib to a default heap buffer
 };
+/*this struct specifics the constants required by shader/vertexshader for a typical camera based render scenario
+(i.e. 2 matricies: 1st for mvp matrix and 2nd for model matrix alone)*/
+struct ShaderTransformConstants_General
+{
+	XMMATRIX mvp;
+	XMMATRIX model;
+};
 
 //forwarddeclare
 class DX12Commandlist;
@@ -53,6 +60,7 @@ public:
 	void TransitionVextexAndIndexBufferState(D3D12_RESOURCE_STATES state, ComPtr<ID3D12GraphicsCommandList4>cmdlist);
 
 private:
+	ShaderTransformConstants_General m_shadertransformconsts;
 	XMMATRIX m_transform;
 	DX12Buffer m_vertexbuffer, m_indexbuffer,m_vertexuploadbuffer,m_indexuploadbuffer;
 	//verticies are all of a single specialized vertex type and they are all dynamically allocated.

@@ -134,16 +134,29 @@ void ModelTestApplication::InitPSO()
 	//root signature setup
 	{
 		 {
-			D3D12_ROOT_PARAMETER rootparams[1] = {};
+			/*D3D12_ROOT_PARAMETER rootparams[2] = {};
 			D3D12_ROOT_SIGNATURE_DESC&rootsigdesc=m_rootsignature.getSignatureDescforModification();
-			rootsigdesc.NumParameters = 1;
+			rootsigdesc.NumParameters = 2;
 			
 			rootparams[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
 			rootparams[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 			rootparams[0].Constants.Num32BitValues = sizeof(XMMATRIX) / 4;
 			rootparams[0].Constants.RegisterSpace=0;
 			rootparams[0].Constants.ShaderRegister = 0;
-			rootsigdesc.pParameters = rootparams;
+			rootparams[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+			rootparams[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+			rootparams[1].Constants.Num32BitValues = sizeof(XMMATRIX) / 4;
+			rootparams[1].Constants.RegisterSpace = 0;
+			rootparams[1].Constants.ShaderRegister = 1;*/
+			D3D12_ROOT_SIGNATURE_DESC& rootsigdesc = m_rootsignature.getSignatureDescforModification();
+			D3D12_ROOT_PARAMETER rootparam = {};
+			rootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+			rootparam.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+			rootparam.Constants.Num32BitValues = sizeof(ShaderTransformConstants_General) / 4;
+			rootparam.Constants.RegisterSpace = 0;
+			rootparam.Constants.ShaderRegister = 0;
+				rootsigdesc.NumParameters = 1;
+			rootsigdesc.pParameters = &rootparam;
 
 		}
 

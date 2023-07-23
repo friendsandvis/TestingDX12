@@ -741,7 +741,7 @@ void RayTracingTestApplication_AdvancedAOTest::InitGbufferPSO()
 		{
 			std::vector< D3D12_ROOT_PARAMETER>rootparams;
 			std::vector<D3D12_STATIC_SAMPLER_DESC> staticsamplers;
-			//for mvp matrix
+			/*for mvp matrix
 			{
 				D3D12_ROOT_PARAMETER arootparam = {};
 				arootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
@@ -759,6 +759,15 @@ void RayTracingTestApplication_AdvancedAOTest::InitGbufferPSO()
 				arootparam.Constants.Num32BitValues = sizeof(XMMATRIX) / 4;
 				arootparam.Constants.RegisterSpace = 0;
 				arootparam.Constants.ShaderRegister = 1;
+				rootparams.push_back(arootparam);
+			}*/
+			{
+				D3D12_ROOT_PARAMETER arootparam = {};
+				arootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+				arootparam.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+				arootparam.Constants.Num32BitValues = sizeof(ShaderTransformConstants_General) / 4;
+				arootparam.Constants.RegisterSpace = 0;
+				arootparam.Constants.ShaderRegister = 0;
 				rootparams.push_back(arootparam);
 			}
 			psoinitdata.rootsignature.BuidDesc(rootparams, staticsamplers);

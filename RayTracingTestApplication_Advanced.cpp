@@ -34,8 +34,8 @@ void RayTracingApplicationAdvanced::RenderRaster()
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
 	m_primarycmdlist->SetPipelineState(m_pso.GetPSO());
 	m_primarycmdlist->SetGraphicsRootSignature(m_pso.GetRootSignature());
-	XMMATRIX mvp = m_maincamera.GetMVP();
-	m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvp, 0);
+	//XMMATRIX mvp = m_maincamera.GetMVP();
+	//m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvp, 0);
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandlestoset[1] =
 	{
 		rtvhandle
@@ -73,7 +73,7 @@ void RayTracingApplicationAdvanced::RenderGbuffer()
 {
 	m_gbufferrendercommandlist.Reset();
 	m_gbufferrendercommandlist->SetPipelineState(m_gbufferpso.GetPSO());
-	m_gbufferrendercommandlist->SetGraphicsRootSignature(m_pso.GetRootSignature());
+	m_gbufferrendercommandlist->SetGraphicsRootSignature(m_gbufferpso.GetRootSignature());
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandlestoset[3] =
 	{
@@ -81,6 +81,35 @@ void RayTracingApplicationAdvanced::RenderGbuffer()
 		m_gbufferrtvheaps.GetCPUHandleOffseted(1),
 		m_gbufferrtvheaps.GetCPUHandleOffseted(2)
 	};
+	//transition gbuffer textures to rtv state
+	{
+		//albedo
+		{
+			D3D12_RESOURCE_BARRIER barrier = m_gbufferalbedo.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET);
+			if (DXUtils::IsBarrierSafeToExecute(barrier))
+			{
+				m_gbufferrendercommandlist->ResourceBarrier(1, &barrier);
+			}
+		}
+		//normal
+		{
+			D3D12_RESOURCE_BARRIER barrier = m_gbuffernormal.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET);
+			if (DXUtils::IsBarrierSafeToExecute(barrier))
+			{
+				m_gbufferrendercommandlist->ResourceBarrier(1, &barrier);
+			}
+		}
+		//position
+		{
+			D3D12_RESOURCE_BARRIER barrier = m_gbufferposition.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET);
+			if (DXUtils::IsBarrierSafeToExecute(barrier))
+			{
+				m_gbufferrendercommandlist->ResourceBarrier(1, &barrier);
+			}
+		}
+
+		
+	}
 	m_gbufferrendercommandlist->OMSetRenderTargets(3, rtvhandlestoset, FALSE, &dsvhandle);
 	
 	float blackclearvalue[4] = { 0.0f,0.0f,0.0f,0.0f };
@@ -151,7 +180,8 @@ void RayTracingApplicationAdvanced::RenderTextureOnScreenGBuffer()
 {
 	m_primarycmdlist.Reset();
 	//set rtv
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
+	UINT  currentBackBufferIdx = m_swapchain.GetCurrentbackbufferIndex();
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(currentBackBufferIdx);
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
 	m_primarycmdlist->SetPipelineState(m_psogbufferdisplay.GetPSO());
 	m_primarycmdlist->SetGraphicsRootSignature(m_psogbufferdisplay.GetRootSignature());
@@ -161,7 +191,8 @@ void RayTracingApplicationAdvanced::RenderTextureOnScreenGBuffer()
 	m_primarycmdlist->SetGraphicsRootDescriptorTable(0, m_gbuffersrvheap.GetGPUHandlefromstart());
 	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, &dsvhandle);
 	float clearvalue[4] = { 1.0f,1.0f,1.0f,1.0f };
-	m_primarycmdlist->ClearRenderTargetView(rtvhandle, clearvalue, 0, nullptr);
+	//m_primarycmdlist->ClearRenderTargetView(rtvhandle, clearvalue, 0, nullptr);
+	ClearBackBuffer(currentBackBufferIdx, m_primarycmdlist, clearvalue);
 	m_primarycmdlist->ClearDepthStencilView(dsvhandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	m_primarycmdlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -518,14 +549,21 @@ void RayTracingApplicationAdvanced::InitGbufferPSO()
 			std::vector< D3D12_ROOT_PARAMETER>rootparams;
 			std::vector<D3D12_STATIC_SAMPLER_DESC> staticsamplers;
 			
-			D3D12_ROOT_PARAMETER arootparam = {};
+			/*D3D12_ROOT_PARAMETER arootparam = {};
 			arootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
 			arootparam.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 			arootparam.Constants.Num32BitValues = sizeof(XMMATRIX) / 4;
 			arootparam.Constants.RegisterSpace = 0;
 			arootparam.Constants.ShaderRegister = 0;
 			rootparams.push_back(arootparam);
-			
+			*/
+			D3D12_ROOT_PARAMETER arootparam = {};
+			arootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+			arootparam.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+			arootparam.Constants.Num32BitValues = sizeof(ShaderTransformConstants_General) / 4;
+			arootparam.Constants.RegisterSpace = 0;
+			arootparam.Constants.ShaderRegister = 0;
+			rootparams.push_back(arootparam);
 			psoinitdata.rootsignature.BuidDesc(rootparams, staticsamplers);
 
 

@@ -8,6 +8,7 @@ struct VSConstants
 {
 //matrix is alias for float4x4
 	matrix mvp;
+	matrix model;
 };
 ConstantBuffer<VSConstants> vertexconsts:register(b0);
 
