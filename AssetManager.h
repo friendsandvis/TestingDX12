@@ -36,7 +36,6 @@ class Model
 {
 public:
 	XMMATRIX GetTransform() { return m_transform; }
-	//set ib & vb and issue draw command,Warning implicitly binds model matrix in slot 1 along with mvp matrix in slot 0.
 	void Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix,UINT mvpmatrixrootparamindex,bool usemodelmatrix=true,bool setmvpmatrix=true);
 	void Extratransform(XMMATRIX extratransformmat);
 	Model(ModelDataUploadMode uploadmode=NOCOPY);

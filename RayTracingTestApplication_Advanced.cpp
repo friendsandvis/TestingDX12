@@ -549,14 +549,7 @@ void RayTracingApplicationAdvanced::InitGbufferPSO()
 			std::vector< D3D12_ROOT_PARAMETER>rootparams;
 			std::vector<D3D12_STATIC_SAMPLER_DESC> staticsamplers;
 			
-			/*D3D12_ROOT_PARAMETER arootparam = {};
-			arootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-			arootparam.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-			arootparam.Constants.Num32BitValues = sizeof(XMMATRIX) / 4;
-			arootparam.Constants.RegisterSpace = 0;
-			arootparam.Constants.ShaderRegister = 0;
-			rootparams.push_back(arootparam);
-			*/
+			
 			D3D12_ROOT_PARAMETER arootparam = {};
 			arootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
 			arootparam.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
