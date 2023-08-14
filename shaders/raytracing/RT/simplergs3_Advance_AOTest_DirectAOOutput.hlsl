@@ -112,7 +112,8 @@ float2 center=float2(-0.5f,-0.5f);
 	ray.TMin=0.001f;
 	ray.TMax=aoconstants.aoradius;
 	SimpleAOpayload payload;
-payload.aoresult=1.0f;//initialize as hit.
+payload.aoresult=1.0f;//initialize as miss.
+//names used can be a bit conflusing so a bit of working explained: we initialize payload res as 1(no hit/miss) and upon anyhit we set it to 0 finally we calculate aoval as avarage of hits;this requires a anyhit shader only we use a miss shader here for namesake(it does not effects payload(code has been commented off).
 		TraceRay(basicas,RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH|RAY_FLAG_SKIP_CLOSEST_HIT_SHADER,0xFF,AOCALCRAY,NUMRAYTTYPES,1,ray,payload);
 		//outtex[outindex]=float4(normalize(worldnormal.xyz),1.0f);
 		finalaoval += payload.aoresult;

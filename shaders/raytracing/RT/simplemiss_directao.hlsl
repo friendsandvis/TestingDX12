@@ -7,5 +7,5 @@ struct SimpleAOpayload
 [shader("miss")]
 void missmain(inout SimpleAOpayload payload)
 {
-	payload.aoresult = 1.0f;
+	//payload.aoresult = 1.0f;
 }
