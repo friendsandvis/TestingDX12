@@ -1,8 +1,8 @@
 #include"ModelTestApplication.h"
 //only 1 model define to be active at a time
 //#define USECONFERENCEROOMCOMPOUNDMODEL
-//#define USESPHONZAMODEL
-#define USECUBEMODEL
+#define USESPHONZAMODEL
+//#define USECUBEMODEL
 
 
 ModelTestApplication::ModelTestApplication()
@@ -83,7 +83,7 @@ void ModelTestApplication::InitExtras()
 #if defined(USESPHONZAMODEL)
 	float scalefactor = 1.0f;
 	XMMATRIX scalemat = XMMatrixScalingFromVector(XMVectorSet(scalefactor, scalefactor, scalefactor, 1.0f));
-	BasicModelManager::LoadModel(m_creationdevice, "models/Sponza.gltf", m_loadedcompoundmodel, VERTEXVERSION2);
+	BasicModelManager::LoadModel(m_creationdevice, "models/Sponza.gltf", m_loadedcompoundmodel, VERTEXVERSION3);
 #endif//defined(USESPHONZAMODEL)
 #ifdef USECUBEMODEL
 	BasicModelManager::LoadModel(m_creationdevice, "models/cubes2.dae", m_loadedcompoundmodel, VERTEXVERSION2);
@@ -116,7 +116,7 @@ void ModelTestApplication::InitExtras()
 void ModelTestApplication::InitPSO()
 {
 	vector<D3D12_INPUT_ELEMENT_DESC> inputelements;
-	DXVertexManager::BuildDefaultInputelementdesc(inputelements, m_loadedmodel.GetVertexVersionUsed());
+	DXVertexManager::BuildDefaultInputelementdesc(inputelements, VERTEXVERSION3);
 	PSOInitData psoinitdata;
 	psoinitdata.type = PSOType::GRAPHICS;
 

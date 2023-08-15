@@ -256,6 +256,20 @@ void Model::GetVertexArray(vector<VertexBase*>& outverticies, AssimpLoadedMesh& 
 		outverticies.push_back(vert);
 		break;
 		}
+		case VERTEXVERSION3:
+		{
+			VertexV3* vert = new VertexV3();
+			vert->m_position.x = aprocessedvertex.pos.x;
+			vert->m_position.y = aprocessedvertex.pos.y;
+			vert->m_position.z = aprocessedvertex.pos.z;
+			vert->m_normal.x = aprocessedvertex.normal.x;
+			vert->m_normal.y = aprocessedvertex.normal.y;
+			vert->m_normal.z = aprocessedvertex.normal.z;
+			vert->m_uv.x = aprocessedvertex.uv.x;
+			vert->m_uv.y = aprocessedvertex.uv.y;
+			outverticies.push_back(vert);
+			break;
+		}
 	}
 	}
 }

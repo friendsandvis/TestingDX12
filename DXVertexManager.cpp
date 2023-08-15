@@ -81,6 +81,43 @@ outinputelementdescs.push_back(element1);
 			outinputelementdescs.push_back(element2);
 		}
 	}
+	case VertexVersion::VERTEXVERSION3:
+	{
+		{
+			D3D12_INPUT_ELEMENT_DESC element1 = {};
+			element1.Format = DXGI_FORMAT_R32G32B32_FLOAT;
+			element1.InputSlot = 0;
+			element1.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+			element1.AlignedByteOffset = 0;
+			element1.InstanceDataStepRate = 0;
+			element1.SemanticName = "POS";
+			element1.SemanticIndex = 0;
+			outinputelementdescs.push_back(element1);
+		}
+		{
+			D3D12_INPUT_ELEMENT_DESC element2 = {};
+			element2.Format = DXGI_FORMAT_R32G32B32_FLOAT;
+			element2.InputSlot = 0;
+			element2.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+			element2.AlignedByteOffset = 3 * sizeof(float);
+			element2.InstanceDataStepRate = 0;
+			element2.SemanticName = "NORMAL";
+			element2.SemanticIndex = 0;
+			outinputelementdescs.push_back(element2);
+		}
+		{
+			D3D12_INPUT_ELEMENT_DESC element3 = {};
+			element3.Format = DXGI_FORMAT_R32G32_FLOAT;
+			element3.InputSlot = 0;
+			element3.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+			element3.AlignedByteOffset = 6 * sizeof(float);
+			element3.InstanceDataStepRate = 0;
+			element3.SemanticName = "VUV";
+			element3.SemanticIndex = 0;
+			outinputelementdescs.push_back(element3);
+		}
+
+	}
 	break;
 	default:
 		break;
@@ -95,6 +132,8 @@ unsigned DXVertexManager::GetVertexSize(VertexVersion vtype)
 		return(5 * sizeof(float)); break;
 	case VERTEXVERSION2:
 		return(6 * sizeof(float)); break;
+	case VERTEXVERSION3:
+		return(8 * sizeof(float)); break;
 	default:
 		return 0;
 	}
@@ -124,6 +163,20 @@ void DXVertexManager::RetriveRawVertexData(vector<float>& outverticiesrawdata, V
 		outverticiesrawdata.push_back(vert->m_normal.y);
 		outverticiesrawdata.push_back(vert->m_normal.z);
 		break;
+	}
+	case VERTEXVERSION3:
+	{
+		VertexV3* vert = static_cast<VertexV3*>(avertex);
+		outverticiesrawdata.push_back(vert->m_position.x);
+		outverticiesrawdata.push_back(vert->m_position.y);
+		outverticiesrawdata.push_back(vert->m_position.z);
+		outverticiesrawdata.push_back(vert->m_normal.x);
+		outverticiesrawdata.push_back(vert->m_normal.y);
+		outverticiesrawdata.push_back(vert->m_normal.z);
+		outverticiesrawdata.push_back(vert->m_uv.x);
+		outverticiesrawdata.push_back(vert->m_uv.y);
+
+
 	}
 	default:
 		break;

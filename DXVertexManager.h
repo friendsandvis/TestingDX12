@@ -23,7 +23,8 @@ enum VertexVersion
 	UNKNOWN,
 	VERTEXVERSION0,
 	VERTEXVERSION1,
-	VERTEXVERSION2
+	VERTEXVERSION2,
+	VERTEXVERSION3
 };
 class VertexBase
 {
@@ -67,6 +68,18 @@ public:
 	{
 		m_vertversion = VertexVersion::VERTEXVERSION2;
 	}
+};
+
+class VertexV3 :public VertexBase
+{
+public:
+	VertexV3()
+	{
+		m_vertversion = VertexVersion::VERTEXVERSION3;
+	}
+	XMFLOAT3 m_position;
+	XMFLOAT3 m_normal;
+	XMFLOAT2 m_uv;
 };
 
 

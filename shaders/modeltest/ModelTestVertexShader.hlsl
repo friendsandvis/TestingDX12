@@ -2,6 +2,7 @@ struct VSIn
 {
     float3 vpos:POS;
 	float3 normal:NORMAL;
+	float2 vuv:VUV;
 };
 
 struct VSConstants
@@ -16,6 +17,7 @@ struct VSOut
 {
     float4 pos : SV_Position;
 	float3 normal: NORM;
+	float2 uv:UV;
 };
 
 VSOut main(VSIn input)
@@ -26,6 +28,7 @@ VSOut main(VSIn input)
 		
 		output.pos =mul(vertexconsts.mvp,float4(input.vpos,1.0f));
 		output.normal=input.normal;
+		output.uv=input.vuv;
 
     return output;
 }
