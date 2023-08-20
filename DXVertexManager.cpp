@@ -81,6 +81,7 @@ outinputelementdescs.push_back(element1);
 			outinputelementdescs.push_back(element2);
 		}
 	}
+	break;
 	case VertexVersion::VERTEXVERSION3:
 	{
 		{

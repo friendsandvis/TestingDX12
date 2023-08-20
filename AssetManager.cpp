@@ -198,6 +198,7 @@ void Model::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimp
 	AssimpLoadedMesh& meshtoload = assimpModel.m_meshes[meshindexinassimpmodeltoload];
 	m_transform=AssimpManager::ToXMMatrix(meshtoload.transform);
 	m_material = meshtoload.material;
+	InitMaterial();
 	
 	
 	
@@ -358,7 +359,19 @@ void Model::TransitionVextexAndIndexBufferState(D3D12_RESOURCE_STATES state, Com
 		cmdlist->ResourceBarrier(1, &barrier);
 	}
 }
-
+void Model::InitMaterial()
+{
+	std::set<std::string>& diffusetexnames=m_material.GetDiffuseTextureNames();
+		if (diffusetexnames.size() > 0)
+		{
+			DXTexture* atexture = new DXTexture();
+			std::string texfilename = *(diffusetexnames.begin());
+			wstring texfilenamewstr(texfilename.begin(), texfilename.end());
+			
+			//need to update texture loader to support non dds
+			m_loadedmaterial.LoadDifuseTexture(texfilenamewstr);
+		}
+}
 CompoundModel::CompoundModel(ModelDataUploadMode uploadmode)
 	:m_datauploadmode(uploadmode)
 {
@@ -408,6 +421,25 @@ void CompoundModel::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel
 		Model* amodel = new Model(m_datauploadmode);
 		amodel->Init(creationdevice, assimpModel, (UINT)i, modelvertexversion);
 		AddModel(amodel);
+	}
+
+	//collect data to build up texture srv heap
+	unsigned int numsrvrequired = 0;
+	for (size_t i = 0; i < m_models.size(); i++)
+	{
+		if (m_models[i]->GetLoadedMaterial().GetDiffuseTexture())
+		{
+			numsrvrequired += 1;
+		}
+	}
+	//prevent crash is no srv required(we do not need the heap then.
+	if (numsrvrequired)
+	{
+		D3D12_DESCRIPTOR_HEAP_DESC texsrvheapdesc = {};
+		texsrvheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		texsrvheapdesc.NumDescriptors = numsrvrequired;
+		texsrvheapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		m_texturesrvheap.Init(texsrvheapdesc, creationdevice);
 	}
 }
 
@@ -558,4 +590,37 @@ void BasicModelManager::GetTriangleRTVertexData(vector<RTVertexDataV0>& rtvertex
 		rtvertexdata.push_back(rtvert);
 		delete vertex;
 	}
+}
+
+ModelMaterial::ModelMaterial()
+	:
+	m_diffusetexture(nullptr)
+{
+
+}
+ModelMaterial::~ModelMaterial()
+{
+	if (m_diffusetexture)
+	{
+		delete m_diffusetexture;
+	}
+	if (m_normaltexture)
+	{
+		delete m_normaltexture;
+	}
+}
+void ModelMaterial::LoadDifuseTexture(std::wstring texname)
+{
+	//todo: actually load the tex
+	m_diffusetexture = new DXTexture();
+}
+void ModelMaterial::LoadNormalTexture(std::wstring texname)
+{
+	//todo: actually load the tex
+	m_normaltexture = new DXTexture();
+}
+std::wstring GetTextureFilePath(std::wstring texname)
+{
+	wstring texfilepath = (L"textures/modeltextures/sponza/") + texname;
+	return texfilepath;
 }

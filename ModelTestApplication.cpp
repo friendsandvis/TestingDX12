@@ -36,7 +36,7 @@ void ModelTestApplication::Render()
 	}
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
 	m_primarycmdlist->SetPipelineState(m_pso.GetPSO());
-	m_primarycmdlist->SetGraphicsRootSignature(m_rootsignature.GetRootSignature());
+	m_primarycmdlist->SetGraphicsRootSignature(m_pso.GetRootSignature());
 	//XMMATRIX mvp = m_maincamera.GetMVP();
 	XMMATRIX orthoproj = XMMatrixOrthographicLH(2.0F, 2.0F, -1.0f, 1.0f);
 	XMMATRIX model = XMMatrixIdentity();
@@ -133,28 +133,36 @@ void ModelTestApplication::InitPSO()
 	//psoinitdata.psodesc.graphicspsodesc.RasterizerState.CullMode = D3D12_CULL_MODE_FRONT;
 	//root signature setup
 	{
-		 {
-			
-			D3D12_ROOT_SIGNATURE_DESC& rootsigdesc = m_rootsignature.getSignatureDescforModification();
-			D3D12_ROOT_PARAMETER rootparam = {};
-			rootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-			rootparam.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-			rootparam.Constants.Num32BitValues = sizeof(ShaderTransformConstants_General) / 4;
-			rootparam.Constants.RegisterSpace = 0;
-			rootparam.Constants.ShaderRegister = 0;
-				rootsigdesc.NumParameters = 1;
-			rootsigdesc.pParameters = &rootparam;
-
-		}
+		 
 
 		//input assembler setup
 		 
 		psoinitdata.psodesc.graphicspsodesc.InputLayout.NumElements = (UINT)inputelements.size();
 		psoinitdata.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = inputelements.data();
-
-		m_rootsignature.Init(m_creationdevice, D3D_ROOT_SIGNATURE_VERSION_1);
-		psoinitdata.psodesc.graphicspsodesc.pRootSignature = m_rootsignature.GetRootSignature();
+		
 		//psoinitdata.psodesc.graphicspsodesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+		{D3D12_ROOT_PARAMETER rootparam0 = {};
+		rootparam0.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+		rootparam0.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+		rootparam0.Constants.Num32BitValues = sizeof(ShaderTransformConstants_General) / 4;
+		rootparam0.Constants.RegisterSpace = 0;
+		rootparam0.Constants.ShaderRegister = 0;
+		vector<D3D12_ROOT_PARAMETER> rootparams;
+		rootparams.push_back(rootparam0);
+		D3D12_ROOT_PARAMETER rootparam1 = {};
+		//making unbound range so make sure it is last range
+		D3D12_DESCRIPTOR_RANGE texturesrvrange = {};
+		texturesrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		texturesrvrange.BaseShaderRegister = 0;
+		texturesrvrange.RegisterSpace = 0;
+		texturesrvrange.NumDescriptors = -1;
+		rootparam1.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		rootparam1.DescriptorTable.NumDescriptorRanges = 1;
+		rootparam1.DescriptorTable.pDescriptorRanges = &texturesrvrange;
+		rootparam1.ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_PIXEL;
+		rootparams.push_back(rootparam1);
+		psoinitdata.rootsignature.BuidDesc(rootparams, vector<D3D12_STATIC_SAMPLER_DESC>());
+		}
 	}
 	m_pso.Init(m_creationdevice, psoinitdata);
 }

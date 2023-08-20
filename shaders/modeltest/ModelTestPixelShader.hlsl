@@ -1,5 +1,5 @@
 
-
+Texture2D<float4> textures[]: register(t0);
 struct VSOut
 {
     float4 pos : SV_Position;

@@ -3,6 +3,7 @@
 #include"DXUtils.h"
 #include"DX12Buffer.h"
 #include"DXVertexManager.h"
+#include"DXTexManager.h"
 
 
 /*struct Vertex
@@ -31,7 +32,21 @@ struct ShaderTransformConstants_General
 
 //forwarddeclare
 class DX12Commandlist;
+class ModelMaterial
+{
+public:
+	void LoadDifuseTexture(std::wstring texname);
+	void LoadNormalTexture(std::wstring texname);
 
+	ModelMaterial();
+	~ModelMaterial();
+	DXTexture* GetDiffuseTexture() { return m_diffusetexture; }
+	DXTexture* GetNormalTexture() { return m_normaltexture; }
+private:
+	std::wstring GetTextureFilePath(std::wstring texname);
+	DXTexture* m_diffusetexture;
+	DXTexture* m_normaltexture;
+};
 class Model
 {
 public:
@@ -57,6 +72,7 @@ public:
 	inline VertexVersion GetVertexVersionUsed() { return m_vertexversion; }
 	inline void SetVertexVersionUsed(VertexVersion vvused) { m_vertexversion=vvused; }
 	void TransitionVextexAndIndexBufferState(D3D12_RESOURCE_STATES state, ComPtr<ID3D12GraphicsCommandList4>cmdlist);
+	ModelMaterial& GetLoadedMaterial() { return m_loadedmaterial; }
 
 private:
 	ShaderTransformConstants_General m_shadertransformconsts;
@@ -73,8 +89,11 @@ private:
 	ModelDataUploadMode m_uploadmode;
 	//no difference between assimp material & model material for now.
 	MeshMaterial m_material;
+	//use meshmaterial to load/create final material for use
+	ModelMaterial m_loadedmaterial;
 	void GetVertexArray(vector<VertexBase*>& outverticies, AssimpLoadedMesh& ameshtoadd,VertexVersion vertversion);
 	void BuildVertexRawData();
+	void InitMaterial();
 };
 //contains various basic models
 class CompoundModel
@@ -93,6 +112,8 @@ public:
 	ModelDataUploadMode m_datauploadmode;
 	VertexVersion m_vertexversion;
 	vector<Model*> m_models;
+	//model material related data
+	DX12DESCHEAP m_texturesrvheap;
 };
 
 class BasicModelManager

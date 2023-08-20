@@ -21,11 +21,14 @@ struct AssimpLoadedVertex
 class MeshMaterial
 {
 public:
-	void AddDiffuseTexture(std::string diffusetexpath) { m_diffusetexturesPath.insert(diffusetexpath); }
-	void AddNormalTexture(std::string normaltexpath) { m_normaltexturesPath.insert(normaltexpath); }
-	void AddAmbientTexture(std::string ambienttexpath) { m_ambienttexturesPath.insert(ambienttexpath); }
+	std::set<std::string>& GetDiffuseTextureNames() { return m_diffusetextureNames; }
+	std::set<std::string>& GetNormalTextureNames() { return m_normaltextureNames; }
+	std::set<std::string>& GetAmbientTextureNames() { return m_ambienttextureNames; }
+	void AddDiffuseTexture(std::string diffusetexpath) { m_diffusetextureNames.insert(diffusetexpath); }
+	void AddNormalTexture(std::string normaltexpath) { m_normaltextureNames.insert(normaltexpath); }
+	void AddAmbientTexture(std::string ambienttexpath) { m_ambienttextureNames.insert(ambienttexpath); }
 private:
-	std::set<std::string> m_diffusetexturesPath,m_normaltexturesPath, m_ambienttexturesPath;
+	std::set<std::string> m_diffusetextureNames,m_normaltextureNames, m_ambienttextureNames;
 };
 struct AssimpLoadedMesh
 {
