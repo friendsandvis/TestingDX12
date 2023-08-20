@@ -1,6 +1,6 @@
 #include"windmaker.h"
 #include"DX12Manager.h"
-//#include"DX12SimpleTexturedQuadApplication.h"
+#include"DX12SimpleTexturedQuadApplication.h"
 #include"DX12SamplerfeedbackApplication.h"
 //#include"DX12ReservedResourceApplication.h"
 //#include"DX12SkyboxtestingApplication.h"
@@ -28,6 +28,7 @@ typedef HRESULT(__stdcall* fPtr)(const IID&, void**);
 int main()
 {
 	//multiple applications present in this testing program choose the one to run(via user input).
+	std::cout << "0.texquadApplication.\n";
 	std::cout << "1.RaytracingApplication.\n";
 	std::cout << "2.RaytracingApplication2.\n";
 	std::cout << "3.ModelTestApplication.\n";
@@ -42,6 +43,8 @@ int main()
 	DX12ApplicationManagerBase* appmanager = nullptr;
 	switch (appnumber)
 	{
+	case 0:
+		appmanager = new TexturedQuadApplication(); break;
 	case 1:
 		appmanager = new RayTracingApplication(); break;
 	case 2:
