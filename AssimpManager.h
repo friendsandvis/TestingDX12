@@ -18,7 +18,7 @@ struct AssimpLoadedVertex
 	XMFLOAT2 uv;
 	XMFLOAT3 normal;
 };
-class MeshMaterial
+class AssimpMaterial
 {
 public:
 	std::set<std::string>& GetDiffuseTextureNames() { return m_diffusetextureNames; }
@@ -35,7 +35,7 @@ struct AssimpLoadedMesh
 	vector<AssimpLoadedVertex> verticies;
 	vector<unsigned> indicies;
 	aiMatrix4x4 transform;
-	MeshMaterial material;
+	AssimpMaterial material;
 };
 struct AssimpLoadedModel
 {

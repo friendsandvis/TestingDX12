@@ -87,8 +87,7 @@ private:
 	D3D12_VERTEX_BUFFER_VIEW m_vertexbufferview;
 	D3D12_INDEX_BUFFER_VIEW m_indexbufferview;
 	ModelDataUploadMode m_uploadmode;
-	//no difference between assimp material & model material for now.
-	MeshMaterial m_material;
+	AssimpMaterial m_material;
 	//use meshmaterial to load/create final material for use
 	ModelMaterial m_loadedmaterial;
 	void GetVertexArray(vector<VertexBase*>& outverticies, AssimpLoadedMesh& ameshtoadd,VertexVersion vertversion);
