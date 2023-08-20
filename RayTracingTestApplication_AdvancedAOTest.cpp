@@ -1,7 +1,8 @@
 #include"RayTracingTestApplication_AdvancedAOTest.h"
 #define OFFSETGBUFFERSRVTEXTURESINRTGLOBALHEAP 2
-
+//if both usesponza and useconference room are commented then a cubes model is rendered.
 #define USECONFERENCEROOMCOMPOUNDMODEL
+#define USESPONZACOMPOUNDMODEL
 /*
 * hitrecord1:fetchgbuffer
 * hitrecord2:simplehit
@@ -426,7 +427,12 @@ void RayTracingTestApplication_AdvancedAOTest::InitExtras()
 	XMMATRIX scalemat = XMMatrixScalingFromVector(XMVectorSet(scalefactor, scalefactor, scalefactor, 1.0f));
 	m_comloadedmodel.Extratransform(scalemat);
 #else
+	#ifdef USESPONZACOMPOUNDMODEL
+	BasicModelManager::LoadModel(m_creationdevice, "models/Sponza.gltf", m_comloadedmodel, VERTEXVERSION2);
+#else
 	BasicModelManager::LoadModel(m_creationdevice, "models/cubes2.dae", m_comloadedmodel, VERTEXVERSION2);
+#endif
+	
 #endif // USECONFERENCEROOMCOMPOUNDMODEL
 
 	
