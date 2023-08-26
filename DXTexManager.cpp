@@ -1,7 +1,12 @@
 #include"DXTexManager.h"
 #include"DX12CommandList.h"
 #include"StreamableTextureFileReader.h"
+
+
 #pragma comment(lib,"DirectXTex.lib")
+//these are needed for windows only extension retrival function used(PathFindExtension)
+#include<shlwapi.h>
+#pragma comment(lib,"Shlwapi.lib")
 
 
 
@@ -15,7 +20,17 @@ DXTexManager::~DXTexManager()
 
 bool DXTexManager::LoadTexture(const wchar_t* imagefile, DXImageData& outloadedImagedata)
 {
-	HRESULT res= LoadFromDDSFile(imagefile, DDS_FLAGS_ALLOW_LARGE_FILES, &outloadedImagedata.m_imagemetadata, outloadedImagedata.m_image);
+	HRESULT res = S_OK;
+	wstring extension=PathFindExtension(imagefile);
+	assert(!extension.empty());
+	if (extension == L".dds")
+	{
+		res = LoadFromDDSFile(imagefile, DDS_FLAGS_ALLOW_LARGE_FILES, &outloadedImagedata.m_imagemetadata, outloadedImagedata.m_image);
+	}
+	else
+	{
+		res = LoadFromWICFile(imagefile, WIC_FLAGS::WIC_FLAGS_NONE, &outloadedImagedata.m_imagemetadata, outloadedImagedata.m_image);
+	} 
 	
 
 	return(res == S_OK);
