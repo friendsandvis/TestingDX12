@@ -52,7 +52,8 @@ std::vector<unsigned> triangleindicies =
 
 Model::Model(ModelDataUploadMode uploadmode)
 	:m_uploadmode(uploadmode),
-	m_vertexversion(UNKNOWN)
+	m_vertexversion(UNKNOWN),
+	m_tmpmaterialgpuindex(-1)
 {
 	m_transform = XMMatrixIdentity();
 }
@@ -68,7 +69,7 @@ Model::~Model()
 		}
 	}
 }
-void Model::Draw(DX12Commandlist& renderingcmdlist,XMMATRIX vpmatrix, UINT mvpmatrixrootparamindex, bool usemodelmatrix, bool setmvpmatrix)
+void Model::Draw(DX12Commandlist& renderingcmdlist,XMMATRIX vpmatrix, UINT mvpmatrixrootparamindex, UINT materialconstsrootparamindex, bool usemodelmatrix, bool setmvpmatrix, bool supportmaterial)
 {
 	renderingcmdlist->IASetVertexBuffers(0, 1, &m_vertexbufferview);
 	renderingcmdlist->IASetIndexBuffer(&m_indexbufferview);
@@ -84,6 +85,10 @@ void Model::Draw(DX12Commandlist& renderingcmdlist,XMMATRIX vpmatrix, UINT mvpma
 	{
 		renderingcmdlist->SetGraphicsRoot32BitConstants(mvpmatrixrootparamindex, sizeof(m_shadertransformconsts)/4, &m_shadertransformconsts, 0);
 
+	}
+	if (supportmaterial)
+	{
+		renderingcmdlist->SetGraphicsRoot32BitConstants(materialconstsrootparamindex, sizeof(m_matconsts) / 4, &m_matconsts, 0);
 	}
 	
 	renderingcmdlist->DrawIndexedInstanced(GetIndiciesCount(), 1, 0, 0, 0);
@@ -191,14 +196,17 @@ void Model::InitIndexBuffer(ComPtr< ID3D12Device> creationdevice,vector<unsigned
 
 }
 
-void Model::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimpModel, UINT meshindexinassimpmodeltoload, VertexVersion modelvertexversion)
+void Model::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimpModel, UINT meshindexinassimpmodeltoload, VertexVersion modelvertexversion, bool supportmaterial)
 {
 	SetVertexVersionUsed(modelvertexversion);
 	vector<VertexBase*> verticies;
 	AssimpLoadedMesh& meshtoload = assimpModel.m_meshes[meshindexinassimpmodeltoload];
 	m_transform=AssimpManager::ToXMMatrix(meshtoload.transform);
-	m_material = meshtoload.material;
-	InitMaterial();
+	if (supportmaterial)
+	{
+		m_material = meshtoload.material;
+		InitMaterial(creationdevice);
+	}
 	
 	
 	
@@ -344,6 +352,10 @@ void Model::UploadModelDatatoGPUBuffers(DX12Commandlist& copycmdlist)
 	copycmdlist->ResourceBarrier(1, &barrier);
 
 }
+void Model::UploadModelTextureData(DX12Commandlist& copycmdlist)
+{
+	m_loadedmaterial.UploadTextures(copycmdlist);
+}
 void Model::TransitionVextexAndIndexBufferState(D3D12_RESOURCE_STATES state, ComPtr<ID3D12GraphicsCommandList4>cmdlist)
 {
 	//transition vertexbuffer to state
@@ -359,7 +371,7 @@ void Model::TransitionVextexAndIndexBufferState(D3D12_RESOURCE_STATES state, Com
 		cmdlist->ResourceBarrier(1, &barrier);
 	}
 }
-void Model::InitMaterial()
+void Model::InitMaterial(ComPtr< ID3D12Device> creationdevice)
 {
 	std::set<std::string>& diffusetexnames=m_material.GetDiffuseTextureNames();
 		if (diffusetexnames.size() > 0)
@@ -371,11 +383,17 @@ void Model::InitMaterial()
 			//need to update texture loader to support non dds
 			m_loadedmaterial.LoadDifuseTexture(texfilenamewstr);
 		}
+		m_loadedmaterial.Init(creationdevice);
+}
+void Model::GetMaterialTextures(vector< DXTexture*>& textures)
+{
+	m_loadedmaterial.GetMaterialTextures(textures);
 }
 CompoundModel::CompoundModel(ModelDataUploadMode uploadmode)
-	:m_datauploadmode(uploadmode)
+	:m_datauploadmode(uploadmode),
+	m_supportmaterial(false)
 {
-
+	m_currenttexidxtoupload = 0;
 }
 CompoundModel::~CompoundModel()
 {
@@ -384,11 +402,11 @@ CompoundModel::~CompoundModel()
 		delete m_models[i];
 	}
 }
-void CompoundModel::Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix, UINT mvpmatrixrootparamindex)
+void CompoundModel::Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix, UINT mvpmatrixrootparamindex,UINT materialconstsrootparamindex)
 {
 	for (size_t i = 0; i < m_models.size(); i++)
 	{
-		m_models[i]->Draw(renderingcmdlist,vpmatrix,mvpmatrixrootparamindex);
+		m_models[i]->Draw(renderingcmdlist,vpmatrix,mvpmatrixrootparamindex,materialconstsrootparamindex,true,true,m_supportmaterial);
 	}
 }
 void CompoundModel::Extratransform(XMMATRIX extratransformmat)
@@ -413,34 +431,94 @@ void CompoundModel::UploadModelDatatoGPUBuffers(DX12Commandlist& copycmdlist)
 		m_models[i]->UploadModelDatatoGPUBuffers(copycmdlist);
 	}
 }
-
-void CompoundModel::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimpModel, VertexVersion modelvertexversion)
+void CompoundModel::UploadModelTextureData(DX12Commandlist& copycmdlist)
 {
+	assert(m_supportmaterial);
+	/*for (size_t i = 0; i < m_models.size(); i++)
+	{
+		m_models[i]->UploadModelTextureData(copycmdlist);
+	}*/
+	for (DXTexture* tex : m_texturestoupload)
+	{
+		tex->UploadTexture(copycmdlist);
+	}
+}
+void CompoundModel::UploadCurrentFrameModelTextureData(DX12Commandlist& copycmdlist, bool increment)
+{
+	if (!m_supportmaterial)
+	{
+		return;
+	}
+	if (!NeedToUploadTextures())
+	{
+		return;
+	}
+	m_texturestoupload[m_currenttexidxtoupload]->UploadTexture(copycmdlist);
+	if (increment)
+	{
+		m_currenttexidxtoupload++;
+	}
+}
+
+void CompoundModel::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimpModel, VertexVersion modelvertexversion, bool supportmaterial)
+{
+	m_supportmaterial = supportmaterial;
+	//init models and gather information required to build up the texture table(diffuse textures only for now)
+	unsigned int numsrvrequired = 0;
 	for (size_t i = 0; i < assimpModel.m_meshes.size(); i++)
 	{
 		Model* amodel = new Model(m_datauploadmode);
-		amodel->Init(creationdevice, assimpModel, (UINT)i, modelvertexversion);
+		amodel->Init(creationdevice, assimpModel, (UINT)i, modelvertexversion,m_supportmaterial);
+		if (m_supportmaterial)
+		{
+			amodel->GetMaterialTextures(m_texturestoupload);
+			if (amodel->GetLoadedMaterial().GetDiffuseTexture())
+			{
+				numsrvrequired += 1;
+			}
+		}
+
 		AddModel(amodel);
 	}
 
 	//collect data to build up texture srv heap
-	unsigned int numsrvrequired = 0;
-	for (size_t i = 0; i < m_models.size(); i++)
-	{
-		if (m_models[i]->GetLoadedMaterial().GetDiffuseTexture())
-		{
-			numsrvrequired += 1;
-		}
-	}
-	//prevent crash is no srv required(we do not need the heap then.
+	
+	
+	
+	UINT actualSRVtoallocate = numsrvrequired + 1;//extra 1 srv for the default texture(white texture) which is used by models without textures.
+	//prevent crash if no srv required(we do not need the heap then.
 	if (numsrvrequired)
 	{
 		D3D12_DESCRIPTOR_HEAP_DESC texsrvheapdesc = {};
 		texsrvheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		texsrvheapdesc.NumDescriptors = numsrvrequired;
+		texsrvheapdesc.NumDescriptors = actualSRVtoallocate;
 		texsrvheapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		m_texturesrvheap.Init(texsrvheapdesc, creationdevice);
+		//create actual srvs
+		int indexinsrvheaptouse = 0;
+		for (size_t i = 0; i < m_models.size(); i++)
+		{
+			DXTexture* diffusetex=m_models[i]->GetLoadedMaterial().GetDiffuseTexture();
+			if (diffusetex)
+			{
+				D3D12_SHADER_RESOURCE_VIEW_DESC srvdesc = {};
+				srvdesc.Texture2D.MipLevels = diffusetex->GetTotalMipCount();
+				srvdesc.Format = diffusetex->GetDXImageData().m_imagemetadata.format;
+				srvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+				srvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+				diffusetex->CreateSRV(creationdevice,srvdesc, m_texturesrvheap.GetCPUHandleOffseted(indexinsrvheaptouse));
+				m_models[i]->SetMatGPUIdx(indexinsrvheaptouse);
+				indexinsrvheaptouse++;
+			}
+			else
+			{
+				//use default texture's srv if no textures available
+				m_models[i]->SetMatGPUIdx(actualSRVtoallocate -1);
+			}
+		}
+
 	}
+
 }
 
 
@@ -483,10 +561,10 @@ void BasicModelManager::LoadModel(ComPtr< ID3D12Device> creationdevice,std::stri
 	AssimpManager assimpmodel(modelfilepath);
 	outmodel.Init(creationdevice,assimpmodel.GetProcessedModel(),0, requiredvertexversion);
 }
-void BasicModelManager::LoadModel(ComPtr< ID3D12Device> creationdevice, std::string modelfilepath, CompoundModel& outmodel, VertexVersion requiredvertexversion)
+void BasicModelManager::LoadModel(ComPtr< ID3D12Device> creationdevice, std::string modelfilepath, CompoundModel& outmodel, VertexVersion requiredvertexversion, bool supportmaterial)
 {
 	AssimpManager assimpmodel(modelfilepath);
-	outmodel.Init(creationdevice, assimpmodel.GetProcessedModel(), requiredvertexversion);
+	outmodel.Init(creationdevice, assimpmodel.GetProcessedModel(), requiredvertexversion,supportmaterial);
 }
 
 void BasicModelManager::GetPlaneVerticiesV0(vector<VertexBase*>& outverticies)
@@ -611,16 +689,57 @@ ModelMaterial::~ModelMaterial()
 }
 void ModelMaterial::LoadDifuseTexture(std::wstring texname)
 {
-	//todo: actually load the tex
+	
 	m_diffusetexture = new DXTexture();
+	wstring texpath=GetTextureFilePath(texname);
+	DXTexManager::LoadTexture(texpath.c_str(), m_diffusetexture->GetDXImageData());
 }
 void ModelMaterial::LoadNormalTexture(std::wstring texname)
 {
-	//todo: actually load the tex
+	
 	m_normaltexture = new DXTexture();
+	wstring texpath = GetTextureFilePath(texname);
+	DXTexManager::LoadTexture(texpath.c_str(), m_normaltexture->GetDXImageData());
 }
-std::wstring GetTextureFilePath(std::wstring texname)
+std::wstring ModelMaterial::GetTextureFilePath(std::wstring texname)
 {
+	//just for testing sponza model textures we have hardcoded path
 	wstring texfilepath = (L"textures/modeltextures/sponza/") + texname;
 	return texfilepath;
+}
+void ModelMaterial::UploadTextures(DX12Commandlist& copycmdlist)
+{
+	if (m_diffusetexture)
+	{
+		m_diffusetexture->UploadTexture(copycmdlist);
+	}
+	if (m_normaltexture)
+	{
+		m_normaltexture->UploadTexture(copycmdlist);
+	}
+}
+void ModelMaterial::Init(ComPtr< ID3D12Device> creationdevice)
+{
+	if (m_diffusetexture)
+	{
+		m_diffusetexture->Init(creationdevice);
+		
+		m_diffusetexture->SetName(L"diffusetexture_modelmaterial");
+	}
+	if (m_normaltexture)
+	{
+		m_normaltexture->Init(creationdevice);
+		m_diffusetexture->SetName(L"normaltexture_modelmaterial");
+	}
+}
+void ModelMaterial::GetMaterialTextures(vector< DXTexture*>& textures)
+{
+	if (m_diffusetexture)
+	{
+		textures.push_back(m_diffusetexture);
+	}
+	if (m_normaltexture)
+	{
+		textures.push_back(m_normaltexture);
+	}
 }

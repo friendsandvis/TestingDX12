@@ -26,6 +26,12 @@ void ModelTestApplication::PreRenderUpdate()
 void ModelTestApplication::Render()
 {
 	m_primarycmdlist.Reset();
+#if defined(USESPHONZAMODEL)//only have sponza textures right now.
+	//upload compoundmodel textures over frames
+	{
+		m_loadedcompoundmodel.UploadCurrentFrameModelTextureData(m_primarycmdlist);
+	}
+#endif
 	//set rtv
 	UINT currentbackbufferidx=m_swapchain.GetCurrentbackbufferIndex();
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(currentbackbufferidx);
@@ -62,8 +68,16 @@ void ModelTestApplication::Render()
 	XMMATRIX vpmat = m_maincamera.GetVP();
 	//m_trianglemodel.Draw(m_primarycmdlist,vpmat);
 	m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &vpmat, 0);
+	//a specialized way to test out model's material(diffuse textures) 
+	if(m_loadedcompoundmodel.SupportMaterial())
+	{
+		DX12DESCHEAP& loadedcompoundmodelmatsrvheap = m_loadedcompoundmodel.GetMatTexSRVHeap();
+		ID3D12DescriptorHeap* heapstoset[1] = { loadedcompoundmodelmatsrvheap.GetDescHeap() };
+		m_primarycmdlist->SetDescriptorHeaps(1, heapstoset);
+		m_primarycmdlist->SetGraphicsRootDescriptorTable(1, loadedcompoundmodelmatsrvheap.GetGPUHandlefromstart());
+	}
 	
-	m_loadedcompoundmodel.Draw(m_primarycmdlist,vpmat,0);
+	m_loadedcompoundmodel.Draw(m_primarycmdlist,vpmat,0,2);
 	
 	DXASSERT(m_primarycmdlist->Close())
 	BasicRender();
@@ -83,7 +97,7 @@ void ModelTestApplication::InitExtras()
 #if defined(USESPHONZAMODEL)
 	float scalefactor = 1.0f;
 	XMMATRIX scalemat = XMMatrixScalingFromVector(XMVectorSet(scalefactor, scalefactor, scalefactor, 1.0f));
-	BasicModelManager::LoadModel(m_creationdevice, "models/Sponza.gltf", m_loadedcompoundmodel, VERTEXVERSION3);
+	BasicModelManager::LoadModel(m_creationdevice, "models/Sponza.gltf", m_loadedcompoundmodel, VERTEXVERSION3,true);
 #endif//defined(USESPHONZAMODEL)
 #ifdef USECUBEMODEL
 	BasicModelManager::LoadModel(m_creationdevice, "models/cubes2.dae", m_loadedcompoundmodel, VERTEXVERSION2);
@@ -108,6 +122,7 @@ void ModelTestApplication::InitExtras()
 	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_loadedmodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_loadedcompoundmodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
+	//m_loadedcompoundmodel.UploadModelTextureData(m_uploadcommandlist);
 	m_cubemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_trianglemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	DXASSERT(m_uploadcommandlist->Close());
@@ -156,12 +171,38 @@ void ModelTestApplication::InitPSO()
 		texturesrvrange.BaseShaderRegister = 0;
 		texturesrvrange.RegisterSpace = 0;
 		texturesrvrange.NumDescriptors = -1;
+		texturesrvrange.OffsetInDescriptorsFromTableStart = 0;
 		rootparam1.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 		rootparam1.DescriptorTable.NumDescriptorRanges = 1;
 		rootparam1.DescriptorTable.pDescriptorRanges = &texturesrvrange;
 		rootparam1.ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_PIXEL;
 		rootparams.push_back(rootparam1);
-		psoinitdata.rootsignature.BuidDesc(rootparams, vector<D3D12_STATIC_SAMPLER_DESC>());
+		D3D12_ROOT_PARAMETER rootparam2 = {};
+		rootparam2.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+		rootparam2.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+		rootparam2.Constants.Num32BitValues = sizeof(Model::MaterialConstants) / 4;
+		rootparam2.Constants.RegisterSpace = 0;
+		rootparam2.Constants.ShaderRegister = 1;
+		rootparams.push_back(rootparam2);
+		vector<D3D12_STATIC_SAMPLER_DESC> staticsamplers;
+		{
+			D3D12_STATIC_SAMPLER_DESC simplesampler = {};
+			simplesampler.Filter = D3D12_FILTER::D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+			simplesampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+			simplesampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+			simplesampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+			simplesampler.MipLODBias = 0;
+			simplesampler.MaxAnisotropy = 0;
+			simplesampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+			simplesampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+			simplesampler.MinLOD = 0.0f;
+			simplesampler.MaxLOD = D3D12_FLOAT32_MAX;
+			simplesampler.ShaderRegister = 0;
+			simplesampler.RegisterSpace = 0;
+			simplesampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+			staticsamplers.push_back(simplesampler);
+		}
+		psoinitdata.rootsignature.BuidDesc(rootparams, staticsamplers);
 		}
 	}
 	m_pso.Init(m_creationdevice, psoinitdata);

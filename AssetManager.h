@@ -32,11 +32,24 @@ struct ShaderTransformConstants_General
 
 //forwarddeclare
 class DX12Commandlist;
+/*
+* Imp terms
+* Load a texture means load from file the tex data/params
+* Upload means upload actual data to gpu resource
+* init means create actual resource objhects from loaded texture data.
+*/
 class ModelMaterial
 {
 public:
+	//create the texture objects if the textures are loaded.
+	void Init(ComPtr< ID3D12Device> creationdevice);
+	//upload data to gpu resource.
+	void UploadTextures(DX12Commandlist& copycmdlist);
+	//load from file the texture data imp:no resource creation here
 	void LoadDifuseTexture(std::wstring texname);
+	//load from file the texture data imp:no resource creation here
 	void LoadNormalTexture(std::wstring texname);
+	void GetMaterialTextures(vector< DXTexture*>& textures);
 
 	ModelMaterial();
 	~ModelMaterial();
@@ -50,8 +63,12 @@ private:
 class Model
 {
 public:
+	struct MaterialConstants
+	{
+		unsigned int texsrvidx;
+	};
 	XMMATRIX GetTransform() { return m_transform; }
-	void Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix,UINT mvpmatrixrootparamindex,bool usemodelmatrix=true,bool setmvpmatrix=true);
+	void Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix,UINT mvpmatrixrootparamindex,UINT materialconstsrootparamindex,bool usemodelmatrix=true,bool setmvpmatrix=true,bool supportmaterial=false);
 	void Extratransform(XMMATRIX extratransformmat);
 	Model(ModelDataUploadMode uploadmode=NOCOPY);
 	~Model();
@@ -59,13 +76,14 @@ public:
 	
 	D3D12_GPU_VIRTUAL_ADDRESS GetVertexBufferGPUVirtualAddress();
 	D3D12_GPU_VIRTUAL_ADDRESS GetIndexBufferGPUVirtualAddress();
-	void Init(ComPtr< ID3D12Device> creationdevice,AssimpLoadedModel& assimpModel,UINT meshindexinassimpmodeltoload,VertexVersion modelvertexversion);
+	void Init(ComPtr< ID3D12Device> creationdevice,AssimpLoadedModel& assimpModel,UINT meshindexinassimpmodeltoload,VertexVersion modelvertexversion,bool supportmaterial =false);
 	void InitVertexBuffer(ComPtr< ID3D12Device> creationdevice,vector<VertexBase*>& verticies);
 	void InitIndexBuffer(ComPtr< ID3D12Device> creationdevice,vector<unsigned>& indicies);
 	inline D3D12_INDEX_BUFFER_VIEW GetIBView() { return m_indexbufferview; }
 	inline D3D12_VERTEX_BUFFER_VIEW GetVBView() { return m_vertexbufferview; }
 	void UploadModelDatatoBuffers();
 	void UploadModelDatatoGPUBuffers(DX12Commandlist& copycmdlist);
+	void UploadModelTextureData(DX12Commandlist& copycmdlist);
 	inline size_t GetIndiciesCount() { return m_indicies.size(); }
 	inline size_t GetVerticiesCount() { return m_verticies.size(); }
 	inline ModelDataUploadMode GetUploadMode() { return m_uploadmode; }
@@ -73,6 +91,9 @@ public:
 	inline void SetVertexVersionUsed(VertexVersion vvused) { m_vertexversion=vvused; }
 	void TransitionVextexAndIndexBufferState(D3D12_RESOURCE_STATES state, ComPtr<ID3D12GraphicsCommandList4>cmdlist);
 	ModelMaterial& GetLoadedMaterial() { return m_loadedmaterial; }
+	void SetMatGPUIdx(unsigned idx) { m_tmpmaterialgpuindex = idx; m_matconsts.texsrvidx = m_tmpmaterialgpuindex; }
+	unsigned GetMatGPUIdx() { return m_tmpmaterialgpuindex; }
+	void GetMaterialTextures(vector< DXTexture*>& textures);
 
 private:
 	ShaderTransformConstants_General m_shadertransformconsts;
@@ -90,9 +111,12 @@ private:
 	AssimpMaterial m_material;
 	//use meshmaterial to load/create final material for use
 	ModelMaterial m_loadedmaterial;
+	MaterialConstants m_matconsts;
+	//an index used to refer in a global descriptor heap/mat table or similar
+	unsigned m_tmpmaterialgpuindex;
 	void GetVertexArray(vector<VertexBase*>& outverticies, AssimpLoadedMesh& ameshtoadd,VertexVersion vertversion);
 	void BuildVertexRawData();
-	void InitMaterial();
+	void InitMaterial(ComPtr< ID3D12Device> creationdevice);
 };
 //contains various basic models
 class CompoundModel
@@ -100,19 +124,28 @@ class CompoundModel
 public:
 	//set ib & vb and issue draw command.
 	void Extratransform(XMMATRIX extratransformmat);
-	void Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix,UINT mvpmatrixrootparamindex);
+	void Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix,UINT mvpmatrixrootparamindex, UINT materialconstsrootparamindex=2);
 	void UploadModelDatatoBuffers();
 	void UploadModelDatatoGPUBuffers(DX12Commandlist& copycmdlist);
+	void UploadModelTextureData(DX12Commandlist& copycmdlist);
 	const vector<Model*>& GetModels() { return m_models; }
+	DX12DESCHEAP& GetMatTexSRVHeap() { return m_texturesrvheap; }
 	CompoundModel(ModelDataUploadMode uploadmode = NOCOPY);
 	~CompoundModel();
-	void Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimpModel, VertexVersion modelvertexversion);
+	void Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimpModel, VertexVersion modelvertexversion,bool supportmaterial=false);
 	void AddModel(Model* abasicModel) { m_models.push_back(abasicModel); }
 	ModelDataUploadMode m_datauploadmode;
 	VertexVersion m_vertexversion;
 	vector<Model*> m_models;
 	//model material related data
 	DX12DESCHEAP m_texturesrvheap;
+	vector< DXTexture*> m_texturestoupload;
+	//local textures upload helper utils
+	size_t m_currenttexidxtoupload;
+	bool m_supportmaterial;
+	bool SupportMaterial() { return m_supportmaterial; }
+	void UploadCurrentFrameModelTextureData(DX12Commandlist& copycmdlist,bool increment =true);
+	bool NeedToUploadTextures() { return (m_currenttexidxtoupload<m_texturestoupload.size()); }
 };
 
 class BasicModelManager
@@ -122,7 +155,7 @@ public:
 	static void InitCubeModel(ComPtr< ID3D12Device> creationdevice, Model& cubemodel);
 	static void InitTriangleModel(ComPtr< ID3D12Device> creationdevice, Model& trianglemodel);
 	static void LoadModel(ComPtr< ID3D12Device> creationdevice,std::string modelfilepath, Model& outmodel, VertexVersion requiredvertexversion);
-	static void LoadModel(ComPtr< ID3D12Device> creationdevice, std::string modelfilepath, CompoundModel& outmodel, VertexVersion requiredvertexversion);
+	static void LoadModel(ComPtr< ID3D12Device> creationdevice, std::string modelfilepath, CompoundModel& outmodel, VertexVersion requiredvertexversion,bool supportmaterial=false);
 	static void GetTriangleRTVertexData(vector<RTVertexDataV0>& rtvertexdata);
 
 private:
