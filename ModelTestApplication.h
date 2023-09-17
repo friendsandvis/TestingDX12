@@ -20,6 +20,10 @@ protected:
 	void InitExtras()override;
 
 private:
+	struct GeneralConstants
+	{
+		unsigned int usematerialtextures;
+	};
 	DX12PSO m_pso;
 	Model m_planemodel,m_trianglemodel;
 	Model m_cubemodel;

@@ -76,7 +76,10 @@ void ModelTestApplication::Render()
 		m_primarycmdlist->SetDescriptorHeaps(1, heapstoset);
 		m_primarycmdlist->SetGraphicsRootDescriptorTable(1, loadedcompoundmodelmatsrvheap.GetGPUHandlefromstart());
 	}
-	
+	//set general constants
+	GeneralConstants generalconstants = {};
+	generalconstants.usematerialtextures = static_cast<unsigned int>(m_loadedcompoundmodel.SupportMaterial());
+	m_primarycmdlist->SetGraphicsRoot32BitConstants(3, sizeof(GeneralConstants) / 4, &generalconstants, 0);
 	m_loadedcompoundmodel.Draw(m_primarycmdlist,vpmat,0,2);
 	
 	DXASSERT(m_primarycmdlist->Close())
@@ -184,6 +187,13 @@ void ModelTestApplication::InitPSO()
 		rootparam2.Constants.RegisterSpace = 0;
 		rootparam2.Constants.ShaderRegister = 1;
 		rootparams.push_back(rootparam2);
+		D3D12_ROOT_PARAMETER rootparam3 = {};
+		rootparam3.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+		rootparam3.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+		rootparam3.Constants.Num32BitValues = sizeof(GeneralConstants) / 4;
+		rootparam3.Constants.RegisterSpace = 1;
+		rootparam3.Constants.ShaderRegister = 1;
+		rootparams.push_back(rootparam3);
 		vector<D3D12_STATIC_SAMPLER_DESC> staticsamplers;
 		{
 			D3D12_STATIC_SAMPLER_DESC simplesampler = {};
