@@ -25,7 +25,7 @@ RayTracingTestApplication_AdvancedAOTest::RayTracingTestApplication_AdvancedAOTe
 	:m_loadedmodel(ModelDataUploadMode::COPY),
 	m_comloadedmodel(ModelDataUploadMode::COPY),
 	m_raytracingsupported(true),
-	m_rtmode(false),
+	m_rtmode(true),
 	m_trianglemodel(ModelDataUploadMode::COPY),
 	m_planemodel(ModelDataUploadMode::COPY)
 {
