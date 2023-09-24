@@ -4,6 +4,7 @@
 #include"DX12Buffer.h"
 #include"DXVertexManager.h"
 #include"DXTexManager.h"
+#include"DX12Texture.h"
 
 
 /*struct Vertex
@@ -127,6 +128,9 @@ public:
 	void Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix,UINT mvpmatrixrootparamindex, UINT materialconstsrootparamindex=2);
 	void UploadModelDatatoBuffers();
 	void UploadModelDatatoGPUBuffers(DX12Commandlist& copycmdlist);
+	void UploadModelDataDefaultTexture(DX12Commandlist& copycmdlist);
+	//a combined upload function to issue upload commands for model data to gpu and other default data if any.
+	void UploadData(DX12Commandlist& copycmdlist, bool uploaddefaults = true, bool uploadmodeldatatogpubuffers = true);
 	void UploadModelTextureData(DX12Commandlist& copycmdlist);
 	const vector<Model*>& GetModels() { return m_models; }
 	DX12DESCHEAP& GetMatTexSRVHeap() { return m_texturesrvheap; }
@@ -139,6 +143,9 @@ public:
 	vector<Model*> m_models;
 	//model material related data
 	DX12DESCHEAP m_texturesrvheap;
+	DX12TextureSimple m_whitetexture;
+	D3D12_PLACED_SUBRESOURCE_FOOTPRINT m_whitetexsubresfootprint;
+	DX12Buffer m_whitetexuploadbuffer;
 	vector< DXTexture*> m_texturestoupload;
 	//local textures upload helper utils
 	size_t m_currenttexidxtoupload;

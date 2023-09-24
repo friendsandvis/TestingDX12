@@ -431,6 +431,51 @@ void CompoundModel::UploadModelDatatoGPUBuffers(DX12Commandlist& copycmdlist)
 		m_models[i]->UploadModelDatatoGPUBuffers(copycmdlist);
 	}
 }
+void CompoundModel::UploadModelDataDefaultTexture(DX12Commandlist& copycmdlist)
+{
+	D3D12_RESOURCE_BARRIER abarrier = m_whitetexuploadbuffer.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_SOURCE);
+	if (DXUtils::IsBarrierSafeToExecute(abarrier))
+	{
+		copycmdlist->ResourceBarrier(1, &abarrier);
+	}
+	abarrier = m_whitetexture.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST);
+	if (DXUtils::IsBarrierSafeToExecute(abarrier))
+	{
+		copycmdlist->ResourceBarrier(1, &abarrier);
+	}
+	D3D12_TEXTURE_COPY_LOCATION dst = {};
+	dst.pResource = m_whitetexture.GetResource().Get();
+	dst.Type = D3D12_TEXTURE_COPY_TYPE::D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+	dst.SubresourceIndex = 0;
+	D3D12_TEXTURE_COPY_LOCATION src = {};
+	src.pResource = m_whitetexuploadbuffer.GetResource().Get();
+	src.Type = D3D12_TEXTURE_COPY_TYPE::D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+	src.PlacedFootprint.Footprint.Format = DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM;
+	src.PlacedFootprint.Footprint.Width = 1;
+	src.PlacedFootprint.Footprint.Height = 1;
+	src.PlacedFootprint.Footprint.Depth = 1;
+	src.PlacedFootprint.Footprint.RowPitch = m_whitetexsubresfootprint.Footprint.RowPitch;
+	src.PlacedFootprint.Offset = 0;
+	copycmdlist->CopyTextureRegion(&dst, 0, 0, 0, &src, NULL);
+	abarrier = m_whitetexture.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	if (DXUtils::IsBarrierSafeToExecute(abarrier))
+	{
+		copycmdlist->ResourceBarrier(1, &abarrier);
+	}
+
+}
+void CompoundModel::UploadData(DX12Commandlist& copycmdlist, bool uploaddefaults, bool uploadmodeldatatogpubuffers)
+{
+	if (uploaddefaults)
+	{
+		UploadModelDataDefaultTexture(copycmdlist);
+	}
+	if (uploadmodeldatatogpubuffers)
+	{
+		UploadModelDatatoGPUBuffers(copycmdlist);
+	}
+	
+}
 void CompoundModel::UploadModelTextureData(DX12Commandlist& copycmdlist)
 {
 	assert(m_supportmaterial);
@@ -517,6 +562,53 @@ void CompoundModel::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel
 			}
 		}
 
+	}
+	if (m_supportmaterial)
+	{
+		
+		//create whitetexture(default texture)
+		{
+			DX12ResourceCreationProperties	whitetexresprops;
+			DX12TextureSimple::InitResourceCreationProperties(whitetexresprops);
+			whitetexresprops.resdesc.Width = whitetexresprops.resdesc.Height = whitetexresprops.resdesc.DepthOrArraySize = 1;
+			whitetexresprops.resdesc.Format = DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM;
+			whitetexresprops.resdesc.MipLevels = 1;
+			m_whitetexture.Init(creationdevice, whitetexresprops, ResourceCreationMode::COMMITED);
+			m_whitetexture.SetName(L"whitetexture");
+
+			UINT numrows;
+			UINT64 totalbytes, rowsizebytes;
+			creationdevice->GetCopyableFootprints(&whitetexresprops.resdesc, 0, 1, 0, &m_whitetexsubresfootprint, &numrows, &rowsizebytes, &totalbytes);
+		}
+		//prepare upload buffer with data for whitetex.
+		{
+			//created whitetexture is hardcoded in properties so we know it's size rrequirnments.
+			DX12ResourceCreationProperties whitetexuploadbufferprops;
+			DX12Buffer::InitResourceCreationProperties(whitetexuploadbufferprops);
+			whitetexuploadbufferprops.resdesc.Width = 4;
+			whitetexuploadbufferprops.resheapprop.Type = D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD;
+			m_whitetexuploadbuffer.Init(creationdevice, whitetexuploadbufferprops, ResourceCreationMode::COMMITED);
+
+		}
+		{
+			unsigned char whitetexdata[4] = { 255,255,255,255 };
+			BufferMapParams mapparams;
+			mapparams.range.Begin = 0;
+			mapparams.range.End = m_whitetexuploadbuffer.GetSize();
+			mapparams.subresource = 0;
+			void* mappedbuffer = m_whitetexuploadbuffer.Map(mapparams);
+			memcpy(mappedbuffer, whitetexdata, mapparams.range.End);
+			BufferMapParams unmapparams = mapparams;
+			m_whitetexuploadbuffer.UnMap(unmapparams);
+
+		}
+		{
+			D3D12_SHADER_RESOURCE_VIEW_DESC whitetexsrvdesc = {};
+			whitetexsrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+			whitetexsrvdesc.Texture2D.MipLevels = 1;
+			whitetexsrvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+			m_whitetexture.CreateSRV(creationdevice, whitetexsrvdesc, m_texturesrvheap.GetCPUHandleOffseted(actualSRVtoallocate - 1));
+		}
 	}
 
 }

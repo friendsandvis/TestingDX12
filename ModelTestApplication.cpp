@@ -124,7 +124,8 @@ void ModelTestApplication::InitExtras()
 	m_uploadcommandlist.Reset();
 	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_loadedmodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
-	m_loadedcompoundmodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
+	//m_loadedcompoundmodel.UploadModelDataDefaultTexture(m_uploadcommandlist);
+	m_loadedcompoundmodel.UploadData(m_uploadcommandlist);
 	//m_loadedcompoundmodel.UploadModelTextureData(m_uploadcommandlist);
 	m_cubemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_trianglemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
@@ -198,13 +199,13 @@ void ModelTestApplication::InitPSO()
 		{
 			D3D12_STATIC_SAMPLER_DESC simplesampler = {};
 			simplesampler.Filter = D3D12_FILTER::D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-			simplesampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-			simplesampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-			simplesampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+			simplesampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE::D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+			simplesampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE::D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+			simplesampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE::D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 			simplesampler.MipLODBias = 0;
 			simplesampler.MaxAnisotropy = 0;
 			simplesampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-			simplesampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+			simplesampler.BorderColor = D3D12_STATIC_BORDER_COLOR::D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
 			simplesampler.MinLOD = 0.0f;
 			simplesampler.MaxLOD = D3D12_FLOAT32_MAX;
 			simplesampler.ShaderRegister = 0;
