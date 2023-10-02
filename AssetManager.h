@@ -95,6 +95,7 @@ public:
 	void SetMatGPUIdx(unsigned idx) { m_tmpmaterialgpuindex = idx; m_matconsts.texsrvidx = m_tmpmaterialgpuindex; }
 	unsigned GetMatGPUIdx() { return m_tmpmaterialgpuindex; }
 	void GetMaterialTextures(vector< DXTexture*>& textures);
+	void AllowRender(bool allow = true) { m_Allowrender=allow; }
 
 private:
 	ShaderTransformConstants_General m_shadertransformconsts;
@@ -113,6 +114,7 @@ private:
 	//use meshmaterial to load/create final material for use
 	ModelMaterial m_loadedmaterial;
 	MaterialConstants m_matconsts;
+	bool m_Allowrender;
 	//an index used to refer in a global descriptor heap/mat table or similar
 	unsigned m_tmpmaterialgpuindex;
 	void GetVertexArray(vector<VertexBase*>& outverticies, AssimpLoadedMesh& ameshtoadd,VertexVersion vertversion);

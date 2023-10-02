@@ -23,12 +23,14 @@ class AssimpMaterial
 public:
 	std::set<std::string>& GetDiffuseTextureNames() { return m_diffusetextureNames; }
 	std::set<std::string>& GetNormalTextureNames() { return m_normaltextureNames; }
-	std::set<std::string>& GetAmbientTextureNames() { return m_ambienttextureNames; }
+	std::set<std::string>& GetMetalnessTextureNames() { return m_metalnesstextureNames; }
+	std::set<std::string>& GetRoughnessTextureNames() { return m_roughnesstextureNames; }
 	void AddDiffuseTexture(std::string diffusetexpath) { m_diffusetextureNames.insert(diffusetexpath); }
 	void AddNormalTexture(std::string normaltexpath) { m_normaltextureNames.insert(normaltexpath); }
-	void AddAmbientTexture(std::string ambienttexpath) { m_ambienttextureNames.insert(ambienttexpath); }
+	void AddMetalnessTexture(std::string metalnesstexpath) { m_metalnesstextureNames.insert(metalnesstexpath); }
+	void AddRoughnessTexture(std::string roughnesstexpath) { m_roughnesstextureNames.insert(roughnesstexpath); }
 private:
-	std::set<std::string> m_diffusetextureNames,m_normaltextureNames, m_ambienttextureNames;
+	std::set<std::string> m_diffusetextureNames,m_normaltextureNames,m_metalnesstextureNames, m_roughnesstextureNames;
 };
 struct AssimpLoadedMesh
 {

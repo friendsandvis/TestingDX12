@@ -82,26 +82,17 @@ void AssimpManager::ProcessMesh(aiMesh* amesh, aiMatrix4x4 finaltrasform)
 			aprocessedmesh.indicies.push_back(face.mIndices[i]);
 		}
 	}
-	if (amesh->mMaterialIndex > 0)
 	{
 		const aiMaterial* const mat=m_scene->mMaterials[amesh->mMaterialIndex];
 		
 		
 		//retrive diffuse textures.
-		unsigned diffusetexcount = mat->GetTextureCount(aiTextureType_DIFFUSE);
+		unsigned diffusetexcount = mat->GetTextureCount(aiTextureType::aiTextureType_BASE_COLOR);
 		for (unsigned i = 0; i < diffusetexcount; i++)
 		{
 			aiString texname;
-			mat->GetTexture(aiTextureType_DIFFUSE, i, &texname);
+			mat->GetTexture(aiTextureType_BASE_COLOR, i, &texname);
 			aprocessedmesh.material.AddDiffuseTexture(texname.C_Str());
-		}
-		//retrive ambient textures
-		unsigned ambienttexcount = mat->GetTextureCount(aiTextureType_AMBIENT);
-		for (unsigned i = 0; i < ambienttexcount; i++)
-		{
-			aiString texname;
-			mat->GetTexture(aiTextureType_AMBIENT, i, &texname);
-			aprocessedmesh.material.AddAmbientTexture(texname.C_Str());
 		}
 		//retrive normal map textures
 		unsigned normaltexcount = mat->GetTextureCount(aiTextureType_NORMALS);
@@ -110,6 +101,22 @@ void AssimpManager::ProcessMesh(aiMesh* amesh, aiMatrix4x4 finaltrasform)
 			aiString texname;
 			mat->GetTexture(aiTextureType_NORMALS, i, &texname);
 			aprocessedmesh.material.AddNormalTexture(texname.C_Str());
+		}
+		//retrive metalness map textures
+		unsigned metalnesstexcount = mat->GetTextureCount(aiTextureType::aiTextureType_METALNESS);
+		for (unsigned i = 0; i < metalnesstexcount; i++)
+		{
+			aiString texname;
+			mat->GetTexture(aiTextureType_METALNESS, i, &texname);
+			aprocessedmesh.material.AddMetalnessTexture(texname.C_Str());
+		}
+		//retrive roughness map textures
+		unsigned roughnesstexcount = mat->GetTextureCount(aiTextureType::aiTextureType_DIFFUSE_ROUGHNESS);
+		for (unsigned i = 0; i < roughnesstexcount; i++)
+		{
+			aiString texname;
+			mat->GetTexture(aiTextureType_DIFFUSE_ROUGHNESS, i, &texname);
+			aprocessedmesh.material.AddRoughnessTexture(texname.C_Str());
 		}
 	}
 

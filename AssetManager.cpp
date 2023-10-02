@@ -53,7 +53,8 @@ std::vector<unsigned> triangleindicies =
 Model::Model(ModelDataUploadMode uploadmode)
 	:m_uploadmode(uploadmode),
 	m_vertexversion(UNKNOWN),
-	m_tmpmaterialgpuindex(-1)
+	m_tmpmaterialgpuindex(-1),
+	m_Allowrender(true)
 {
 	m_transform = XMMatrixIdentity();
 }
@@ -71,6 +72,10 @@ Model::~Model()
 }
 void Model::Draw(DX12Commandlist& renderingcmdlist,XMMATRIX vpmatrix, UINT mvpmatrixrootparamindex, UINT materialconstsrootparamindex, bool usemodelmatrix, bool setmvpmatrix, bool supportmaterial)
 {
+	if (!m_Allowrender)
+	{
+		return;
+	}
 	renderingcmdlist->IASetVertexBuffers(0, 1, &m_vertexbufferview);
 	renderingcmdlist->IASetIndexBuffer(&m_indexbufferview);
 	XMMATRIX mvp = vpmatrix;
@@ -457,7 +462,7 @@ void CompoundModel::UploadModelDataDefaultTexture(DX12Commandlist& copycmdlist)
 	src.PlacedFootprint.Footprint.RowPitch = m_whitetexsubresfootprint.Footprint.RowPitch;
 	src.PlacedFootprint.Offset = 0;
 	copycmdlist->CopyTextureRegion(&dst, 0, 0, 0, &src, NULL);
-	abarrier = m_whitetexture.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	abarrier = m_whitetexture.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	if (DXUtils::IsBarrierSafeToExecute(abarrier))
 	{
 		copycmdlist->ResourceBarrier(1, &abarrier);
@@ -532,7 +537,7 @@ void CompoundModel::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel
 	
 	UINT actualSRVtoallocate = numsrvrequired + 1;//extra 1 srv for the default texture(white texture) which is used by models without textures.
 	//prevent crash if no srv required(we do not need the heap then.
-	if (numsrvrequired)
+	if (actualSRVtoallocate)
 	{
 		D3D12_DESCRIPTOR_HEAP_DESC texsrvheapdesc = {};
 		texsrvheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
