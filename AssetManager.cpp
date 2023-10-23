@@ -383,7 +383,7 @@ void Model::InitMaterial(ComPtr< ID3D12Device> creationdevice)
 	std::set<std::string>& texnames = m_material.GetDiffuseTextureNames();
 	if (texnames.size() > 0)
 	{
-		DXTexture* atexture = new DXTexture();
+
 		std::string texfilename = *(texnames.begin());
 		wstring texfilenamewstr(texfilename.begin(), texfilename.end());
 
@@ -396,7 +396,6 @@ void Model::InitMaterial(ComPtr< ID3D12Device> creationdevice)
 		std::set<std::string>& texnames = m_material.GetNormalTextureNames();
 		if (texnames.size() > 0)
 		{
-			DXTexture* atexture = new DXTexture();
 			std::string texfilename = *(texnames.begin());
 			wstring texfilenamewstr(texfilename.begin(), texfilename.end());
 
@@ -409,7 +408,6 @@ void Model::InitMaterial(ComPtr< ID3D12Device> creationdevice)
 		std::set<std::string>& texnames = m_material.GetRoughnessTextureNames();
 		if (texnames.size() > 0)
 		{
-			DXTexture* atexture = new DXTexture();
 			std::string texfilename = *(texnames.begin());
 			wstring texfilenamewstr(texfilename.begin(), texfilename.end());
 
@@ -422,7 +420,6 @@ void Model::InitMaterial(ComPtr< ID3D12Device> creationdevice)
 		std::set<std::string>& texnames = m_material.GetMetalnessTextureNames();
 		if (texnames.size() > 0)
 		{
-			DXTexture* atexture = new DXTexture();
 			std::string texfilename = *(texnames.begin());
 			wstring texfilenamewstr(texfilename.begin(), texfilename.end());
 

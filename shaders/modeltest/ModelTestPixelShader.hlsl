@@ -29,7 +29,7 @@ float4 main(VSOut psin) : SV_TARGET0
 {
 	//return float4(psin.normal,1.0f);
 	float2 uvnew=float2(psin.uv.x,1.0f-psin.uv.y);
-		float4 texoutput=textures[matconsts.roughnesstexidx].Sample(simplesampler,uvnew);
+		float4 texoutput=textures[matconsts.diffusetexidx].Sample(simplesampler,uvnew);
 		float4 normaloutput = float4(psin.normal,1.0f);
 		return lerp(normaloutput,texoutput,(float)generalconsts.supportmaterialtextures);
 	
