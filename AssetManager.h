@@ -50,16 +50,34 @@ public:
 	void LoadDifuseTexture(std::wstring texname);
 	//load from file the texture data imp:no resource creation here
 	void LoadNormalTexture(std::wstring texname);
+	//load from file the texture data imp:no resource creation here
+	void LoadRoughnessTexture(std::wstring texname);
+	//load from file the texture data imp:no resource creation here
+	void LoadMetalnessTexture(std::wstring texname);
 	void GetMaterialTextures(vector< DXTexture*>& textures);
 
 	ModelMaterial();
 	~ModelMaterial();
 	DXTexture* GetDiffuseTexture() { return m_diffusetexture; }
 	DXTexture* GetNormalTexture() { return m_normaltexture; }
+	DXTexture* GetRoughnessTexture() { return m_roughnesstexture; }
+	DXTexture* GetMetalnessTexture() { return m_metalnesstexture; }
 private:
 	std::wstring GetTextureFilePath(std::wstring texname);
+	//pbr texture set
 	DXTexture* m_diffusetexture;
 	DXTexture* m_normaltexture;
+	DXTexture* m_roughnesstexture;
+	DXTexture* m_metalnesstexture;
+
+};
+//hold texture index for each material texture srv parameter in srvheap(pbr material only for now)
+struct MaterialDataGPU
+{
+	unsigned diffusetexidx;
+	unsigned normaltexidx;
+	unsigned roughnesstexidx;
+
 };
 class Model
 {
@@ -96,6 +114,11 @@ public:
 	unsigned GetMatGPUIdx() { return m_tmpmaterialgpuindex; }
 	void GetMaterialTextures(vector< DXTexture*>& textures);
 	void AllowRender(bool allow = true) { m_Allowrender=allow; }
+	//materialdata gpu control functions
+	void SetDiffusetextureIdx(unsigned idx) { m_materialdata_gpu.diffusetexidx=idx; }
+	void SetNormaltextureIdx(unsigned idx) { m_materialdata_gpu.normaltexidx = idx; }
+	void SetRoughnesstextureIdx(unsigned idx) { m_materialdata_gpu.roughnesstexidx = idx; }
+	MaterialDataGPU GetMaterialDataGPU() { return m_materialdata_gpu; }
 
 private:
 	ShaderTransformConstants_General m_shadertransformconsts;
@@ -111,6 +134,8 @@ private:
 	D3D12_INDEX_BUFFER_VIEW m_indexbufferview;
 	ModelDataUploadMode m_uploadmode;
 	AssimpMaterial m_material;
+	//actual material block used to retrive material data for model in shaders
+	MaterialDataGPU m_materialdata_gpu;
 	//use meshmaterial to load/create final material for use
 	ModelMaterial m_loadedmaterial;
 	MaterialConstants m_matconsts;
@@ -135,7 +160,7 @@ public:
 	void UploadData(DX12Commandlist& copycmdlist, bool uploaddefaults = true, bool uploadmodeldatatogpubuffers = true);
 	void UploadModelTextureData(DX12Commandlist& copycmdlist);
 	const vector<Model*>& GetModels() { return m_models; }
-	DX12DESCHEAP& GetMatTexSRVHeap() { return m_texturesrvheap; }
+	DX12DESCHEAP& GetResourceviewHeap() { return m_resourceviewheap; }
 	CompoundModel(ModelDataUploadMode uploadmode = NOCOPY);
 	~CompoundModel();
 	void Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimpModel, VertexVersion modelvertexversion,bool supportmaterial=false);
@@ -144,17 +169,21 @@ public:
 	VertexVersion m_vertexversion;
 	vector<Model*> m_models;
 	//model material related data
-	DX12DESCHEAP m_texturesrvheap;
+	DX12DESCHEAP m_resourceviewheap;
 	DX12TextureSimple m_whitetexture;
 	D3D12_PLACED_SUBRESOURCE_FOOTPRINT m_whitetexsubresfootprint;
 	DX12Buffer m_whitetexuploadbuffer;
 	vector< DXTexture*> m_texturestoupload;
+	
+	std::vector<MaterialDataGPU> m_allmaterialsused;
+	DX12Buffer m_materialtable;
 	//local textures upload helper utils
 	size_t m_currenttexidxtoupload;
 	bool m_supportmaterial;
 	bool SupportMaterial() { return m_supportmaterial; }
 	void UploadCurrentFrameModelTextureData(DX12Commandlist& copycmdlist,bool increment =true);
 	bool NeedToUploadTextures() { return (m_currenttexidxtoupload<m_texturestoupload.size()); }
+	
 };
 
 class BasicModelManager

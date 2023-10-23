@@ -93,7 +93,7 @@ void Model::Draw(DX12Commandlist& renderingcmdlist,XMMATRIX vpmatrix, UINT mvpma
 	}
 	if (supportmaterial)
 	{
-		renderingcmdlist->SetGraphicsRoot32BitConstants(materialconstsrootparamindex, sizeof(m_matconsts) / 4, &m_matconsts, 0);
+		renderingcmdlist->SetGraphicsRoot32BitConstants(materialconstsrootparamindex, sizeof(m_materialdata_gpu) / 4, &m_materialdata_gpu, 0);
 	}
 	
 	renderingcmdlist->DrawIndexedInstanced(GetIndiciesCount(), 1, 0, 0, 0);
@@ -378,16 +378,58 @@ void Model::TransitionVextexAndIndexBufferState(D3D12_RESOURCE_STATES state, Com
 }
 void Model::InitMaterial(ComPtr< ID3D12Device> creationdevice)
 {
-	std::set<std::string>& diffusetexnames=m_material.GetDiffuseTextureNames();
-		if (diffusetexnames.size() > 0)
+	//diffuse texture load
+	{
+	std::set<std::string>& texnames = m_material.GetDiffuseTextureNames();
+	if (texnames.size() > 0)
+	{
+		DXTexture* atexture = new DXTexture();
+		std::string texfilename = *(texnames.begin());
+		wstring texfilenamewstr(texfilename.begin(), texfilename.end());
+
+
+		m_loadedmaterial.LoadDifuseTexture(texfilenamewstr);
+	}
+	}
+	//normal texture load
+	{
+		std::set<std::string>& texnames = m_material.GetNormalTextureNames();
+		if (texnames.size() > 0)
 		{
 			DXTexture* atexture = new DXTexture();
-			std::string texfilename = *(diffusetexnames.begin());
+			std::string texfilename = *(texnames.begin());
 			wstring texfilenamewstr(texfilename.begin(), texfilename.end());
-			
-			//need to update texture loader to support non dds
-			m_loadedmaterial.LoadDifuseTexture(texfilenamewstr);
+
+
+			m_loadedmaterial.LoadNormalTexture(texfilenamewstr);
 		}
+	}
+	//roughness texture load
+	{
+		std::set<std::string>& texnames = m_material.GetRoughnessTextureNames();
+		if (texnames.size() > 0)
+		{
+			DXTexture* atexture = new DXTexture();
+			std::string texfilename = *(texnames.begin());
+			wstring texfilenamewstr(texfilename.begin(), texfilename.end());
+
+
+			m_loadedmaterial.LoadRoughnessTexture(texfilenamewstr);
+		}
+	}
+	//metalness texture load
+	{
+		std::set<std::string>& texnames = m_material.GetMetalnessTextureNames();
+		if (texnames.size() > 0)
+		{
+			DXTexture* atexture = new DXTexture();
+			std::string texfilename = *(texnames.begin());
+			wstring texfilenamewstr(texfilename.begin(), texfilename.end());
+
+
+			m_loadedmaterial.LoadMetalnessTexture(texfilenamewstr);
+		}
+	}
 		m_loadedmaterial.Init(creationdevice);
 }
 void Model::GetMaterialTextures(vector< DXTexture*>& textures)
@@ -471,10 +513,10 @@ void CompoundModel::UploadModelDataDefaultTexture(DX12Commandlist& copycmdlist)
 }
 void CompoundModel::UploadData(DX12Commandlist& copycmdlist, bool uploaddefaults, bool uploadmodeldatatogpubuffers)
 {
-	if (uploaddefaults)
+	/*if (uploaddefaults)
 	{
 		UploadModelDataDefaultTexture(copycmdlist);
-	}
+	}*/
 	if (uploadmodeldatatogpubuffers)
 	{
 		UploadModelDatatoGPUBuffers(copycmdlist);
@@ -521,8 +563,21 @@ void CompoundModel::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel
 		amodel->Init(creationdevice, assimpModel, (UINT)i, modelvertexversion,m_supportmaterial);
 		if (m_supportmaterial)
 		{
+			//gather textures to upload
 			amodel->GetMaterialTextures(m_texturestoupload);
+			//gather number of textures for which srvs are to be created.
+			//diffuse
 			if (amodel->GetLoadedMaterial().GetDiffuseTexture())
+			{
+				numsrvrequired += 1;
+			}
+			//normal
+			if (amodel->GetLoadedMaterial().GetNormalTexture())
+			{
+				numsrvrequired += 1;
+			}
+			//roughness/metalness(note we expect roughness/metalness to be packed in single texture.
+			if (amodel->GetLoadedMaterial().GetRoughnessTexture())
 			{
 				numsrvrequired += 1;
 			}
@@ -534,8 +589,7 @@ void CompoundModel::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel
 	//collect data to build up texture srv heap
 	
 	
-	
-	UINT actualSRVtoallocate = numsrvrequired + 1;//extra 1 srv for the default texture(white texture) which is used by models without textures.
+	UINT actualSRVtoallocate =numsrvrequired;
 	//prevent crash if no srv required(we do not need the heap then.
 	if (actualSRVtoallocate)
 	{
@@ -543,34 +597,93 @@ void CompoundModel::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel
 		texsrvheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		texsrvheapdesc.NumDescriptors = actualSRVtoallocate;
 		texsrvheapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-		m_texturesrvheap.Init(texsrvheapdesc, creationdevice);
+		m_resourceviewheap.Init(texsrvheapdesc, creationdevice);
 		//create actual srvs
 		int indexinsrvheaptouse = 0;
 		for (size_t i = 0; i < m_models.size(); i++)
 		{
-			DXTexture* diffusetex=m_models[i]->GetLoadedMaterial().GetDiffuseTexture();
-			if (diffusetex)
-			{
-				D3D12_SHADER_RESOURCE_VIEW_DESC srvdesc = {};
-				srvdesc.Texture2D.MipLevels = diffusetex->GetTotalMipCount();
-				srvdesc.Format = diffusetex->GetDXImageData().m_imagemetadata.format;
-				srvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-				srvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-				diffusetex->CreateSRV(creationdevice,srvdesc, m_texturesrvheap.GetCPUHandleOffseted(indexinsrvheaptouse));
-				m_models[i]->SetMatGPUIdx(indexinsrvheaptouse);
-				indexinsrvheaptouse++;
-			}
-			else
-			{
-				//use default texture's srv if no textures available
-				m_models[i]->SetMatGPUIdx(actualSRVtoallocate -1);
-			}
+				//handle diffuse texture
+				DXTexture* diffusetex = m_models[i]->GetLoadedMaterial().GetDiffuseTexture();
+				if (diffusetex)
+				{
+					D3D12_SHADER_RESOURCE_VIEW_DESC srvdesc = {};
+					srvdesc.Texture2D.MipLevels = diffusetex->GetTotalMipCount();
+					srvdesc.Format = diffusetex->GetDXImageData().m_imagemetadata.format;
+					srvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+					srvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+					diffusetex->CreateSRV(creationdevice, srvdesc, m_resourceviewheap.GetCPUHandleOffseted(indexinsrvheaptouse));
+
+					m_models[i]->SetDiffusetextureIdx(indexinsrvheaptouse);
+					indexinsrvheaptouse++;
+
+				}
+				//handle normal texture
+				DXTexture* normaltex = m_models[i]->GetLoadedMaterial().GetNormalTexture();
+				if (normaltex)
+				{
+					D3D12_SHADER_RESOURCE_VIEW_DESC srvdesc = {};
+					srvdesc.Texture2D.MipLevels = normaltex->GetTotalMipCount();
+					srvdesc.Format = normaltex->GetDXImageData().m_imagemetadata.format;
+					srvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+					srvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+					normaltex->CreateSRV(creationdevice, srvdesc, m_resourceviewheap.GetCPUHandleOffseted(indexinsrvheaptouse));
+					m_models[i]->SetNormaltextureIdx(indexinsrvheaptouse);
+					indexinsrvheaptouse++;
+
+				}
+				//handle roughness/metalness texture
+				DXTexture* roughnesstex = m_models[i]->GetLoadedMaterial().GetRoughnessTexture();
+				if (roughnesstex)
+				{
+					D3D12_SHADER_RESOURCE_VIEW_DESC srvdesc = {};
+					srvdesc.Texture2D.MipLevels = roughnesstex->GetTotalMipCount();
+					srvdesc.Format = roughnesstex->GetDXImageData().m_imagemetadata.format;
+					srvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+					srvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+					roughnesstex->CreateSRV(creationdevice, srvdesc, m_resourceviewheap.GetCPUHandleOffseted(indexinsrvheaptouse));
+					m_models[i]->SetRoughnesstextureIdx(indexinsrvheaptouse);
+					indexinsrvheaptouse++;
+
+				}
+				//now we have full material gpu dataready for model so retrive the material gpu data
+				{
+					m_allmaterialsused.push_back(m_models[i]->GetMaterialDataGPU());
+					unsigned matidx = static_cast<unsigned>(m_allmaterialsused.size()) - 1;
+					m_models[i]->SetMatGPUIdx(matidx);
+				}
+
 		}
 
 	}
 	if (m_supportmaterial)
 	{
-		
+		/*//create materialtable buffer
+		{
+			DX12ResourceCreationProperties materialtablebufferprops;
+			DX12Buffer::InitResourceCreationProperties(materialtablebufferprops);
+			materialtablebufferprops.resdesc.Width = sizeof(MaterialDataGPU) * m_allmaterialsused.size();
+			materialtablebufferprops.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
+			m_materialtable.Init(creationdevice, materialtablebufferprops, ResourceCreationMode::COMMITED);
+			m_materialtable.SetName(L"materialtablebuffer");
+			//create material table buffer view
+			{
+				D3D12_SHADER_RESOURCE_VIEW_DESC materialtablebuffersrvdesc = {};
+				materialtablebuffersrvdesc.ViewDimension= D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_BUFFER;
+				materialtablebuffersrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+				materialtablebuffersrvdesc.Format = DXGI_FORMAT::DXGI_FORMAT_UNKNOWN;
+				materialtablebuffersrvdesc.Buffer.FirstElement = 0;
+				materialtablebuffersrvdesc.Buffer.NumElements = static_cast<UINT>(m_allmaterialsused.size());
+				materialtablebuffersrvdesc.Buffer.StructureByteStride = sizeof(MaterialDataGPU);
+				m_materialtable.CreateSRV(creationdevice,materialtablebuffersrvdesc, m_resourceviewheap.GetCPUHandleOffseted(0));
+			}
+			//write materialtable
+			BufferMapParams mattablewriteparams = {};
+			mattablewriteparams.range.Begin = 0;
+			mattablewriteparams.range.End = m_materialtable.GetSize();
+			void* mattablebuffmapped = m_materialtable.Map(mattablewriteparams);
+			memcpy(mattablebuffmapped, m_allmaterialsused.data(), m_materialtable.GetSize());
+			m_materialtable.UnMap(mattablewriteparams);
+		}
 		//create whitetexture(default texture)
 		{
 			DX12ResourceCreationProperties	whitetexresprops;
@@ -612,8 +725,8 @@ void CompoundModel::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel
 			whitetexsrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 			whitetexsrvdesc.Texture2D.MipLevels = 1;
 			whitetexsrvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-			m_whitetexture.CreateSRV(creationdevice, whitetexsrvdesc, m_texturesrvheap.GetCPUHandleOffseted(actualSRVtoallocate - 1));
-		}
+			//m_whitetexture.CreateSRV(creationdevice, whitetexsrvdesc, m_resourceviewheap.GetCPUHandleOffseted(1));
+		}*/
 	}
 
 }
@@ -769,7 +882,10 @@ void BasicModelManager::GetTriangleRTVertexData(vector<RTVertexDataV0>& rtvertex
 
 ModelMaterial::ModelMaterial()
 	:
-	m_diffusetexture(nullptr)
+	m_diffusetexture(nullptr),
+	m_normaltexture(nullptr),
+	m_roughnesstexture(nullptr),
+	m_metalnesstexture(nullptr)
 {
 
 }
@@ -782,6 +898,14 @@ ModelMaterial::~ModelMaterial()
 	if (m_normaltexture)
 	{
 		delete m_normaltexture;
+	}
+	if (m_roughnesstexture)
+	{
+		delete m_roughnesstexture;
+	}
+	if (m_metalnesstexture)
+	{
+		delete m_metalnesstexture;
 	}
 }
 void ModelMaterial::LoadDifuseTexture(std::wstring texname)
@@ -797,6 +921,20 @@ void ModelMaterial::LoadNormalTexture(std::wstring texname)
 	m_normaltexture = new DXTexture();
 	wstring texpath = GetTextureFilePath(texname);
 	DXTexManager::LoadTexture(texpath.c_str(), m_normaltexture->GetDXImageData());
+}
+void ModelMaterial::LoadRoughnessTexture(std::wstring texname)
+{
+
+	m_roughnesstexture = new DXTexture();
+	wstring texpath = GetTextureFilePath(texname);
+	DXTexManager::LoadTexture(texpath.c_str(), m_roughnesstexture->GetDXImageData());
+}
+void ModelMaterial::LoadMetalnessTexture(std::wstring texname)
+{
+
+	m_metalnesstexture = new DXTexture();
+	wstring texpath = GetTextureFilePath(texname);
+	DXTexManager::LoadTexture(texpath.c_str(), m_metalnesstexture->GetDXImageData());
 }
 std::wstring ModelMaterial::GetTextureFilePath(std::wstring texname)
 {
@@ -814,6 +952,14 @@ void ModelMaterial::UploadTextures(DX12Commandlist& copycmdlist)
 	{
 		m_normaltexture->UploadTexture(copycmdlist);
 	}
+	if (m_roughnesstexture)
+	{
+		m_roughnesstexture->UploadTexture(copycmdlist);
+	}
+	if (m_metalnesstexture)
+	{
+		m_metalnesstexture->UploadTexture(copycmdlist);
+	}
 }
 void ModelMaterial::Init(ComPtr< ID3D12Device> creationdevice)
 {
@@ -828,6 +974,16 @@ void ModelMaterial::Init(ComPtr< ID3D12Device> creationdevice)
 		m_normaltexture->Init(creationdevice);
 		m_diffusetexture->SetName(L"normaltexture_modelmaterial");
 	}
+	if (m_roughnesstexture)
+	{
+		m_roughnesstexture->Init(creationdevice);
+		m_roughnesstexture->SetName(L"roughnesstexture_modelmaterial");
+	}
+	if (m_metalnesstexture)
+	{
+		m_metalnesstexture->Init(creationdevice);
+		m_metalnesstexture->SetName(L"metalnesstexture_modelmaterial");
+	}
 }
 void ModelMaterial::GetMaterialTextures(vector< DXTexture*>& textures)
 {
@@ -838,5 +994,13 @@ void ModelMaterial::GetMaterialTextures(vector< DXTexture*>& textures)
 	if (m_normaltexture)
 	{
 		textures.push_back(m_normaltexture);
+	}
+	if (m_roughnesstexture)
+	{
+		textures.push_back(m_roughnesstexture);
+	}
+	if (m_metalnesstexture)
+	{
+		textures.push_back(m_metalnesstexture);
 	}
 }

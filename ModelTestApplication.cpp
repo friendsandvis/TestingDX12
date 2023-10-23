@@ -71,10 +71,10 @@ void ModelTestApplication::Render()
 	//a specialized way to test out model's material(diffuse textures) 
 	if(m_loadedcompoundmodel.SupportMaterial())
 	{
-		DX12DESCHEAP& loadedcompoundmodelmatsrvheap = m_loadedcompoundmodel.GetMatTexSRVHeap();
+		DX12DESCHEAP& loadedcompoundmodelmatsrvheap = m_loadedcompoundmodel.GetResourceviewHeap();
 		ID3D12DescriptorHeap* heapstoset[1] = { loadedcompoundmodelmatsrvheap.GetDescHeap() };
 		m_primarycmdlist->SetDescriptorHeaps(1, heapstoset);
-		m_primarycmdlist->SetGraphicsRootDescriptorTable(1, loadedcompoundmodelmatsrvheap.GetGPUHandlefromstart());
+		m_primarycmdlist->SetGraphicsRootDescriptorTable(1, loadedcompoundmodelmatsrvheap.GetGPUHandleOffseted(0));
 	}
 	//set general constants
 	GeneralConstants generalconstants = {};
@@ -151,6 +151,8 @@ void ModelTestApplication::InitPSO()
 	psoinitdata.psodesc.graphicspsodesc.VS.pShaderBytecode = vs->GetCompiledCode();
 	//psoinitdata.psodesc.graphicspsodesc.RasterizerState.CullMode = D3D12_CULL_MODE_FRONT;
 	//root signature setup
+	vector < D3D12_DESCRIPTOR_RANGE> descrangestouserootparam1;
+	vector<D3D12_ROOT_PARAMETER> rootparams;
 	{
 		 
 
@@ -166,7 +168,6 @@ void ModelTestApplication::InitPSO()
 		rootparam0.Constants.Num32BitValues = sizeof(ShaderTransformConstants_General) / 4;
 		rootparam0.Constants.RegisterSpace = 0;
 		rootparam0.Constants.ShaderRegister = 0;
-		vector<D3D12_ROOT_PARAMETER> rootparams;
 		rootparams.push_back(rootparam0);
 		D3D12_ROOT_PARAMETER rootparam1 = {};
 		//making unbound range so make sure it is last range
@@ -176,15 +177,21 @@ void ModelTestApplication::InitPSO()
 		texturesrvrange.RegisterSpace = 0;
 		texturesrvrange.NumDescriptors = -1;
 		texturesrvrange.OffsetInDescriptorsFromTableStart = 0;
+		
+
+		descrangestouserootparam1.push_back(texturesrvrange);
+		
+		
+		
 		rootparam1.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		rootparam1.DescriptorTable.NumDescriptorRanges = 1;
-		rootparam1.DescriptorTable.pDescriptorRanges = &texturesrvrange;
+		rootparam1.DescriptorTable.NumDescriptorRanges = descrangestouserootparam1.size();
+		rootparam1.DescriptorTable.pDescriptorRanges = descrangestouserootparam1.data();
 		rootparam1.ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_PIXEL;
 		rootparams.push_back(rootparam1);
 		D3D12_ROOT_PARAMETER rootparam2 = {};
 		rootparam2.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
 		rootparam2.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-		rootparam2.Constants.Num32BitValues = sizeof(Model::MaterialConstants) / 4;
+		rootparam2.Constants.Num32BitValues = sizeof(MaterialDataGPU) / 4;
 		rootparam2.Constants.RegisterSpace = 0;
 		rootparam2.Constants.ShaderRegister = 1;
 		rootparams.push_back(rootparam2);
@@ -195,6 +202,7 @@ void ModelTestApplication::InitPSO()
 		rootparam3.Constants.RegisterSpace = 1;
 		rootparam3.Constants.ShaderRegister = 1;
 		rootparams.push_back(rootparam3);
+		
 		vector<D3D12_STATIC_SAMPLER_DESC> staticsamplers;
 		{
 			D3D12_STATIC_SAMPLER_DESC simplesampler = {};
