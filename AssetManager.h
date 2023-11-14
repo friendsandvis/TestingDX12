@@ -111,6 +111,8 @@ public:
 	void TransitionVextexAndIndexBufferState(D3D12_RESOURCE_STATES state, ComPtr<ID3D12GraphicsCommandList4>cmdlist);
 	ModelMaterial& GetLoadedMaterial() { return m_loadedmaterial; }
 	void SetMatGPUIdx(unsigned idx) { m_tmpmaterialgpuindex = idx; m_matconsts.texsrvidx = m_tmpmaterialgpuindex; }
+	void SetDiffuseIdx(unsigned idx) { m_diffusetexidx = idx; m_matconsts.texsrvidx = m_diffusetexidx;
+	}
 	unsigned GetMatGPUIdx() { return m_tmpmaterialgpuindex; }
 	void GetMaterialTextures(vector< DXTexture*>& textures);
 	void AllowRender(bool allow = true) { m_Allowrender=allow; }
@@ -141,7 +143,7 @@ private:
 	MaterialConstants m_matconsts;
 	bool m_Allowrender;
 	//an index used to refer in a global descriptor heap/mat table or similar
-	unsigned m_tmpmaterialgpuindex;
+	unsigned m_tmpmaterialgpuindex,m_diffusetexidx;
 	void GetVertexArray(vector<VertexBase*>& outverticies, AssimpLoadedMesh& ameshtoadd,VertexVersion vertversion);
 	void BuildVertexRawData();
 	void InitMaterial(ComPtr< ID3D12Device> creationdevice);

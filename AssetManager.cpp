@@ -586,8 +586,8 @@ void CompoundModel::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel
 	//collect data to build up texture srv heap
 	
 	
-	UINT actualSRVtoallocate =numsrvrequired;
-	//prevent crash if no srv required(we do not need the heap then.
+	UINT actualSRVtoallocate =numsrvrequired+1;//1 extra needed for material table.
+	//prevent crash if no srv required(we do not need the heap then).
 	if (actualSRVtoallocate)
 	{
 		D3D12_DESCRIPTOR_HEAP_DESC texsrvheapdesc = {};
@@ -596,7 +596,7 @@ void CompoundModel::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel
 		texsrvheapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		m_resourceviewheap.Init(texsrvheapdesc, creationdevice);
 		//create actual srvs
-		int indexinsrvheaptouse = 0;
+		int indexinsrvheaptouse = 1;//0th place used for material table buffer
 		for (size_t i = 0; i < m_models.size(); i++)
 		{
 				//handle diffuse texture
@@ -654,7 +654,7 @@ void CompoundModel::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel
 	}
 	if (m_supportmaterial)
 	{
-		/*//create materialtable buffer
+		//create materialtable buffer
 		{
 			DX12ResourceCreationProperties materialtablebufferprops;
 			DX12Buffer::InitResourceCreationProperties(materialtablebufferprops);
@@ -682,7 +682,7 @@ void CompoundModel::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel
 			m_materialtable.UnMap(mattablewriteparams);
 		}
 		//create whitetexture(default texture)
-		{
+		 {
 			DX12ResourceCreationProperties	whitetexresprops;
 			DX12TextureSimple::InitResourceCreationProperties(whitetexresprops);
 			whitetexresprops.resdesc.Width = whitetexresprops.resdesc.Height = whitetexresprops.resdesc.DepthOrArraySize = 1;
@@ -723,7 +723,7 @@ void CompoundModel::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel
 			whitetexsrvdesc.Texture2D.MipLevels = 1;
 			whitetexsrvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 			//m_whitetexture.CreateSRV(creationdevice, whitetexsrvdesc, m_resourceviewheap.GetCPUHandleOffseted(1));
-		}*/
+		}
 	}
 
 }

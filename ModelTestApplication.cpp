@@ -170,16 +170,26 @@ void ModelTestApplication::InitPSO()
 		rootparam0.Constants.ShaderRegister = 0;
 		rootparams.push_back(rootparam0);
 		D3D12_ROOT_PARAMETER rootparam1 = {};
+		//making mat table srv range
+		D3D12_DESCRIPTOR_RANGE materialtablerange = {};
+		materialtablerange.OffsetInDescriptorsFromTableStart = 0;
+		materialtablerange.NumDescriptors = 1;
+		materialtablerange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		materialtablerange.RegisterSpace = 1;
+		materialtablerange.BaseShaderRegister = 0;
 		//making unbound range so make sure it is last range
 		D3D12_DESCRIPTOR_RANGE texturesrvrange = {};
 		texturesrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		texturesrvrange.BaseShaderRegister = 0;
+		texturesrvrange.BaseShaderRegister = 1;
 		texturesrvrange.RegisterSpace = 0;
-		texturesrvrange.NumDescriptors = -1;
-		texturesrvrange.OffsetInDescriptorsFromTableStart = 0;
+		texturesrvrange.NumDescriptors = 307;
+		texturesrvrange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 		
-
+		
 		descrangestouserootparam1.push_back(texturesrvrange);
+		descrangestouserootparam1.push_back(materialtablerange);
+		
+		
 		
 		
 		
@@ -189,6 +199,12 @@ void ModelTestApplication::InitPSO()
 		rootparam1.ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_PIXEL;
 		rootparams.push_back(rootparam1);
 		D3D12_ROOT_PARAMETER rootparam2 = {};
+		/*rootparam2.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+		rootparam2.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+		rootparam2.Constants.Num32BitValues = sizeof(MaterialDataGPU) / 4;
+		rootparam2.Constants.RegisterSpace = 0;
+		rootparam2.Constants.ShaderRegister = 1;
+		*/
 		rootparam2.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
 		rootparam2.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 		rootparam2.Constants.Num32BitValues = sizeof(MaterialDataGPU) / 4;
@@ -202,6 +218,7 @@ void ModelTestApplication::InitPSO()
 		rootparam3.Constants.RegisterSpace = 1;
 		rootparam3.Constants.ShaderRegister = 1;
 		rootparams.push_back(rootparam3);
+
 		
 		vector<D3D12_STATIC_SAMPLER_DESC> staticsamplers;
 		{
