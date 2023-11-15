@@ -79,7 +79,7 @@ void ModelTestApplication::Render()
 	//set general constants
 	GeneralConstants generalconstants = {};
 	generalconstants.usematerialtextures = static_cast<unsigned int>(m_loadedcompoundmodel.SupportMaterial());
-	m_primarycmdlist->SetGraphicsRoot32BitConstants(3, sizeof(GeneralConstants) / 4, &generalconstants, 0);
+	//m_primarycmdlist->SetGraphicsRoot32BitConstants(3, sizeof(GeneralConstants) / 4, &generalconstants, 0);
 	m_loadedcompoundmodel.Draw(m_primarycmdlist,vpmat,0,2);
 	
 	DXASSERT(m_primarycmdlist->Close())
@@ -184,10 +184,11 @@ void ModelTestApplication::InitPSO()
 		texturesrvrange.RegisterSpace = 0;
 		texturesrvrange.NumDescriptors = 307;
 		texturesrvrange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-		
-		
+		//do not know why order of range is important here else issue in unbound range(all texture).
 		descrangestouserootparam1.push_back(texturesrvrange);
 		descrangestouserootparam1.push_back(materialtablerange);
+		
+		
 		
 		
 		
@@ -214,7 +215,7 @@ void ModelTestApplication::InitPSO()
 		D3D12_ROOT_PARAMETER rootparam3 = {};
 		rootparam3.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
 		rootparam3.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-		rootparam3.Constants.Num32BitValues = sizeof(GeneralConstants) / 4;
+		rootparam3.Constants.Num32BitValues = sizeof(Model::MaterialConstants) / 4;
 		rootparam3.Constants.RegisterSpace = 1;
 		rootparam3.Constants.ShaderRegister = 1;
 		rootparams.push_back(rootparam3);
