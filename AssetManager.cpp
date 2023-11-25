@@ -47,6 +47,14 @@ std::vector<unsigned> triangleindicies =
 {
 	0,1,2
 };
+std::vector<VetexV0> planeVertexData_versionV0 =
+{
+	VetexV0({-1.0f, 1.0f, 0.0f}, {0.0f,0.0f}),//0
+	VetexV0({-1.0f,-1.0f,0.0f}, {0.0f,1.0f}),//1
+	VetexV0({1.0f,-1.0f,0.0f},  {1.0f,1.0f}),//2
+	VetexV0({1.0f,1.0f,0.0f},   {1.0f,0.0f}),//3
+
+};
 //repesentation of a single mesh vertex
 
 
@@ -777,6 +785,7 @@ void BasicModelManager::LoadModel(ComPtr< ID3D12Device> creationdevice, std::str
 
 void BasicModelManager::GetPlaneVerticiesV0(vector<VertexBase*>& outverticies)
 {
+	/*
 	//0(left-top)
 	VetexV0* vert = new VetexV0();
 	vert->m_position = { -1.0f, 1.0f, 0.0f };
@@ -797,6 +806,15 @@ void BasicModelManager::GetPlaneVerticiesV0(vector<VertexBase*>& outverticies)
 	vert->m_position = { 1.0f,1.0f,0.0f };
 	vert->m_uv = { 1.0f,0.0f };
 	outverticies.push_back(vert);
+	*/
+	//use verticies from plane verticies vector
+	for (const VetexV0& v : planeVertexData_versionV0)
+	{
+		VetexV0* vert = new VetexV0();
+		(*vert) = v;
+		outverticies.push_back(vert);
+	}
+
 }
 
 void BasicModelManager::GetCubeVerticiesV0(vector<VertexBase*>& outverticies)

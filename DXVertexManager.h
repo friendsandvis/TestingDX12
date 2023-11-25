@@ -43,6 +43,11 @@ public:
 	{
 		m_vertversion = VertexVersion::VERTEXVERSION0;
 	}
+	VetexV0(XMFLOAT3 pos, XMFLOAT2 uv)
+	{
+		Set(pos, uv);
+		m_vertversion = VertexVersion::VERTEXVERSION0;
+	}
 	void Set(XMFLOAT3 pos, XMFLOAT2 uv) { m_position = pos; m_uv = uv; }
 };
 
