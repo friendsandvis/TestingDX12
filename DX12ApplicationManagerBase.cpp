@@ -1,4 +1,5 @@
 #include"DX12ApplicationManagerBase.h"
+
 #include<chrono>
 
 
@@ -12,6 +13,10 @@ DX12ApplicationManagerBase::DX12ApplicationManagerBase()
 
 DX12ApplicationManagerBase::~DX12ApplicationManagerBase()
 {
+	//cleanup IMGUI
+	ImGui_ImplWin32_Shutdown();
+	ImGui_ImplDX12_Shutdown();
+	ImGui::DestroyContext();
 }
 
 D3D12_VIEWPORT DX12ApplicationManagerBase::GetViewport()
@@ -79,6 +84,8 @@ void DX12ApplicationManagerBase::Init(ComPtr< ID3D12Device> creationdevice, ComP
 	//basic initialization first
 	InitBase(creationdevice);
 	Initswapchain(factory, swapchainwidth, swapchainheight, hwnd);
+	//init imgui
+	InitIMGUI(creationdevice,hwnd);
 	//extra init maybe specialized by specialized classes
 	InitExtras();
 }
@@ -167,5 +174,29 @@ void DX12ApplicationManagerBase::ClearBackBuffer(unsigned backbufferindex, DX12C
 	//issue clear rtv call
 	cmdlisttouse->ClearRenderTargetView(rtvhandle, clearvalue, 0, nullptr);
 	
+}
+void DX12ApplicationManagerBase::InitIMGUI(ComPtr< ID3D12Device> creationdevice, HWND hwnd)
+{
+	D3D12_DESCRIPTOR_HEAP_DESC imguiheapdesc = {};
+	imguiheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	imguiheapdesc.NumDescriptors = 1;	//just creating for imgui(example uses 1 as well.
+	imguiheapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	m_imguisrvdescheap.Init(imguiheapdesc, creationdevice);
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGui::GetIO();
+	ImGui::StyleColorsDark();
+	ImGui_ImplWin32_Init(hwnd);
+	ImGui_ImplDX12_Init(creationdevice.Get(),1, DXGI_FORMAT_B8G8R8A8_UNORM, m_imguisrvdescheap.GetDescHeap(), m_imguisrvdescheap.GetCPUHandlefromstart(), m_imguisrvdescheap.GetGPUHandlefromstart());
+}
+void DX12ApplicationManagerBase::IMGUIPrerender()
+{
+	ImGui_ImplDX12_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+}
+void DX12ApplicationManagerBase::PreRenderUpdate()
+{
+	IMGUIPrerender();
 }
 	

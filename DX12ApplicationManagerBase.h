@@ -7,6 +7,12 @@
 #include"DX12Resource.h"
 #include"WindowProcHook.h"
 #include"DXCamera.h"
+//imgui
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include<imgui.h>
+#include<backends/imgui_impl_dx12.h>
+#include<backends/imgui_impl_win32.h>
+
 #define NUMCOMMANDLISTSTOCK 2
 
 // interface for all dx12 applicationmanagers.Could help in creaing  speciialized dx12 applications
@@ -18,7 +24,7 @@ public:
 	void InitBase(ComPtr< ID3D12Device> creationdevice);
 	void Initswapchain(ComPtr<IDXGIFactory2> factory, unsigned width, unsigned height, HWND hwnd);
 	virtual void Render() = 0;
-	virtual void PreRenderUpdate() {}
+	virtual void PreRenderUpdate();
 	virtual void PostRenderUpdate() {}
 	//called inside init function san be overriden by child class to init other app specific members at app init time
 	
@@ -35,6 +41,8 @@ protected:
 	DXCamera m_maincamera;
 	 virtual void InitExtras() {}
 	 void ClearBackBuffer(unsigned backbufferindex, DX12Commandlist& cmdlisttouse, float clearvalue[4]);
+	 void InitIMGUI(ComPtr< ID3D12Device> creationdevice, HWND hwnd);
+	 void IMGUIPrerender();
 	
 
 	ComPtr< ID3D12Device> m_creationdevice;
@@ -57,5 +65,7 @@ protected:
 	DX12DESCHEAP m_rtvdescheap;
 	DX12DESCHEAP m_dsvdescheap;
 	DX12Resource m_depthbuffer;
+	//imgui related
+	DX12DESCHEAP m_imguisrvdescheap;
 };
 
