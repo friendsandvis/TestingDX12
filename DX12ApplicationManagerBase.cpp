@@ -144,20 +144,17 @@ void DX12ApplicationManagerBase::BasicRender()
 	m_prepresentcommandlist.Reset();
 	UINT currentbackbufferidx=m_swapchain.GetCurrentbackbufferIndex();
 	{
-		ImGui::Render();
+		//ImGui::Render();
 		D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(currentbackbufferidx);
 		D3D12_RESOURCE_BARRIER barrier = m_swapchain.TransitionBackBuffer(currentbackbufferidx, D3D12_RESOURCE_STATE_RENDER_TARGET);
 		if (DXUtils::IsBarrierSafeToExecute(barrier))
 		{
 			m_prepresentcommandlist->ResourceBarrier(1, &barrier);
 		}
-		float clearvalue[4] = {1.0f,0.0f,0.0f,0.0f};
-		m_prepresentcommandlist->ClearRenderTargetView(rtvhandle, clearvalue, 0, nullptr);
-		m_prepresentcommandlist->OMSetRenderTargets(1, &rtvhandle, FALSE, nullptr);
-		ID3D12DescriptorHeap* descheapstoset[1];
+		/*ID3D12DescriptorHeap* descheapstoset[1];
 		descheapstoset[0]=m_imguisrvdescheap.GetDescHeap();
-		m_prepresentcommandlist->SetDescriptorHeaps(1, descheapstoset);
-		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_prepresentcommandlist.GetcmdList());
+		m_prepresentcommandlist->SetDescriptorHeaps(1, descheapstoset);*/
+		//ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_prepresentcommandlist.GetcmdList());
 
 	}
 	D3D12_RESOURCE_BARRIER barrier=m_swapchain.TransitionBackBuffer(currentbackbufferidx, D3D12_RESOURCE_STATE_PRESENT);
