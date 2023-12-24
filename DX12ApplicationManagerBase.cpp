@@ -14,9 +14,9 @@ DX12ApplicationManagerBase::DX12ApplicationManagerBase()
 DX12ApplicationManagerBase::~DX12ApplicationManagerBase()
 {
 	//cleanup IMGUI
-	ImGui_ImplWin32_Shutdown();
+	/*ImGui_ImplWin32_Shutdown();
 	ImGui_ImplDX12_Shutdown();
-	ImGui::DestroyContext();
+	ImGui::DestroyContext();*/
 }
 
 D3D12_VIEWPORT DX12ApplicationManagerBase::GetViewport()
@@ -85,7 +85,7 @@ void DX12ApplicationManagerBase::Init(ComPtr< ID3D12Device> creationdevice, ComP
 	InitBase(creationdevice);
 	Initswapchain(factory, swapchainwidth, swapchainheight, hwnd);
 	//init imgui
-	InitIMGUI(creationdevice,hwnd);
+	//InitIMGUI(creationdevice,hwnd);
 	//extra init maybe specialized by specialized classes
 	InitExtras();
 }
@@ -134,9 +134,33 @@ void DX12ApplicationManagerBase::InitBase(ComPtr< ID3D12Device> creationdevice)
 
 void DX12ApplicationManagerBase::BasicRender()
 {
+	//simple imgui test window
+	/* {
+		ImGui::Begin("test imguiwindow", nullptr);
+		ImGui::Text("testimgui TEXT line 1");
+		ImGui::End();
+	}*/
+
 	m_prepresentcommandlist.Reset();
 	UINT currentbackbufferidx=m_swapchain.GetCurrentbackbufferIndex();
-	D3D12_RESOURCE_BARRIER barrier=m_swapchain.TransitionBackBuffer(currentbackbufferidx, D3D12_RESOURCE_STATE_COMMON);
+	{
+		ImGui::Render();
+		D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(currentbackbufferidx);
+		D3D12_RESOURCE_BARRIER barrier = m_swapchain.TransitionBackBuffer(currentbackbufferidx, D3D12_RESOURCE_STATE_RENDER_TARGET);
+		if (DXUtils::IsBarrierSafeToExecute(barrier))
+		{
+			m_prepresentcommandlist->ResourceBarrier(1, &barrier);
+		}
+		float clearvalue[4] = {1.0f,0.0f,0.0f,0.0f};
+		m_prepresentcommandlist->ClearRenderTargetView(rtvhandle, clearvalue, 0, nullptr);
+		m_prepresentcommandlist->OMSetRenderTargets(1, &rtvhandle, FALSE, nullptr);
+		ID3D12DescriptorHeap* descheapstoset[1];
+		descheapstoset[0]=m_imguisrvdescheap.GetDescHeap();
+		m_prepresentcommandlist->SetDescriptorHeaps(1, descheapstoset);
+		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_prepresentcommandlist.GetcmdList());
+
+	}
+	D3D12_RESOURCE_BARRIER barrier=m_swapchain.TransitionBackBuffer(currentbackbufferidx, D3D12_RESOURCE_STATE_PRESENT);
 	if (DXUtils::IsBarrierSafeToExecute(barrier))
 	{
 		m_prepresentcommandlist->ResourceBarrier(1,&barrier );
@@ -184,7 +208,8 @@ void DX12ApplicationManagerBase::InitIMGUI(ComPtr< ID3D12Device> creationdevice,
 	m_imguisrvdescheap.Init(imguiheapdesc, creationdevice);
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGui::GetIO();
+	ImGuiIO& io = ImGui::GetIO();
+	io.IniFilename = nullptr;
 	ImGui::StyleColorsDark();
 	ImGui_ImplWin32_Init(hwnd);
 	ImGui_ImplDX12_Init(creationdevice.Get(),1, DXGI_FORMAT_B8G8R8A8_UNORM, m_imguisrvdescheap.GetDescHeap(), m_imguisrvdescheap.GetCPUHandlefromstart(), m_imguisrvdescheap.GetGPUHandlefromstart());
@@ -197,6 +222,6 @@ void DX12ApplicationManagerBase::IMGUIPrerender()
 }
 void DX12ApplicationManagerBase::PreRenderUpdate()
 {
-	IMGUIPrerender();
+	//IMGUIPrerender();
 }
 	
