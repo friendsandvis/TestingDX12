@@ -189,6 +189,9 @@
     <ClCompile Include="imgui\imgui.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
+    <ClCompile Include="DX12ShadowTestApplication.cpp">
+      <Filter>Applications</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="windmaker.h">
@@ -352,6 +355,9 @@
     </ClInclude>
     <ClInclude Include="imgui\backends\imgui_impl_dx12.h">
       <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12ShadowTestApplication.h">
+      <Filter>Applications</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

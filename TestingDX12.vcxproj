@@ -173,6 +173,7 @@
     <ClCompile Include="DX12ResourceBase.cpp" />
     <ClCompile Include="DX12RootSignature.cpp" />
     <ClCompile Include="DX12SamplerfeedbackApplication.cpp" />
+    <ClCompile Include="DX12ShadowTestApplication.cpp" />
     <ClCompile Include="DX12SimpleTexturedQuadApplication.cpp" />
     <ClCompile Include="DX12SkyboxtestingApplication.cpp" />
     <ClCompile Include="DX12Swapchain.cpp" />
@@ -229,6 +230,7 @@
     <ClInclude Include="DX12ResourceBase.h" />
     <ClInclude Include="DX12RootSignature.h" />
     <ClInclude Include="DX12SamplerfeedbackApplication.h" />
+    <ClInclude Include="DX12ShadowTestApplication.h" />
     <ClInclude Include="DX12SimpleTexturedQuadApplication.h" />
     <ClInclude Include="DX12SkyboxtestingApplication.h" />
     <ClInclude Include="DX12Swapchain.h" />
