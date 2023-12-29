@@ -79,8 +79,7 @@ void ModelTestApplication::Render()
 	//set general constants
 	GeneralConstants generalconstants = {};
 	generalconstants.usematerialtextures = static_cast<unsigned int>(m_loadedcompoundmodel.SupportMaterial());
-	//m_primarycmdlist->SetGraphicsRoot32BitConstants(3, sizeof(GeneralConstants) / 4, &generalconstants, 0);
-	m_loadedcompoundmodel.Draw(m_primarycmdlist,vpmat,0,2);
+	m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 3);
 	
 	DXASSERT(m_primarycmdlist->Close())
 	BasicRender();

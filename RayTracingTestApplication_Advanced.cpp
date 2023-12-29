@@ -133,7 +133,8 @@ void RayTracingApplicationAdvanced::RenderGbuffer()
 		
 		XMMATRIX vp = m_maincamera.GetMVP();
 		//m_loadedmodel.Draw(m_gbufferrendercommandlist, vp, 0);
-		m_comloadedmodel.Draw(m_gbufferrendercommandlist, vp, 0);
+		//not using materials so not passing matconstantsrootparamidx now
+		m_comloadedmodel.Draw(m_gbufferrendercommandlist, vp,0);
 		m_gbufferrendercommandlist.Close();
 	}
 	ID3D12CommandList* cmdliststoexecute[1] = { m_gbufferrendercommandlist.GetcmdList() };

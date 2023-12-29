@@ -101,10 +101,8 @@ void Model::Draw(DX12Commandlist& renderingcmdlist,XMMATRIX vpmatrix, UINT mvpma
 	}
 	if (supportmaterial)
 	{
-		renderingcmdlist->SetGraphicsRoot32BitConstants(materialconstsrootparamindex, sizeof(m_materialdata_gpu) / 4, &m_materialdata_gpu, 0);
+		renderingcmdlist->SetGraphicsRoot32BitConstants(materialconstsrootparamindex, sizeof(m_matconsts) / 4, &m_matconsts, 0);
 	}
-	//hardcoded to 3 as 3rd root param is for mat consdtant as per model test app(might want to remove this hardcoding soon).
-	renderingcmdlist->SetGraphicsRoot32BitConstants(3, sizeof(m_matconsts) / 4, &m_matconsts, 0);
 	renderingcmdlist->DrawIndexedInstanced(GetIndiciesCount(), 1, 0, 0, 0);
 }
 void Model::Extratransform(XMMATRIX extratransformmat)
