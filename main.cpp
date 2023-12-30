@@ -11,6 +11,7 @@
 #include"RayTracingTestApplication2.h"
 #include"RayTracingTestApplication_Advanced.h"
 #include"RayTracingTestApplication_AdvancedAOTest.h"
+#include"DX12ShadowTestApplication.h"
 #include<iostream>
 #include"StreamableTextureFileCreator.h"
 #include"StreamableTextureFileReader.h"
@@ -37,6 +38,7 @@ int main()
 	std::cout << "6.run stf creator.\n";
 	std::cout << "7.run stf reader.\n";
 	std::cout << "8.RaytracingApplicationAdvancedAOTest.\n";
+	std::cout << "9.shadowtestApplication.\n";
 	std::cout << "Enter application number  to run:\n";
 	int appnumber;
 	std::cin >> appnumber;
@@ -69,6 +71,8 @@ int main()
 	}
 	case 8:
 		appmanager = new RayTracingTestApplication_AdvancedAOTest(); break;
+	case 9:
+		appmanager = new ShadowTestApplication(); break;
 	default:
 		std::cout << "Invalid App number choosen";
 		return 1;
