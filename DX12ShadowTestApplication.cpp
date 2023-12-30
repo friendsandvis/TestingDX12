@@ -126,8 +126,15 @@ void ShadowTestApplication::InitBasicPSO()
 	rootparam0.DescriptorTable.NumDescriptorRanges = 1;
 	rootparam0.DescriptorTable.pDescriptorRanges = &texsrvrange;
 
+	D3D12_ROOT_PARAMETER rootparam1 = {};
+	rootparam1.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+	rootparam1.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	rootparam1.Constants.Num32BitValues = sizeof(ShaderTransformConstants_General) / 4;
+	rootparam1.Constants.RegisterSpace = 0;
+	rootparam1.Constants.ShaderRegister = 0;
 	vector<D3D12_ROOT_PARAMETER> rootparams;
 	rootparams.push_back(rootparam0);
+	rootparams.push_back(rootparam1);
 
 	vector<D3D12_STATIC_SAMPLER_DESC> staticsamplers;
 	staticsamplers.push_back(simplesampler);
@@ -222,6 +229,10 @@ void ShadowTestApplication::Render()
 	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, nullptr);
 	float rtclearcolour[4] = { 1.0f,1.0f,1.0f,1.0f };
 	m_primarycmdlist->ClearRenderTargetView(rtvhandle, rtclearcolour, 0, nullptr);
+	XMMATRIX vpmat = m_maincamera.GetVP();
+	m_shadertransformconsts.model = XMMatrixIdentity();
+	m_shadertransformconsts.mvp = XMMatrixMultiply(m_shadertransformconsts.model, vpmat);
+	m_primarycmdlist->SetGraphicsRoot32BitConstants(1, sizeof(m_shadertransformconsts) / 4, &m_shadertransformconsts, 0);
 	m_primarycmdlist->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
 	backbufferbarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	backbufferbarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;

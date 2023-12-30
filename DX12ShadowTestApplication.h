@@ -27,6 +27,7 @@ private:
 	DXTexture m_redtexture;
 	DX12DESCHEAP m_resaccessviewdescheap;//CBV/SRV/UAV
 	DXFPSCameraController m_maincameracontroller;
+	ShaderTransformConstants_General m_shadertransformconsts;
 
 	void InitBasicPSO();
 
