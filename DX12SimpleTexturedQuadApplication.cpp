@@ -130,8 +130,8 @@ void TexturedQuadApplication::InitBasicPSO()
 	//shaders to use
 	DX12Shader* vs = new DX12Shader();
 	DX12Shader* ps = new DX12Shader();
-	vs->Init(L"shaders/BasicVertexShader_1.hlsl", DX12Shader::ShaderType::VS);
-	ps->Init(L"shaders/BasicPixelShader_1.hlsl", DX12Shader::ShaderType::PS);
+	vs->Init(L"shaders/texturedquad/VS.hlsl", DX12Shader::ShaderType::VS);
+	ps->Init(L"shaders/texturedquad/PS.hlsl", DX12Shader::ShaderType::PS);
 	basicpsodata.m_shaderstouse.push_back(vs);
 	basicpsodata.m_shaderstouse.push_back(ps);
 
