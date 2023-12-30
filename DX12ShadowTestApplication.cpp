@@ -30,7 +30,7 @@ void ShadowTestApplication::InitExtras()
 	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
 	DXTexManager::LoadTexture(L"textures/texlargemiped.dds", m_redtexture.GetDXImageData());
 	bool initsuccess = m_redtexture.Init(m_creationdevice);
-	m_redtexture.SetName(L"GREENTEX");
+	m_redtexture.SetName(L"REDTEX");
 	D3D12_PLACED_SUBRESOURCE_FOOTPRINT whitetexsubresfootprint;
 	{
 		DX12ResourceCreationProperties	whitetexresprops;
@@ -184,7 +184,7 @@ void ShadowTestApplication::InitBasicPSO()
 	simplesampler.RegisterSpace = 0;
 	simplesampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-	D3D12_ROOT_PARAMETER psimgrootparam = {};
+	D3D12_ROOT_PARAMETER rootparam0 = {};
 
 	D3D12_DESCRIPTOR_RANGE texsrvrange = {};
 	texsrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
@@ -193,19 +193,16 @@ void ShadowTestApplication::InitBasicPSO()
 	texsrvrange.RegisterSpace = 0;
 	texsrvrange.OffsetInDescriptorsFromTableStart = 0;
 
-	psimgrootparam.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	psimgrootparam.DescriptorTable.NumDescriptorRanges = 1;
-	psimgrootparam.DescriptorTable.pDescriptorRanges = &texsrvrange;
+	rootparam0.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootparam0.DescriptorTable.NumDescriptorRanges = 1;
+	rootparam0.DescriptorTable.pDescriptorRanges = &texsrvrange;
 
-	CD3DX12_ROOT_SIGNATURE_DESC emptyrootsignaturedesc = {};
-	emptyrootsignaturedesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-	emptyrootsignaturedesc.NumParameters = 1;
-	emptyrootsignaturedesc.pParameters = &psimgrootparam;
-	emptyrootsignaturedesc.NumStaticSamplers = 1;
-	emptyrootsignaturedesc.pStaticSamplers = &simplesampler;
-	DXASSERT(D3D12SerializeRootSignature(&emptyrootsignaturedesc, D3D_ROOT_SIGNATURE_VERSION_1, m_emptyrootsignatureblob.GetAddressOf(), m_rootsignatureerrors.GetAddressOf()))
-		DXASSERT(m_creationdevice->CreateRootSignature(0, m_emptyrootsignatureblob.Get()->GetBufferPointer(), m_emptyrootsignatureblob->GetBufferSize(), IID_PPV_ARGS(m_emptyrootsignature.GetAddressOf())))
-		basicpsodata.psodesc.graphicspsodesc.pRootSignature = m_emptyrootsignature.Get();
+	vector<D3D12_ROOT_PARAMETER> rootparams;
+	rootparams.push_back(rootparam0);
+
+	vector<D3D12_STATIC_SAMPLER_DESC> staticsamplers;
+	staticsamplers.push_back(simplesampler);
+	basicpsodata.rootsignature.BuidDesc(rootparams, staticsamplers);
 
 	//inputlayoutsetup
 	{
@@ -248,7 +245,8 @@ void ShadowTestApplication::Render()
 {
 	m_primarycmdlist.Reset();
 	m_primarycmdlist->SetPipelineState(m_basicpso.GetPSO());
-	m_primarycmdlist->SetGraphicsRootSignature(m_emptyrootsignature.Get());
+	//m_primarycmdlist->SetGraphicsRootSignature(m_emptyrootsignature.Get());
+	m_primarycmdlist->SetGraphicsRootSignature(m_basicpso.GetRootSignature());
 	ID3D12DescriptorHeap* descheapstoset[1];
 	descheapstoset[0] = m_resaccessviewdescheap.GetDescHeap();
 	m_primarycmdlist->SetDescriptorHeaps(1, descheapstoset);

@@ -23,7 +23,6 @@ protected:
 private:
 	DX12PSO m_basicpso;
 	ComPtr<ID3DBlob> m_emptyrootsignatureblob, m_rootsignatureerrors;
-	ComPtr<ID3D12RootSignature> m_emptyrootsignature;
 	Model m_planemodel;
 	DXTexture m_redtexture;
 	DX12TextureSimple m_whitetexture;
