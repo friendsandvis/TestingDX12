@@ -25,8 +25,6 @@ private:
 	ComPtr<ID3DBlob> m_emptyrootsignatureblob, m_rootsignatureerrors;
 	Model m_planemodel;
 	DXTexture m_redtexture;
-	DX12TextureSimple m_whitetexture;
-	DX12Buffer m_whitetexuploadbuffer;
 	DX12DESCHEAP m_resaccessviewdescheap;//CBV/SRV/UAV
 	DXFPSCameraController m_maincameracontroller;
 
