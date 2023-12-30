@@ -5,6 +5,7 @@
 ShadowTestApplication::ShadowTestApplication()
 	:m_planemodel(ModelDataUploadMode::COPY)
 {
+	m_maincameracontroller.SetCameratoControl(&m_maincamera);
 }
 
 ShadowTestApplication::~ShadowTestApplication()
@@ -303,6 +304,16 @@ void ShadowTestApplication::Render()
 
 
 		BasicRender();
+}
+void ShadowTestApplication::PreRenderUpdate()
+{
+	m_maincameracontroller.Update();
+}
+void ShadowTestApplication::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+
+	m_maincameracontroller.ProcessWindowProcEvent(hwnd, uMsg, wParam, lParam);
+
 }
 
 

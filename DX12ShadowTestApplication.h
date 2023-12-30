@@ -12,7 +12,9 @@ class ShadowTestApplication :public DX12ApplicationManagerBase
 public:
 	ShadowTestApplication();
 	~ShadowTestApplication();
+	void PreRenderUpdate()override;
 	void Render()override;
+	void ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)override;
 
 
 protected:
