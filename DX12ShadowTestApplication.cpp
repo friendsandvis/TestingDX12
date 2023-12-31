@@ -230,8 +230,13 @@ void ShadowTestApplication::Render()
 	float rtclearcolour[4] = { 1.0f,1.0f,1.0f,1.0f };
 	m_primarycmdlist->ClearRenderTargetView(rtvhandle, rtclearcolour, 0, nullptr);
 	XMMATRIX vpmat = m_maincamera.GetVP();
-	m_shadertransformconsts.model = XMMatrixIdentity();
-	m_shadertransformconsts.mvp = XMMatrixMultiply(m_shadertransformconsts.model, vpmat);
+	//a generic model matrix to render the plane act a ground.
+	const float rotationangle = XMConvertToRadians(90.0f);
+	XMMATRIX rotatexmat= DirectX::XMMatrixRotationX(rotationangle);
+	const float scale = 20.0f;
+	XMMATRIX scalemat = DirectX::XMMatrixScaling(scale, scale, scale);
+	m_shadertransformconsts.model = DirectX::XMMatrixMultiply(scalemat, rotatexmat);
+	m_shadertransformconsts.mvp = DirectX::XMMatrixMultiply(m_shadertransformconsts.model, vpmat);
 	m_primarycmdlist->SetGraphicsRoot32BitConstants(1, sizeof(m_shadertransformconsts) / 4, &m_shadertransformconsts, 0);
 	m_primarycmdlist->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
 	backbufferbarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
