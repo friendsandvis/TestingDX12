@@ -21,3 +21,13 @@ bool DXUtils::IsBarrierSafeToExecute(const D3D12_RESOURCE_BARRIER barrier)
 
 	return issafe;
 }
+DirectX::XMMATRIX DXUtils::GetTransformationMatrix(float uniformscale, DirectX::XMVECTOR rotationaxis, float rotationangle, DirectX::XMVECTOR translate)
+{
+	DirectX::XMMATRIX transform = DirectX::XMMatrixIdentity();
+	DirectX::XMMATRIX scaleingmat = DirectX::XMMatrixScaling(uniformscale, uniformscale, uniformscale);
+	DirectX::XMMATRIX rotationmat = DirectX::XMMatrixRotationAxis(rotationaxis,DirectX::XMConvertToRadians(rotationangle));
+	DirectX::XMMATRIX translationmat = DirectX::XMMatrixTranslationFromVector(translate);
+	transform = DirectX::XMMatrixMultiply(scaleingmat, rotationmat);
+	transform = DirectX::XMMatrixMultiply(transform, translationmat);
+	return transform;
+}

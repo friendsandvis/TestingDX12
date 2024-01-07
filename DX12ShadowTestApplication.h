@@ -23,7 +23,7 @@ protected:
 private:
 	DX12PSO m_basicpso;
 	ComPtr<ID3DBlob> m_emptyrootsignatureblob, m_rootsignatureerrors;
-	Model m_planemodel;
+	Model m_planemodel,m_cubemodel;
 	DXTexture m_redtexture;
 	DX12DESCHEAP m_resaccessviewdescheap;//CBV/SRV/UAV
 	DXFPSCameraController m_maincameracontroller;

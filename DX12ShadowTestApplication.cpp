@@ -27,6 +27,7 @@ void ShadowTestApplication::InitExtras()
 
 
 	//init assets
+	BasicModelManager::InitCubeModel(m_creationdevice, m_cubemodel);
 	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
 	DXTexManager::LoadTexture(L"textures/texlargemiped.dds", m_redtexture.GetDXImageData());
 	bool initsuccess = m_redtexture.Init(m_creationdevice);
@@ -47,6 +48,7 @@ void ShadowTestApplication::InitExtras()
 	//upload asset data
 	m_uploadcommandlist.Reset();
 	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
+	m_cubemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_redtexture.UploadTexture(m_uploadcommandlist);
 	DXASSERT(m_uploadcommandlist->Close())
 
@@ -158,6 +160,7 @@ void ShadowTestApplication::InitBasicPSO()
 		simplevsinputelementdesc[1].AlignedByteOffset = sizeof(float) * 3;//uv after 3 pos floats
 		basicpsodata.psodesc.graphicspsodesc.InputLayout.NumElements = 2;
 		basicpsodata.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = simplevsinputelementdesc;
+		basicpsodata.psodesc.graphicspsodesc.RasterizerState.FillMode = D3D12_FILL_MODE::D3D12_FILL_MODE_SOLID;
 
 	}
 
@@ -230,15 +233,25 @@ void ShadowTestApplication::Render()
 	float rtclearcolour[4] = { 1.0f,1.0f,1.0f,1.0f };
 	m_primarycmdlist->ClearRenderTargetView(rtvhandle, rtclearcolour, 0, nullptr);
 	XMMATRIX vpmat = m_maincamera.GetVP();
-	//a generic model matrix to render the plane act a ground.
-	const float rotationangle = XMConvertToRadians(90.0f);
-	XMMATRIX rotatexmat= DirectX::XMMatrixRotationX(rotationangle);
-	const float scale = 20.0f;
-	XMMATRIX scalemat = DirectX::XMMatrixScaling(scale, scale, scale);
-	m_shadertransformconsts.model = DirectX::XMMatrixMultiply(scalemat, rotatexmat);
-	m_shadertransformconsts.mvp = DirectX::XMMatrixMultiply(m_shadertransformconsts.model, vpmat);
-	m_primarycmdlist->SetGraphicsRoot32BitConstants(1, sizeof(m_shadertransformconsts) / 4, &m_shadertransformconsts, 0);
-	m_primarycmdlist->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
+	
+	
+	//draw plane model
+	{
+		XMVECTOR rotaxis = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
+		m_shadertransformconsts.model= DXUtils::GetTransformationMatrix(2.0f,rotaxis,90.0f);
+		m_shadertransformconsts.mvp = DirectX::XMMatrixMultiply(m_shadertransformconsts.model, vpmat);
+		m_primarycmdlist->SetGraphicsRoot32BitConstants(1, sizeof(m_shadertransformconsts) / 4, &m_shadertransformconsts, 0);
+		m_primarycmdlist->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
+	}
+	//draw cube model
+	 {
+		XMVECTOR rotaxis = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
+		XMVECTOR translate= XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+		m_shadertransformconsts.model = DXUtils::GetTransformationMatrix(1.0f, rotaxis, 0.0f, translate);
+		m_shadertransformconsts.mvp = DirectX::XMMatrixMultiply(m_shadertransformconsts.model, vpmat);
+		m_primarycmdlist->SetGraphicsRoot32BitConstants(1, sizeof(m_shadertransformconsts) / 4, &m_shadertransformconsts, 0);
+		m_primarycmdlist->DrawIndexedInstanced(m_cubemodel.GetIndiciesCount(), 1, 0, 0, 0);
+	 }
 	backbufferbarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	backbufferbarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	m_primarycmdlist->ResourceBarrier(1, &backbufferbarrier);

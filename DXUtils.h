@@ -6,6 +6,7 @@
 #include<assert.h>
 #include<vector>
 #include<d3dx12.h>
+#include<DirectXMath.h>
 
 #define BACKBUFFERCOUNT 3
 #define MAXACCESSABLERESOURCEVIEWCOUNT 5
@@ -25,6 +26,8 @@ public:
 	DXUtils();
 	~DXUtils();
 	static bool IsBarrierSafeToExecute(const D3D12_RESOURCE_BARRIER barrier);
+	//rotationangle in degree
+	static DirectX::XMMATRIX GetTransformationMatrix(float uniformscale, DirectX::XMVECTOR rotationaxis, float rotationangle, DirectX::XMVECTOR translate=DirectX::XMVectorSet(0.0f,0.0f,0.0f,0.0f));
 private:
 
 };
