@@ -134,9 +134,16 @@ void ShadowTestApplication::InitBasicPSO()
 	rootparam1.Constants.Num32BitValues = sizeof(ShaderTransformConstants_General) / 4;
 	rootparam1.Constants.RegisterSpace = 0;
 	rootparam1.Constants.ShaderRegister = 0;
+	D3D12_ROOT_PARAMETER rootparam2 = {};
+	rootparam2.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+	rootparam2.ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_PIXEL;
+	rootparam2.Constants.Num32BitValues = sizeof(SimpleMaterial) / 4;
+	rootparam2.Constants.RegisterSpace = 0;
+	rootparam2.Constants.ShaderRegister = 1;
 	vector<D3D12_ROOT_PARAMETER> rootparams;
 	rootparams.push_back(rootparam0);
 	rootparams.push_back(rootparam1);
+	rootparams.push_back(rootparam2);
 
 	vector<D3D12_STATIC_SAMPLER_DESC> staticsamplers;
 	staticsamplers.push_back(simplesampler);
@@ -211,12 +218,8 @@ void ShadowTestApplication::Render()
 	}
 
 	m_primarycmdlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	{
-		D3D12_VERTEX_BUFFER_VIEW vbview = m_planemodel.GetVBView();
-		D3D12_INDEX_BUFFER_VIEW Ibview = m_planemodel.GetIBView();
-		m_primarycmdlist->IASetVertexBuffers(0, 1, &vbview);
-		m_primarycmdlist->IASetIndexBuffer(&Ibview);
-	}
+	D3D12_VERTEX_BUFFER_VIEW vbview;
+		D3D12_INDEX_BUFFER_VIEW Ibview;
 
 
 	//set rtv
@@ -236,20 +239,33 @@ void ShadowTestApplication::Render()
 	
 	
 	//draw plane model
-	{
+	 {
+		vbview = m_planemodel.GetVBView();
+		Ibview = m_planemodel.GetIBView();
+		m_mat.colour = { 1.0f,0.0f,0.0f,1.0f };
 		XMVECTOR rotaxis = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
 		m_shadertransformconsts.model= DXUtils::GetTransformationMatrix(2.0f,rotaxis,90.0f);
 		m_shadertransformconsts.mvp = DirectX::XMMatrixMultiply(m_shadertransformconsts.model, vpmat);
 		m_primarycmdlist->SetGraphicsRoot32BitConstants(1, sizeof(m_shadertransformconsts) / 4, &m_shadertransformconsts, 0);
+		m_primarycmdlist->SetGraphicsRoot32BitConstants(2, sizeof(m_mat) / 4, &m_mat, 0);
+		m_primarycmdlist->IASetVertexBuffers(0, 1, &vbview);
+		m_primarycmdlist->IASetIndexBuffer(&Ibview);
 		m_primarycmdlist->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
 	}
 	//draw cube model
 	 {
+		vbview = m_cubemodel.GetVBView();
+		Ibview = m_cubemodel.GetIBView();
+		
+		m_mat.colour = { 0.0f,1.0f,0.0f,1.0f };
 		XMVECTOR rotaxis = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
 		XMVECTOR translate= XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-		m_shadertransformconsts.model = DXUtils::GetTransformationMatrix(1.0f, rotaxis, 0.0f, translate);
+		m_shadertransformconsts.model = DXUtils::GetTransformationMatrix(0.5f, rotaxis, 0.0f, translate);
 		m_shadertransformconsts.mvp = DirectX::XMMatrixMultiply(m_shadertransformconsts.model, vpmat);
 		m_primarycmdlist->SetGraphicsRoot32BitConstants(1, sizeof(m_shadertransformconsts) / 4, &m_shadertransformconsts, 0);
+		m_primarycmdlist->SetGraphicsRoot32BitConstants(2, sizeof(m_mat) / 4, &m_mat, 0);
+		m_primarycmdlist->IASetVertexBuffers(0, 1, &vbview);
+		m_primarycmdlist->IASetIndexBuffer(&Ibview);
 		m_primarycmdlist->DrawIndexedInstanced(m_cubemodel.GetIndiciesCount(), 1, 0, 0, 0);
 	 }
 	backbufferbarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;

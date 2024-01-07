@@ -21,6 +21,10 @@ protected:
 	void InitExtras();
 
 private:
+	struct SimpleMaterial
+	{
+		XMFLOAT4 colour;
+	};
 	DX12PSO m_basicpso;
 	ComPtr<ID3DBlob> m_emptyrootsignatureblob, m_rootsignatureerrors;
 	Model m_planemodel,m_cubemodel;
@@ -28,6 +32,7 @@ private:
 	DX12DESCHEAP m_resaccessviewdescheap;//CBV/SRV/UAV
 	DXFPSCameraController m_maincameracontroller;
 	ShaderTransformConstants_General m_shadertransformconsts;
+	SimpleMaterial m_mat;
 
 	void InitBasicPSO();
 
