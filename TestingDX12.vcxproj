@@ -183,6 +183,7 @@
     <ClCompile Include="DXTextureUtils.cpp" />
     <ClCompile Include="DXUtils.cpp" />
     <ClCompile Include="DXVertexManager.cpp" />
+    <ClCompile Include="Entity.cpp" />
     <ClCompile Include="imgui\backends\imgui_impl_dx10.cpp" />
     <ClCompile Include="imgui\backends\imgui_impl_dx11.cpp" />
     <ClCompile Include="imgui\backends\imgui_impl_dx12.cpp" />
@@ -200,6 +201,7 @@
     <ClCompile Include="RayTracingTestApplication_Advanced.cpp" />
     <ClCompile Include="RayTracingTestApplication_AdvancedAOTest.cpp" />
     <ClCompile Include="RaytracingUtils.cpp" />
+    <ClCompile Include="RenderableEntity.cpp" />
     <ClCompile Include="RTPSO.cpp" />
     <ClCompile Include="SamplerFeedbackManager.cpp" />
     <ClCompile Include="ShaderManager.cpp" />
@@ -240,6 +242,7 @@
     <ClInclude Include="DXTextureUtils.h" />
     <ClInclude Include="DXUtils.h" />
     <ClInclude Include="DXVertexManager.h" />
+    <ClInclude Include="Entity.h" />
     <ClInclude Include="imgui\backends\imgui_impl_dx10.h" />
     <ClInclude Include="imgui\backends\imgui_impl_dx11.h" />
     <ClInclude Include="imgui\backends\imgui_impl_dx12.h" />
@@ -257,6 +260,7 @@
     <ClInclude Include="RayTracingTestApplication_AdvancedAOTest.h" />
     <ClInclude Include="RaytracingUtils.h" />
     <ClInclude Include="Renderable.h" />
+    <ClInclude Include="RenderableEntity.h" />
     <ClInclude Include="RTPSO.h" />
     <ClInclude Include="SamplerFeedbackManager.h" />
     <ClInclude Include="ShaderManager.h" />

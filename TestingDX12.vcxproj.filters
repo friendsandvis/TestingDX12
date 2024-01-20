@@ -28,6 +28,15 @@
     <Filter Include="imgui">
       <UniqueIdentifier>{8b24abba-c003-46db-86ab-63d6b2dd72d2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="framework">
+      <UniqueIdentifier>{59565ecc-9d81-4ecf-a310-9ea7fdcd2efa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="framework\Entity">
+      <UniqueIdentifier>{c6fbea41-7f94-4ef1-a3fd-f2ce7893fef6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="framework\Entity\entitytypes">
+      <UniqueIdentifier>{bd820cfc-e133-4f5b-ae1a-769261689dd6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -191,6 +200,12 @@
     </ClCompile>
     <ClCompile Include="DX12ShadowTestApplication.cpp">
       <Filter>Applications</Filter>
+    </ClCompile>
+    <ClCompile Include="Entity.cpp">
+      <Filter>framework\Entity</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderableEntity.cpp">
+      <Filter>framework\Entity\entitytypes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -358,6 +373,12 @@
     </ClInclude>
     <ClInclude Include="DX12ShadowTestApplication.h">
       <Filter>Applications</Filter>
+    </ClInclude>
+    <ClInclude Include="Entity.h">
+      <Filter>framework\Entity</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderableEntity.h">
+      <Filter>framework\Entity\entitytypes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
