@@ -207,6 +207,9 @@
     <ClCompile Include="RenderableEntity.cpp">
       <Filter>framework\Entity\entitytypes</Filter>
     </ClCompile>
+    <ClCompile Include="BasicRenderableEntity.cpp">
+      <Filter>framework\Entity\entitytypes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="windmaker.h">
@@ -378,6 +381,9 @@
       <Filter>framework\Entity</Filter>
     </ClInclude>
     <ClInclude Include="RenderableEntity.h">
+      <Filter>framework\Entity\entitytypes</Filter>
+    </ClInclude>
+    <ClInclude Include="BasicRenderableEntity.h">
       <Filter>framework\Entity\entitytypes</Filter>
     </ClInclude>
   </ItemGroup>

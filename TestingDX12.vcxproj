@@ -156,6 +156,7 @@
   <ItemGroup>
     <ClCompile Include="AssetManager.cpp" />
     <ClCompile Include="AssimpManager.cpp" />
+    <ClCompile Include="BasicRenderableEntity.cpp" />
     <ClCompile Include="CameraMovementManager.cpp" />
     <ClCompile Include="DX12ApplicationManagerBase.cpp" />
     <ClCompile Include="DX12Buffer.cpp" />
@@ -214,6 +215,7 @@
   <ItemGroup>
     <ClInclude Include="AssetManager.h" />
     <ClInclude Include="AssimpManager.h" />
+    <ClInclude Include="BasicRenderableEntity.h" />
     <ClInclude Include="CameraMovementManager.h" />
     <ClInclude Include="CommonDataStructures.h" />
     <ClInclude Include="DX12ApplicationManagerBase.h" />
