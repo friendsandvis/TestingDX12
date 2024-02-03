@@ -27,7 +27,6 @@ private:
 		XMFLOAT4 colour;
 	};
 	DX12PSO m_basicpso;
-	ComPtr<ID3DBlob> m_emptyrootsignatureblob, m_rootsignatureerrors;
 	DXTexture m_redtexture;
 	DX12DESCHEAP m_resaccessviewdescheap;//CBV/SRV/UAV
 	DXFPSCameraController m_maincameracontroller;
