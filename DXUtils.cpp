@@ -31,3 +31,17 @@ DirectX::XMMATRIX DXUtils::GetTransformationMatrix(float uniformscale, DirectX::
 	transform = DirectX::XMMatrixMultiply(transform, translationmat);
 	return transform;
 }
+DirectX::XMMATRIX DXUtils::GetTransformationMatrix(DirectX::XMVECTOR scale, DirectX::XMVECTOR rotationaxis, float rotationangle, DirectX::XMVECTOR translate)
+{
+	DirectX::XMMATRIX transform = DirectX::XMMatrixIdentity();
+	DirectX::XMMATRIX scaleingmat = DirectX::XMMatrixScalingFromVector(scale);
+	DirectX::XMMATRIX rotationmat = DirectX::XMMatrixRotationAxis(rotationaxis, DirectX::XMConvertToRadians(rotationangle));
+	DirectX::XMMATRIX translationmat = DirectX::XMMatrixTranslationFromVector(translate);
+	transform = DirectX::XMMatrixMultiply(scaleingmat, rotationmat);
+	transform = DirectX::XMMatrixMultiply(transform, translationmat);
+	return transform;
+}
+DirectX::XMVECTOR DXUtils::Float4tovector(DirectX::XMFLOAT4 value)
+{
+	return (DirectX::XMVectorSet(value.x, value.y, value.z, value.w));
+}

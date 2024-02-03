@@ -29,7 +29,12 @@ void ShadowTestApplication::InitExtras()
 
 	//init assets
 	m_basicCubeEntity.Init(m_creationdevice, m_uploadcommandlist);
+	m_basicCubeEntity.SetName("Cube0");
+	m_basicCubeEntity.SetTransformationData(0.5f, DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 0.0f), 0.0f, DirectX::XMFLOAT4(0.0f, 1.0f, 0.0f, 0.0f));
+
 	m_basicPlaneEntity.Init(m_creationdevice, m_uploadcommandlist);
+	m_basicPlaneEntity.SetName("Plane0");
+	m_basicPlaneEntity.SetTransformationData(2.0f, DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 0.0f), 90.0f, DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f));
 	DXTexManager::LoadTexture(L"textures/texlargemiped.dds", m_redtexture.GetDXImageData());
 	bool initsuccess = m_redtexture.Init(m_creationdevice);
 	m_redtexture.SetName(L"REDTEX");
@@ -240,8 +245,7 @@ void ShadowTestApplication::Render()
 	//draw plane model
 	 {
 		m_mat.colour = { 1.0f,0.0f,0.0f,1.0f };
-		XMVECTOR rotaxis = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
-		m_shadertransformconsts.model= DXUtils::GetTransformationMatrix(2.0f,rotaxis,90.0f);
+		m_shadertransformconsts.model = m_basicPlaneEntity.GetModelMatrix();
 		m_shadertransformconsts.mvp = DirectX::XMMatrixMultiply(m_shadertransformconsts.model, vpmat);
 		m_primarycmdlist->SetGraphicsRoot32BitConstants(1, sizeof(m_shadertransformconsts) / 4, &m_shadertransformconsts, 0);
 		m_primarycmdlist->SetGraphicsRoot32BitConstants(2, sizeof(m_mat) / 4, &m_mat, 0);
@@ -251,9 +255,7 @@ void ShadowTestApplication::Render()
 	 {
 		
 		m_mat.colour = { 0.0f,1.0f,0.0f,1.0f };
-		XMVECTOR rotaxis = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
-		XMVECTOR translate= XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-		m_shadertransformconsts.model = DXUtils::GetTransformationMatrix(0.5f, rotaxis, 0.0f, translate);
+		m_shadertransformconsts.model = m_basicCubeEntity.GetModelMatrix();
 		m_shadertransformconsts.mvp = DirectX::XMMatrixMultiply(m_shadertransformconsts.model, vpmat);
 		m_primarycmdlist->SetGraphicsRoot32BitConstants(1, sizeof(m_shadertransformconsts) / 4, &m_shadertransformconsts, 0);
 		m_primarycmdlist->SetGraphicsRoot32BitConstants(2, sizeof(m_mat) / 4, &m_mat, 0);

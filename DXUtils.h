@@ -26,8 +26,11 @@ public:
 	DXUtils();
 	~DXUtils();
 	static bool IsBarrierSafeToExecute(const D3D12_RESOURCE_BARRIER barrier);
+	static DirectX::XMVECTOR Float4tovector(DirectX::XMFLOAT4 value);
 	//rotationangle in degree
 	static DirectX::XMMATRIX GetTransformationMatrix(float uniformscale, DirectX::XMVECTOR rotationaxis, float rotationangle, DirectX::XMVECTOR translate=DirectX::XMVectorSet(0.0f,0.0f,0.0f,0.0f));
+	//rotationangle in degree
+	static DirectX::XMMATRIX GetTransformationMatrix(DirectX::XMVECTOR scale, DirectX::XMVECTOR rotationaxis, float rotationangle, DirectX::XMVECTOR translate = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f));
 private:
 
 };
