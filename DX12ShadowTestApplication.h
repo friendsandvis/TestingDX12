@@ -5,6 +5,7 @@
 #include"DXTexManager.h"
 #include"DX12Texture.h"
 #include"CameraMovementManager.h"
+#include"BasicRenderableEntity.h"
 
 
 class ShadowTestApplication :public DX12ApplicationManagerBase
@@ -27,12 +28,12 @@ private:
 	};
 	DX12PSO m_basicpso;
 	ComPtr<ID3DBlob> m_emptyrootsignatureblob, m_rootsignatureerrors;
-	Model m_planemodel,m_cubemodel;
 	DXTexture m_redtexture;
 	DX12DESCHEAP m_resaccessviewdescheap;//CBV/SRV/UAV
 	DXFPSCameraController m_maincameracontroller;
 	ShaderTransformConstants_General m_shadertransformconsts;
 	SimpleMaterial m_mat;
+	BasicRenderableEntity m_basicCubeEntity, m_basicPlaneEntity;
 
 	void InitBasicPSO();
 

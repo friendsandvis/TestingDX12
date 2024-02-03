@@ -3,7 +3,8 @@
 
 
 ShadowTestApplication::ShadowTestApplication()
-	:m_planemodel(ModelDataUploadMode::COPY)
+	:m_basicCubeEntity(MODELTYPE::BASIC_CUBE),
+	m_basicPlaneEntity(MODELTYPE::BASIC_PLANE)
 {
 	m_maincameracontroller.SetCameratoControl(&m_maincamera);
 }
@@ -27,8 +28,8 @@ void ShadowTestApplication::InitExtras()
 
 
 	//init assets
-	BasicModelManager::InitCubeModel(m_creationdevice, m_cubemodel);
-	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
+	m_basicCubeEntity.Init(m_creationdevice, m_uploadcommandlist);
+	m_basicPlaneEntity.Init(m_creationdevice, m_uploadcommandlist);
 	DXTexManager::LoadTexture(L"textures/texlargemiped.dds", m_redtexture.GetDXImageData());
 	bool initsuccess = m_redtexture.Init(m_creationdevice);
 	m_redtexture.SetName(L"REDTEX");
@@ -47,8 +48,6 @@ void ShadowTestApplication::InitExtras()
 
 	//upload asset data
 	m_uploadcommandlist.Reset();
-	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
-	m_cubemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_redtexture.UploadTexture(m_uploadcommandlist);
 	DXASSERT(m_uploadcommandlist->Close())
 
@@ -240,22 +239,16 @@ void ShadowTestApplication::Render()
 	
 	//draw plane model
 	 {
-		vbview = m_planemodel.GetVBView();
-		Ibview = m_planemodel.GetIBView();
 		m_mat.colour = { 1.0f,0.0f,0.0f,1.0f };
 		XMVECTOR rotaxis = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
 		m_shadertransformconsts.model= DXUtils::GetTransformationMatrix(2.0f,rotaxis,90.0f);
 		m_shadertransformconsts.mvp = DirectX::XMMatrixMultiply(m_shadertransformconsts.model, vpmat);
 		m_primarycmdlist->SetGraphicsRoot32BitConstants(1, sizeof(m_shadertransformconsts) / 4, &m_shadertransformconsts, 0);
 		m_primarycmdlist->SetGraphicsRoot32BitConstants(2, sizeof(m_mat) / 4, &m_mat, 0);
-		m_primarycmdlist->IASetVertexBuffers(0, 1, &vbview);
-		m_primarycmdlist->IASetIndexBuffer(&Ibview);
-		m_primarycmdlist->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
+		m_basicPlaneEntity.Render(m_primarycmdlist);
 	}
 	//draw cube model
 	 {
-		vbview = m_cubemodel.GetVBView();
-		Ibview = m_cubemodel.GetIBView();
 		
 		m_mat.colour = { 0.0f,1.0f,0.0f,1.0f };
 		XMVECTOR rotaxis = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
@@ -264,9 +257,8 @@ void ShadowTestApplication::Render()
 		m_shadertransformconsts.mvp = DirectX::XMMatrixMultiply(m_shadertransformconsts.model, vpmat);
 		m_primarycmdlist->SetGraphicsRoot32BitConstants(1, sizeof(m_shadertransformconsts) / 4, &m_shadertransformconsts, 0);
 		m_primarycmdlist->SetGraphicsRoot32BitConstants(2, sizeof(m_mat) / 4, &m_mat, 0);
-		m_primarycmdlist->IASetVertexBuffers(0, 1, &vbview);
-		m_primarycmdlist->IASetIndexBuffer(&Ibview);
-		m_primarycmdlist->DrawIndexedInstanced(m_cubemodel.GetIndiciesCount(), 1, 0, 0, 0);
+
+		m_basicCubeEntity.Render(m_primarycmdlist);
 	 }
 	backbufferbarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	backbufferbarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;

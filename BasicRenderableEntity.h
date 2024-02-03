@@ -11,6 +11,7 @@ class BasicRenderableEntity :public RenderableEntity
 {
 public:
 	BasicRenderableEntity();
+	BasicRenderableEntity(MODELTYPE modeltype);
 	~BasicRenderableEntity();
 	virtual void Init(ComPtr< ID3D12Device> creationdevice, DX12Commandlist& cmdlist)override;
 	virtual void Render(DX12Commandlist& cmdlist)override;

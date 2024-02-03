@@ -1,7 +1,8 @@
 #include"BasicRenderableEntity.h"
 
 BasicRenderableEntity::BasicRenderableEntity()
-	:m_model(ModelDataUploadMode::COPY)
+	:m_model(ModelDataUploadMode::COPY),
+	 m_modelType(MODELTYPE::BASIC_CUBE)
 
 {
 	m_entityType = ENTITYTYPE::BASICRENDERABLEENTITY;
@@ -24,6 +25,11 @@ void BasicRenderableEntity::Init(ComPtr< ID3D12Device> creationdevice, DX12Comma
 		break;
 	}
 	m_model.UploadModelDatatoGPUBuffers(cmdlist);
+}
+BasicRenderableEntity::BasicRenderableEntity(MODELTYPE modeltype)
+	:m_modelType(modeltype)
+{
+
 }
 
 void BasicRenderableEntity::Render(DX12Commandlist& cmdlist)
