@@ -156,6 +156,7 @@
   <ItemGroup>
     <ClCompile Include="AssetManager.cpp" />
     <ClCompile Include="AssimpManager.cpp" />
+    <ClCompile Include="BasicEntityRenderer.cpp" />
     <ClCompile Include="BasicRenderableEntity.cpp" />
     <ClCompile Include="CameraMovementManager.cpp" />
     <ClCompile Include="DX12ApplicationManagerBase.cpp" />
@@ -185,6 +186,7 @@
     <ClCompile Include="DXUtils.cpp" />
     <ClCompile Include="DXVertexManager.cpp" />
     <ClCompile Include="Entity.cpp" />
+    <ClCompile Include="EntityRenderer.cpp" />
     <ClCompile Include="imgui\backends\imgui_impl_dx10.cpp" />
     <ClCompile Include="imgui\backends\imgui_impl_dx11.cpp" />
     <ClCompile Include="imgui\backends\imgui_impl_dx12.cpp" />
@@ -215,6 +217,7 @@
   <ItemGroup>
     <ClInclude Include="AssetManager.h" />
     <ClInclude Include="AssimpManager.h" />
+    <ClInclude Include="BasicEntityRenderer.h" />
     <ClInclude Include="BasicRenderableEntity.h" />
     <ClInclude Include="CameraMovementManager.h" />
     <ClInclude Include="CommonDataStructures.h" />
@@ -245,6 +248,7 @@
     <ClInclude Include="DXUtils.h" />
     <ClInclude Include="DXVertexManager.h" />
     <ClInclude Include="Entity.h" />
+    <ClInclude Include="EntityRenderer.h" />
     <ClInclude Include="imgui\backends\imgui_impl_dx10.h" />
     <ClInclude Include="imgui\backends\imgui_impl_dx11.h" />
     <ClInclude Include="imgui\backends\imgui_impl_dx12.h" />

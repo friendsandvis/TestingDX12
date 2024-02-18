@@ -11,7 +11,7 @@ class Entity
 {
 public:
 	Entity();
-	~Entity();
+	virtual ~Entity();
 	std::string GetName() { m_name; }
 	void SetName(std::string name) { m_name = name; }
 	void SetTransformationData(DirectX::XMFLOAT4 scale, DirectX::XMFLOAT4 rotationaxis,float rotationangle, DirectX::XMFLOAT4 translate);

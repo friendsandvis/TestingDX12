@@ -37,6 +37,9 @@
     <Filter Include="framework\Entity\entitytypes">
       <UniqueIdentifier>{bd820cfc-e133-4f5b-ae1a-769261689dd6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="framework\Renderer">
+      <UniqueIdentifier>{13619c17-5615-4e5e-b4c1-aaf214a5cd85}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -209,6 +212,12 @@
     </ClCompile>
     <ClCompile Include="BasicRenderableEntity.cpp">
       <Filter>framework\Entity\entitytypes</Filter>
+    </ClCompile>
+    <ClCompile Include="BasicEntityRenderer.cpp">
+      <Filter>framework\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="EntityRenderer.cpp">
+      <Filter>framework\Renderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -385,6 +394,12 @@
     </ClInclude>
     <ClInclude Include="BasicRenderableEntity.h">
       <Filter>framework\Entity\entitytypes</Filter>
+    </ClInclude>
+    <ClInclude Include="BasicEntityRenderer.h">
+      <Filter>framework\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="EntityRenderer.h">
+      <Filter>framework\Renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
