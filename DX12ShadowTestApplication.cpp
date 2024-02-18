@@ -28,13 +28,17 @@ void ShadowTestApplication::InitExtras()
 
 
 	//init assets
+	BasicMaterialData basicMatData;
 	m_basicCubeEntity.Init(m_creationdevice, m_uploadcommandlist);
 	m_basicCubeEntity.SetName("Cube0");
 	m_basicCubeEntity.SetTransformationData(0.5f, DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 0.0f), 0.0f, DirectX::XMFLOAT4(0.0f, 1.0f, 0.0f, 0.0f));
-
+	basicMatData.m_albedo = {0.0f,1.0f,0.0f,1.0f};
+	m_basicCubeEntity.SetBasicMaterialData(basicMatData);
 	m_basicPlaneEntity.Init(m_creationdevice, m_uploadcommandlist);
 	m_basicPlaneEntity.SetName("Plane0");
 	m_basicPlaneEntity.SetTransformationData(2.0f, DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 0.0f), 90.0f, DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f));
+	basicMatData.m_albedo = { 1.0f,0.0f,0.0f,1.0f };
+	m_basicPlaneEntity.SetBasicMaterialData(basicMatData);
 	DXTexManager::LoadTexture(L"textures/texlargemiped.dds", m_redtexture.GetDXImageData());
 	bool initsuccess = m_redtexture.Init(m_creationdevice);
 	m_redtexture.SetName(L"REDTEX");
@@ -244,7 +248,7 @@ void ShadowTestApplication::Render()
 	
 	//draw plane model
 	 {
-		m_mat.colour = { 1.0f,0.0f,0.0f,1.0f };
+		m_mat.colour = m_basicPlaneEntity.GetBasicMaterialData().m_albedo;
 		m_shadertransformconsts.model = m_basicPlaneEntity.GetModelMatrix();
 		m_shadertransformconsts.mvp = DirectX::XMMatrixMultiply(m_shadertransformconsts.model, vpmat);
 		m_primarycmdlist->SetGraphicsRoot32BitConstants(1, sizeof(m_shadertransformconsts) / 4, &m_shadertransformconsts, 0);
@@ -254,7 +258,7 @@ void ShadowTestApplication::Render()
 	//draw cube model
 	 {
 		
-		m_mat.colour = { 0.0f,1.0f,0.0f,1.0f };
+		m_mat.colour = m_basicCubeEntity.GetBasicMaterialData().m_albedo;
 		m_shadertransformconsts.model = m_basicCubeEntity.GetModelMatrix();
 		m_shadertransformconsts.mvp = DirectX::XMMatrixMultiply(m_shadertransformconsts.model, vpmat);
 		m_primarycmdlist->SetGraphicsRoot32BitConstants(1, sizeof(m_shadertransformconsts) / 4, &m_shadertransformconsts, 0);
