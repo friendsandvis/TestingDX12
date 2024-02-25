@@ -11,12 +11,13 @@ void BasicEntityRenderer::Render(DX12Commandlist& cmdlist, RenderData& renderDat
 {
 	for (std::shared_ptr<Entity> entity : m_entityList)
 	{
-		BasicRenderableEntity* basicRenderableEntity=dynamic_cast<BasicRenderableEntity*>(entity.get());
+		shared_ptr<BasicRenderableEntity> basicRenderableEntity = std::dynamic_pointer_cast<BasicRenderableEntity>(entity);
 		m_mat.colour = basicRenderableEntity->GetBasicMaterialData().m_albedo;
 		m_shadertransformconsts.model = basicRenderableEntity->GetModelMatrix();
 		m_shadertransformconsts.mvp = DirectX::XMMatrixMultiply(m_shadertransformconsts.model, renderData.vpmat);
 		cmdlist->SetGraphicsRoot32BitConstants(1, sizeof(m_shadertransformconsts) / 4, &m_shadertransformconsts, 0);
 		cmdlist->SetGraphicsRoot32BitConstants(2, sizeof(m_mat) / 4, &m_mat, 0);
+		basicRenderableEntity->Render(cmdlist);
 		
 	}
 }

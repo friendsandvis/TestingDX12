@@ -6,6 +6,7 @@
 #include"DX12Texture.h"
 #include"CameraMovementManager.h"
 #include"BasicRenderableEntity.h"
+#include"BasicEntityRenderer.h"
 
 
 class ShadowTestApplication :public DX12ApplicationManagerBase
@@ -32,7 +33,8 @@ private:
 	DXFPSCameraController m_maincameracontroller;
 	ShaderTransformConstants_General m_shadertransformconsts;
 	SimpleMaterial m_mat;
-	BasicRenderableEntity m_basicCubeEntity, m_basicPlaneEntity;
+	std::shared_ptr<BasicRenderableEntity> m_basicCubeEntitysharedPtr, m_basicPlaneEntitysharedPtr;
+	BasicEntityRenderer m_basicEntityrenderer;
 
 	void InitBasicPSO();
 

@@ -2,6 +2,7 @@
 #include"Entity.h"
 #include<forward_list>
 #include<memory>
+#include"DX12CommandList.h"
 
 class EntityRenderer
 {
@@ -21,11 +22,3 @@ public:
 protected:
 	std::forward_list<std::shared_ptr<Entity>> m_entityList;
 };
-
-EntityRenderer::EntityRenderer()
-{
-}
-
-EntityRenderer::~EntityRenderer()
-{
-}

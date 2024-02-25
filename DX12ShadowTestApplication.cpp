@@ -3,10 +3,10 @@
 
 
 ShadowTestApplication::ShadowTestApplication()
-	:m_basicCubeEntity(MODELTYPE::BASIC_CUBE),
-	m_basicPlaneEntity(MODELTYPE::BASIC_PLANE)
 {
 	m_maincameracontroller.SetCameratoControl(&m_maincamera);
+	m_basicCubeEntitysharedPtr = std::make_shared<BasicRenderableEntity>(MODELTYPE::BASIC_CUBE);
+	m_basicPlaneEntitysharedPtr = std::make_shared<BasicRenderableEntity>(MODELTYPE::BASIC_PLANE);
 }
 
 ShadowTestApplication::~ShadowTestApplication()
@@ -29,21 +29,26 @@ void ShadowTestApplication::InitExtras()
 
 	//init assets
 	BasicMaterialData basicMatData;
-	m_basicCubeEntity.Init(m_creationdevice, m_uploadcommandlist);
-	m_basicCubeEntity.SetName("Cube0");
-	m_basicCubeEntity.SetTransformationData(0.5f, DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 0.0f), 0.0f, DirectX::XMFLOAT4(0.0f, 1.0f, 0.0f, 0.0f));
+	m_basicCubeEntitysharedPtr->Init(m_creationdevice, m_uploadcommandlist);
+	m_basicCubeEntitysharedPtr->SetName("Cube0");
+	m_basicCubeEntitysharedPtr->SetTransformationData(0.5f, DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 0.0f), 0.0f, DirectX::XMFLOAT4(0.0f, 1.0f, 0.0f, 0.0f));
 	basicMatData.m_albedo = {0.0f,1.0f,0.0f,1.0f};
-	m_basicCubeEntity.SetBasicMaterialData(basicMatData);
-	m_basicPlaneEntity.Init(m_creationdevice, m_uploadcommandlist);
-	m_basicPlaneEntity.SetName("Plane0");
-	m_basicPlaneEntity.SetTransformationData(2.0f, DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 0.0f), 90.0f, DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f));
+	m_basicCubeEntitysharedPtr->SetBasicMaterialData(basicMatData);
+	m_basicPlaneEntitysharedPtr->Init(m_creationdevice, m_uploadcommandlist);
+	m_basicPlaneEntitysharedPtr->SetName("Plane0");
+	m_basicPlaneEntitysharedPtr->SetTransformationData(2.0f, DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 0.0f), 90.0f, DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f));
 	basicMatData.m_albedo = { 1.0f,0.0f,0.0f,1.0f };
-	m_basicPlaneEntity.SetBasicMaterialData(basicMatData);
+	m_basicPlaneEntitysharedPtr->SetBasicMaterialData(basicMatData);
 	DXTexManager::LoadTexture(L"textures/texlargemiped.dds", m_redtexture.GetDXImageData());
 	bool initsuccess = m_redtexture.Init(m_creationdevice);
 	m_redtexture.SetName(L"REDTEX");
 	
-	
+	//init renderer
+	{
+		m_basicEntityrenderer.Init(m_creationdevice);
+	}
+	m_basicEntityrenderer.AddEntity(m_basicCubeEntitysharedPtr);
+	m_basicEntityrenderer.AddEntity(m_basicPlaneEntitysharedPtr);
 	
 	{
 		D3D12_SHADER_RESOURCE_VIEW_DESC redtexsrvdesc = {};
@@ -244,28 +249,30 @@ void ShadowTestApplication::Render()
 	float rtclearcolour[4] = { 1.0f,1.0f,1.0f,1.0f };
 	m_primarycmdlist->ClearRenderTargetView(rtvhandle, rtclearcolour, 0, nullptr);
 	XMMATRIX vpmat = m_maincamera.GetVP();
+	EntityRenderer::RenderData renderData;
+	renderData.vpmat = vpmat;
+	m_basicEntityrenderer.Render(m_primarycmdlist, renderData);
 	
-	
-	//draw plane model
+	/*//draw plane model
 	 {
-		m_mat.colour = m_basicPlaneEntity.GetBasicMaterialData().m_albedo;
-		m_shadertransformconsts.model = m_basicPlaneEntity.GetModelMatrix();
+		m_mat.colour = m_basicPlaneEntitysharedPtr->GetBasicMaterialData().m_albedo;
+		m_shadertransformconsts.model = m_basicPlaneEntitysharedPtr->GetModelMatrix();
 		m_shadertransformconsts.mvp = DirectX::XMMatrixMultiply(m_shadertransformconsts.model, vpmat);
 		m_primarycmdlist->SetGraphicsRoot32BitConstants(1, sizeof(m_shadertransformconsts) / 4, &m_shadertransformconsts, 0);
 		m_primarycmdlist->SetGraphicsRoot32BitConstants(2, sizeof(m_mat) / 4, &m_mat, 0);
-		m_basicPlaneEntity.Render(m_primarycmdlist);
+		m_basicPlaneEntitysharedPtr->Render(m_primarycmdlist);
 	}
 	//draw cube model
 	 {
 		
-		m_mat.colour = m_basicCubeEntity.GetBasicMaterialData().m_albedo;
-		m_shadertransformconsts.model = m_basicCubeEntity.GetModelMatrix();
+		m_mat.colour = m_basicCubeEntitysharedPtr->GetBasicMaterialData().m_albedo;
+		m_shadertransformconsts.model = m_basicCubeEntitysharedPtr->GetModelMatrix();
 		m_shadertransformconsts.mvp = DirectX::XMMatrixMultiply(m_shadertransformconsts.model, vpmat);
 		m_primarycmdlist->SetGraphicsRoot32BitConstants(1, sizeof(m_shadertransformconsts) / 4, &m_shadertransformconsts, 0);
 		m_primarycmdlist->SetGraphicsRoot32BitConstants(2, sizeof(m_mat) / 4, &m_mat, 0);
 
-		m_basicCubeEntity.Render(m_primarycmdlist);
-	 }
+		m_basicCubeEntitysharedPtr->Render(m_primarycmdlist);
+	 }*/
 	backbufferbarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	backbufferbarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	m_primarycmdlist->ResourceBarrier(1, &backbufferbarrier);
