@@ -29,7 +29,7 @@ void BasicRenderableEntity::Init(ComPtr< ID3D12Device> creationdevice, DX12Comma
 BasicRenderableEntity::BasicRenderableEntity(MODELTYPE modeltype)
 	:m_modelType(modeltype)
 {
-
+	m_entityType = ENTITYTYPE::BASICRENDERABLEENTITY;
 }
 
 void BasicRenderableEntity::Render(DX12Commandlist& cmdlist)

@@ -40,6 +40,9 @@
     <Filter Include="framework\Renderer">
       <UniqueIdentifier>{13619c17-5615-4e5e-b4c1-aaf214a5cd85}</UniqueIdentifier>
     </Filter>
+    <Filter Include="framework\SceneSerialize">
+      <UniqueIdentifier>{03a04cd7-bdbc-43f0-b042-29741acadd8f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -218,6 +221,9 @@
     </ClCompile>
     <ClCompile Include="EntityRenderer.cpp">
       <Filter>framework\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="SceneSerializer.cpp">
+      <Filter>framework\SceneSerialize</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -400,6 +406,9 @@
     </ClInclude>
     <ClInclude Include="EntityRenderer.h">
       <Filter>framework\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneSerializer.h">
+      <Filter>framework\SceneSerialize</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

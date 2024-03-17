@@ -1,11 +1,11 @@
 #pragma once
 #include<string>
 #include"DXUtils.h"
-
-enum class ENTITYTYPE
+class SceneSerializer;
+enum class ENTITYTYPE : unsigned
 {
-	BASICRENDERABLEENTITY,
-	GENERIC
+	BASICRENDERABLEENTITY = 0,
+	GENERIC = 1
 };
 class Entity
 {
@@ -19,11 +19,14 @@ public:
 	DirectX::XMMATRIX GetModelMatrix();
 	ENTITYTYPE GetEntityType() { return m_entityType; }
 protected:
+	
 	std::string m_name;
 	DirectX::XMFLOAT4 m_translate;
 	DirectX::XMFLOAT4 m_scale;
 	DirectX::XMFLOAT4 m_rotationaxis;
 	float m_rotationangle;
 	ENTITYTYPE m_entityType;
+	friend class SceneSerializer;
+	
 
 };

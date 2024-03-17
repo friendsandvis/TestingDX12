@@ -2,10 +2,10 @@
 #include"RenderableEntity.h"
 #include"AssetManager.h"
 
-enum class MODELTYPE
+enum class MODELTYPE: unsigned
 {
-	BASIC_CUBE,
-	BASIC_PLANE
+	BASIC_CUBE = 1,
+	BASIC_PLANE = 2
 };
 struct BasicMaterialData
 {

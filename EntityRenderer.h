@@ -4,6 +4,7 @@
 #include<memory>
 #include"DX12CommandList.h"
 
+class SceneSerializer;
 class EntityRenderer
 {
 public:
@@ -21,4 +22,5 @@ public:
 	virtual void Render(DX12Commandlist& cmdlist, RenderData& renderData) =0;
 protected:
 	std::forward_list<std::shared_ptr<Entity>> m_entityList;
+	friend class SceneSerializer;
 };

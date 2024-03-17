@@ -207,6 +207,7 @@
     <ClCompile Include="RenderableEntity.cpp" />
     <ClCompile Include="RTPSO.cpp" />
     <ClCompile Include="SamplerFeedbackManager.cpp" />
+    <ClCompile Include="SceneSerializer.cpp" />
     <ClCompile Include="ShaderManager.cpp" />
     <ClCompile Include="StreamableTextureFileCommon.cpp" />
     <ClCompile Include="StreamableTextureFileCreator.cpp" />
@@ -269,6 +270,7 @@
     <ClInclude Include="RenderableEntity.h" />
     <ClInclude Include="RTPSO.h" />
     <ClInclude Include="SamplerFeedbackManager.h" />
+    <ClInclude Include="SceneSerializer.h" />
     <ClInclude Include="ShaderManager.h" />
     <ClInclude Include="StreamableTextureFileCommon.h" />
     <ClInclude Include="StreamableTextureFileCreator.h" />

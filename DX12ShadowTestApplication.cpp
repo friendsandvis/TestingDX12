@@ -1,5 +1,6 @@
 #include"DX12ShadowTestApplication.h"
 #include"DXUtils.h"
+#include"SceneSerializer.h"
 
 
 ShadowTestApplication::ShadowTestApplication()
@@ -47,9 +48,21 @@ void ShadowTestApplication::InitExtras()
 	{
 		m_basicEntityrenderer.Init(m_creationdevice);
 	}
-	m_basicEntityrenderer.AddEntity(m_basicCubeEntitysharedPtr);
-	m_basicEntityrenderer.AddEntity(m_basicPlaneEntitysharedPtr);
-	
+	//m_basicEntityrenderer.AddEntity(m_basicCubeEntitysharedPtr);
+	//m_basicEntityrenderer.AddEntity(m_basicPlaneEntitysharedPtr);
+	//SceneSerializer::SaveScene("testfile1.sce", &m_basicEntityrenderer);
+	std::vector<std::shared_ptr<Entity>> sceneEntities;
+	SceneSerializer::LoadScene("testfile1.sce", sceneEntities);
+	//prepare scene entities for renderer
+	for (std::shared_ptr<Entity> entity : sceneEntities)
+	{
+		if (entity->GetEntityType() == ENTITYTYPE::BASICRENDERABLEENTITY)
+		{
+			std::shared_ptr<BasicRenderableEntity> basicRenderableEntity = std::dynamic_pointer_cast<BasicRenderableEntity>(entity);
+			basicRenderableEntity->Init(m_creationdevice, m_uploadcommandlist);
+		}
+		m_basicEntityrenderer.AddEntity(entity);
+	}
 	{
 		D3D12_SHADER_RESOURCE_VIEW_DESC redtexsrvdesc = {};
 		redtexsrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
