@@ -225,6 +225,12 @@
     <ClCompile Include="SceneSerializer.cpp">
       <Filter>framework\SceneSerialize</Filter>
     </ClCompile>
+    <ClCompile Include="LightEntity.cpp">
+      <Filter>framework\Entity\entitytypes</Filter>
+    </ClCompile>
+    <ClCompile Include="DebugRenderableEntity.cpp">
+      <Filter>framework\Entity\entitytypes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="windmaker.h">
@@ -409,6 +415,12 @@
     </ClInclude>
     <ClInclude Include="SceneSerializer.h">
       <Filter>framework\SceneSerialize</Filter>
+    </ClInclude>
+    <ClInclude Include="LightEntity.h">
+      <Filter>framework\Entity\entitytypes</Filter>
+    </ClInclude>
+    <ClInclude Include="DebugRenderableEntity.h">
+      <Filter>framework\Entity\entitytypes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

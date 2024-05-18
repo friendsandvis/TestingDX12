@@ -7,6 +7,7 @@
 #include"CameraMovementManager.h"
 #include"BasicRenderableEntity.h"
 #include"BasicEntityRenderer.h"
+#include"LightEntity.h"
 
 
 class ShadowTestApplication :public DX12ApplicationManagerBase
@@ -34,6 +35,7 @@ private:
 	ShaderTransformConstants_General m_shadertransformconsts;
 	SimpleMaterial m_mat;
 	std::shared_ptr<BasicRenderableEntity> m_basicCubeEntitysharedPtr, m_basicPlaneEntitysharedPtr;
+	std::shared_ptr<LightEntity> m_testLightEntity;
 	BasicEntityRenderer m_basicEntityrenderer;
 
 	void InitBasicPSO();

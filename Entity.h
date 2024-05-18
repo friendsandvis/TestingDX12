@@ -5,7 +5,8 @@ class SceneSerializer;
 enum class ENTITYTYPE : unsigned
 {
 	BASICRENDERABLEENTITY = 0,
-	GENERIC = 1
+	GENERIC = 1,
+	UTILENTITY = 2,
 };
 class Entity
 {

@@ -159,6 +159,7 @@
     <ClCompile Include="BasicEntityRenderer.cpp" />
     <ClCompile Include="BasicRenderableEntity.cpp" />
     <ClCompile Include="CameraMovementManager.cpp" />
+    <ClCompile Include="DebugRenderableEntity.cpp" />
     <ClCompile Include="DX12ApplicationManagerBase.cpp" />
     <ClCompile Include="DX12Buffer.cpp" />
     <ClCompile Include="DX12Commandlist.cpp" />
@@ -196,6 +197,7 @@
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
+    <ClCompile Include="LightEntity.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MipTestApplication.cpp" />
     <ClCompile Include="ModelTestApplication.cpp" />
@@ -222,6 +224,7 @@
     <ClInclude Include="BasicRenderableEntity.h" />
     <ClInclude Include="CameraMovementManager.h" />
     <ClInclude Include="CommonDataStructures.h" />
+    <ClInclude Include="DebugRenderableEntity.h" />
     <ClInclude Include="DX12ApplicationManagerBase.h" />
     <ClInclude Include="DX12Buffer.h" />
     <ClInclude Include="DX12CommandList.h" />
@@ -259,6 +262,7 @@
     <ClInclude Include="imgui\imstb_rectpack.h" />
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="imgui\imstb_truetype.h" />
+    <ClInclude Include="LightEntity.h" />
     <ClInclude Include="MipTestApplication.h" />
     <ClInclude Include="ModelTestApplication.h" />
     <ClInclude Include="RayTracingTestApplication.h" />

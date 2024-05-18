@@ -8,6 +8,7 @@ ShadowTestApplication::ShadowTestApplication()
 	m_maincameracontroller.SetCameratoControl(&m_maincamera);
 	m_basicCubeEntitysharedPtr = std::make_shared<BasicRenderableEntity>(MODELTYPE::BASIC_CUBE);
 	m_basicPlaneEntitysharedPtr = std::make_shared<BasicRenderableEntity>(MODELTYPE::BASIC_PLANE);
+	m_testLightEntity = std::make_shared<LightEntity>();
 }
 
 ShadowTestApplication::~ShadowTestApplication()
@@ -43,6 +44,9 @@ void ShadowTestApplication::InitExtras()
 	DXTexManager::LoadTexture(L"textures/texlargemiped.dds", m_redtexture.GetDXImageData());
 	bool initsuccess = m_redtexture.Init(m_creationdevice);
 	m_redtexture.SetName(L"REDTEX");
+	m_testLightEntity->Init(m_creationdevice, m_uploadcommandlist);
+	m_testLightEntity->SetTransformationData(0.15f, DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 0.0f), 0.0f, DirectX::XMFLOAT4(0.0f, 0.25f, 0.0f, 0.0f));
+	m_testLightEntity->SetName("TestLight1");
 	
 	//init renderer
 	{
@@ -53,6 +57,7 @@ void ShadowTestApplication::InitExtras()
 	//SceneSerializer::SaveScene("testfile1.sce", &m_basicEntityrenderer);
 	std::vector<std::shared_ptr<Entity>> sceneEntities;
 	SceneSerializer::LoadScene("testfile1.sce", sceneEntities);
+	sceneEntities.push_back(m_testLightEntity);
 	//prepare scene entities for renderer
 	for (std::shared_ptr<Entity> entity : sceneEntities)
 	{
