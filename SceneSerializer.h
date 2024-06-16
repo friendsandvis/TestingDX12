@@ -3,6 +3,12 @@
 #include"EntityRenderer.h"
 #include"BasicRenderableEntity.h"
 //saves a list of entities with properties(aka scene) in a file
+/*
+* eg save steps:
+* m_basicEntityrenderer.AddEntity(m_basicCubeEntitysharedPtr);
+	m_basicEntityrenderer.AddEntity(m_basicPlaneEntitysharedPtr);
+	SceneSerializer::SaveScene("testfile1.sce", &m_basicEntityrenderer);
+*/
 class SceneSerializer
 {
 public:

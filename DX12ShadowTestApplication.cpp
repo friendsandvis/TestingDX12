@@ -1,8 +1,15 @@
 #include"DX12ShadowTestApplication.h"
 #include"DXUtils.h"
 #include"SceneSerializer.h"
-
-
+/*
+* option 0 : render multiplane cube only
+* optoion 1: render created  scene
+* option  2 : render custom loaded entity
+*/
+#define RENDERENTITIESOPTION_MULTIPLANECUBEONLY 0
+#define RENDERENTITIESOPTION_CUSTOMCREATEDSCENE 1
+#define RENDERENTITIESOPTION_LOADEDSCENE 2
+#define RENDERENTITIESOPTION RENDERENTITIESOPTION_MULTIPLANECUBEONLY
 ShadowTestApplication::ShadowTestApplication()
 {
 	m_maincameracontroller.SetCameratoControl(&m_maincamera);
@@ -47,14 +54,13 @@ void ShadowTestApplication::InitExtras()
 	m_testLightEntity->Init(m_creationdevice, m_uploadcommandlist);
 	m_testLightEntity->SetTransformationData(0.15f, DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 0.0f), 0.0f, DirectX::XMFLOAT4(0.0f, 0.25f, 0.0f, 0.0f));
 	m_testLightEntity->SetName("TestLight1");
+	//------------------------cube face planes
+	m_multiplaneCube.Init(m_creationdevice, m_uploadcommandlist);
 	
 	//init renderer
 	{
 		m_basicEntityrenderer.Init(m_creationdevice);
 	}
-	//m_basicEntityrenderer.AddEntity(m_basicCubeEntitysharedPtr);
-	//m_basicEntityrenderer.AddEntity(m_basicPlaneEntitysharedPtr);
-	//SceneSerializer::SaveScene("testfile1.sce", &m_basicEntityrenderer);
 	std::vector<std::shared_ptr<Entity>> sceneEntities;
 	SceneSerializer::LoadScene("testfile1.sce", sceneEntities);
 	sceneEntities.push_back(m_testLightEntity);
@@ -89,7 +95,6 @@ void ShadowTestApplication::InitBasicPSO()
 {
 	PSOInitData basicpsodata = {};
 	basicpsodata.type = GRAPHICS;
-
 	//shaders to use
 	DX12Shader* vs = new DX12Shader();
 	DX12Shader* ps = new DX12Shader();
@@ -99,35 +104,12 @@ void ShadowTestApplication::InitBasicPSO()
 	basicpsodata.m_shaderstouse.push_back(ps);
 
 	//build up graphic pso desc
-
+	DX12PSO::DefaultInitPSOData(basicpsodata);
 	//shaderdesc
 	basicpsodata.psodesc.graphicspsodesc.VS.pShaderBytecode = vs->GetCompiledCode();
 	basicpsodata.psodesc.graphicspsodesc.VS.BytecodeLength = vs->GetCompiledCodeSize();
 	basicpsodata.psodesc.graphicspsodesc.PS.pShaderBytecode = ps->GetCompiledCode();
 	basicpsodata.psodesc.graphicspsodesc.PS.BytecodeLength = ps->GetCompiledCodeSize();
-
-	//primitive setup
-	basicpsodata.psodesc.graphicspsodesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-
-	//rasterizer setup
-	basicpsodata.psodesc.graphicspsodesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
-	basicpsodata.psodesc.graphicspsodesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-	basicpsodata.psodesc.graphicspsodesc.RasterizerState.DepthClipEnable = FALSE;
-	basicpsodata.psodesc.graphicspsodesc.RasterizerState.AntialiasedLineEnable = FALSE;
-
-	//rtv&sample setup
-	basicpsodata.psodesc.graphicspsodesc.SampleMask = UINT_MAX;
-	basicpsodata.psodesc.graphicspsodesc.SampleDesc.Count = 1;
-	basicpsodata.psodesc.graphicspsodesc.SampleDesc.Quality = 0;
-	basicpsodata.psodesc.graphicspsodesc.RTVFormats[0] = DXGI_FORMAT_B8G8R8A8_UNORM;
-	basicpsodata.psodesc.graphicspsodesc.NumRenderTargets = 1;
-
-	//raster state
-	basicpsodata.psodesc.graphicspsodesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
-	basicpsodata.psodesc.graphicspsodesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-	basicpsodata.psodesc.graphicspsodesc.RasterizerState.DepthClipEnable = FALSE;
-	basicpsodata.psodesc.graphicspsodesc.RasterizerState.AntialiasedLineEnable = FALSE;
-
 	//root signature
 
 	//1 root param for ps texture & sampler 
@@ -255,6 +237,7 @@ void ShadowTestApplication::Render()
 
 	//set rtv
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
 
 	D3D12_RESOURCE_BARRIER backbufferbarrier = {};
 	backbufferbarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -263,34 +246,62 @@ void ShadowTestApplication::Render()
 	backbufferbarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
 	backbufferbarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	m_primarycmdlist->ResourceBarrier(1, &backbufferbarrier);
-	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, nullptr);
+	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, &dsvhandle);
 	float rtclearcolour[4] = { 1.0f,1.0f,1.0f,1.0f };
 	m_primarycmdlist->ClearRenderTargetView(rtvhandle, rtclearcolour, 0, nullptr);
+	m_primarycmdlist->ClearDepthStencilView(dsvhandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	XMMATRIX vpmat = m_maincamera.GetVP();
 	EntityRenderer::RenderData renderData;
 	renderData.vpmat = vpmat;
-	m_basicEntityrenderer.Render(m_primarycmdlist, renderData);
 	
-	/*//draw plane model
-	 {
-		m_mat.colour = m_basicPlaneEntitysharedPtr->GetBasicMaterialData().m_albedo;
-		m_shadertransformconsts.model = m_basicPlaneEntitysharedPtr->GetModelMatrix();
-		m_shadertransformconsts.mvp = DirectX::XMMatrixMultiply(m_shadertransformconsts.model, vpmat);
-		m_primarycmdlist->SetGraphicsRoot32BitConstants(1, sizeof(m_shadertransformconsts) / 4, &m_shadertransformconsts, 0);
-		m_primarycmdlist->SetGraphicsRoot32BitConstants(2, sizeof(m_mat) / 4, &m_mat, 0);
-		m_basicPlaneEntitysharedPtr->Render(m_primarycmdlist);
+switch(RENDERENTITIESOPTION)
+{
+	case RENDERENTITIESOPTION_MULTIPLANECUBEONLY:
+	{
+		//draw cube face planes
+		for (unsigned i = 0; i < 6; i++)
+		{
+			std::shared_ptr<BasicRenderableEntity> planeFace = m_multiplaneCube.m_cubeFacePlanes[i];
+			m_mat.colour = planeFace->GetBasicMaterialData().m_albedo;
+			m_shadertransformconsts.model = planeFace->GetModelMatrix();
+			m_shadertransformconsts.mvp = DirectX::XMMatrixMultiply(m_shadertransformconsts.model, vpmat);
+			m_primarycmdlist->SetGraphicsRoot32BitConstants(1, sizeof(m_shadertransformconsts) / 4, &m_shadertransformconsts, 0);
+			m_primarycmdlist->SetGraphicsRoot32BitConstants(2, sizeof(m_mat) / 4, &m_mat, 0);
+			planeFace->Render(m_primarycmdlist);
+		}
+		break;
 	}
-	//draw cube model
-	 {
-		
-		m_mat.colour = m_basicCubeEntitysharedPtr->GetBasicMaterialData().m_albedo;
-		m_shadertransformconsts.model = m_basicCubeEntitysharedPtr->GetModelMatrix();
-		m_shadertransformconsts.mvp = DirectX::XMMatrixMultiply(m_shadertransformconsts.model, vpmat);
-		m_primarycmdlist->SetGraphicsRoot32BitConstants(1, sizeof(m_shadertransformconsts) / 4, &m_shadertransformconsts, 0);
-		m_primarycmdlist->SetGraphicsRoot32BitConstants(2, sizeof(m_mat) / 4, &m_mat, 0);
+	case RENDERENTITIESOPTION_LOADEDSCENE:
+	{
+		m_basicEntityrenderer.Render(m_primarycmdlist, renderData);
+		break;
+	}
+	case RENDERENTITIESOPTION_CUSTOMCREATEDSCENE:
+	{
+		//draw plane model
+		{
+			m_mat.colour = m_basicPlaneEntitysharedPtr->GetBasicMaterialData().m_albedo;
+			m_shadertransformconsts.model = m_basicPlaneEntitysharedPtr->GetModelMatrix();
+			m_shadertransformconsts.mvp = DirectX::XMMatrixMultiply(m_shadertransformconsts.model, vpmat);
+			m_primarycmdlist->SetGraphicsRoot32BitConstants(1, sizeof(m_shadertransformconsts) / 4, &m_shadertransformconsts, 0);
+			m_primarycmdlist->SetGraphicsRoot32BitConstants(2, sizeof(m_mat) / 4, &m_mat, 0);
+			m_basicPlaneEntitysharedPtr->Render(m_primarycmdlist);
+		}
+		//draw cube model
+		{
 
-		m_basicCubeEntitysharedPtr->Render(m_primarycmdlist);
-	 }*/
+			m_mat.colour = m_basicCubeEntitysharedPtr->GetBasicMaterialData().m_albedo;
+			m_shadertransformconsts.model = m_basicCubeEntitysharedPtr->GetModelMatrix();
+			m_shadertransformconsts.mvp = DirectX::XMMatrixMultiply(m_shadertransformconsts.model, vpmat);
+			m_primarycmdlist->SetGraphicsRoot32BitConstants(1, sizeof(m_shadertransformconsts) / 4, &m_shadertransformconsts, 0);
+			m_primarycmdlist->SetGraphicsRoot32BitConstants(2, sizeof(m_mat) / 4, &m_mat, 0);
+
+			m_basicCubeEntitysharedPtr->Render(m_primarycmdlist);
+		}
+		break;
+	}
+}
+
 	backbufferbarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	backbufferbarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	m_primarycmdlist->ResourceBarrier(1, &backbufferbarrier);

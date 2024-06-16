@@ -10,9 +10,13 @@ DXFPSCameraController::DXFPSCameraController()
 	m_lastmouseXpos(0),
 	m_lastmouseYpos(0),
 	m_campitch(0.0f),
-	m_camyaw(-90.0f)
-	
-{}
+
+	m_camyaw(0.0f)
+{
+#ifndef UPDATECAMERAVECTORTECHNIQUE_UPDATETARGETPOSITION
+	m_camyaw = -90.0f;
+#endif
+}
 DXFPSCameraController::~DXFPSCameraController()
 {}
 
@@ -100,9 +104,18 @@ void DXFPSCameraController::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM 
 		int yoffset = m_lastmouseYpos - ypos;
 		m_lastmouseXpos = xpos;
 		m_lastmouseYpos = ypos;
-		m_camyaw -= sensitivity*xoffset;
-		m_campitch += sensitivity*yoffset;
+		float yawoffset = sensitivity*xoffset;
+		float pitchoffset = sensitivity*yoffset;
+#ifdef UPDATECAMERAVECTORTECHNIQUE_UPDATETARGETPOSITION
+		m_cameratocontrol->UpdateCameraVectors(pitchoffset, yawoffset);
+#else
+		m_camyaw -= sensitivity * xoffset;
+		m_campitch += sensitivity * yoffset;
 		m_cameratocontrol->UpdateCameraVectors(m_campitch, m_camyaw);
+#endif // UPDATECAMERAVECTORTECHNIQUE_UPDATETARGETPOSITION
+
+		
+		
 		break;
 	}
 	}

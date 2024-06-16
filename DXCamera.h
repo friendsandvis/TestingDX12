@@ -1,4 +1,10 @@
 #pragma once
+//#define UPDATECAMERAVECTORTECHNIQUE_UPDATETARGETPOSITION
+/*
+* two techniques used to update camera vectors with Pitch and yaw angles.
+* 1. old does not update target position where pitch and yaw vector are used to calculate forwardvector directly by using sin & cos(target position is ignored)
+* 2. new where pitch & yaw are used to rotate previous camera vectors along CX & Y axis,target position is updated. 
+*/
 #include<DirectXMath.h>
 using namespace DirectX;
 // perspectice projection camera
@@ -27,10 +33,11 @@ public:
 	XMVECTOR GetCamUp() { return m_up; }
 	XMVECTOR GetCamForward() { return m_forward; }
 	XMVECTOR GetCamRight() { return m_right; }
-	void SetCamPos(XMVECTOR campos) { m_camerapos=campos; }
+	void SetCamPos(XMVECTOR campos);
 	void UpdateCameraVectors(float pitch, float yaw);
 private:
 	XMVECTOR m_camerapos;
+	XMVECTOR m_cameraTargetpos;
 	XMVECTOR m_up, m_forward,m_right;
 	XMMATRIX m_model;
 	XMMATRIX m_view;

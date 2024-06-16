@@ -34,3 +34,14 @@ private:
 	Model m_model;
 	BasicMaterialData m_materialData;
 };
+//just a colection of 6 diffrent coloured planes to represent a cube
+struct BasicEntityMultiPlaneCube
+{
+	std::shared_ptr<BasicRenderableEntity> m_PlaneEntityCubeFacePYsharedPtr, m_PlaneEntityCubeFaceNYsharedPtr, m_PlaneEntityCubeFacePXsharedPtr, m_PlaneEntityCubeFaceNXsharedPtr, m_PlaneEntityCubeFacePZsharedPtr, m_PlaneEntityCubeFaceNZsharedPtr;
+	std::shared_ptr<BasicRenderableEntity> m_cubeFacePlanes[6];
+
+	BasicEntityMultiPlaneCube();
+	void Init(ComPtr< ID3D12Device> creationdevice, DX12Commandlist& uploadcmdlist);
+
+
+};

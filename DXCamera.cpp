@@ -11,9 +11,11 @@ DXCamera::DXCamera()
 	m_view = XMMatrixIdentity();
 	m_projection = XMMatrixIdentity();
 	m_model = XMMatrixIdentity();
-	m_camerapos = { 0.0f,0.0f,3.0f };
+	m_camerapos = XMVectorSet(0.0f, 0.0f, 3.0f, 1.0f);//{ 0.0f,0.0f,3.0f };
+	m_cameraTargetpos = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
 	m_up = {0.0f,1.0f,0.0f};
-	m_forward = { 0.0f,0.0f,-1.0f };
+	m_forward = m_cameraTargetpos - m_camerapos;//XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f);//{ 0.0f,0.0f,-1.0f };
+	m_forward = XMVector3Normalize(m_forward);
 	m_right = XMVector3Cross(m_up, m_forward);
 	
 	
@@ -87,11 +89,34 @@ void DXCamera::UpdateCameraVectors(float pitch, float yaw)
 {
 	double pitchinrads = (double)XMConvertToRadians(pitch);
 	double yawinrads = (double)XMConvertToRadians(yaw);
+#ifdef UPDATECAMERAVECTORTECHNIQUE_UPDATETARGETPOSITION
+	XMVECTOR camToTargetVec = m_cameraTargetpos - m_camerapos;
+	float camToTargetVecDistance = 0.0f;
+	XMVECTOR camToTargetVecDistanceVec = XMVector3Length(camToTargetVec);
+	XMStoreFloat(&camToTargetVecDistance, camToTargetVecDistanceVec);
+	camToTargetVec = XMVector3Normalize(camToTargetVec);
+	XMMATRIX xaxisrotation = XMMatrixRotationX(pitchinrads);
+	camToTargetVec = XMVector4Transform(camToTargetVec, xaxisrotation);
+	XMMATRIX yaxisrotation = XMMatrixRotationY(yawinrads);
+	camToTargetVec = XMVector4Transform(camToTargetVec, yaxisrotation);
+	XMVECTOR camToTargetVecResultant = camToTargetVec * camToTargetVecDistance;
+	m_cameraTargetpos = m_camerapos + camToTargetVecResultant;
+	m_forward = XMVector3Normalize(m_cameraTargetpos - m_camerapos);
+	m_right = XMVector3Cross(m_up, m_forward);
+#else
 	double x = cos(yawinrads) * cos(pitchinrads);
 	double y = sin(pitchinrads);
-	double z = sin(yawinrads)*cos(pitchinrads);
-	XMVECTOR newforward = XMVectorSet(x, y, z,0.0f);
+	double z = sin(yawinrads) * cos(pitchinrads);
+	XMVECTOR newforward = XMVectorSet(x, y, z, 0.0f);
 	newforward = XMVector3Normalize(newforward);
 	m_forward = newforward;
 	m_right = XMVector3Cross(m_up, m_forward);
+#endif // UPDATECAMERAVECTORTECHNIQUE_UPDATETARGETPOSITION
+}
+void DXCamera::SetCamPos(XMVECTOR campos)
+{
+	m_camerapos = campos;
+	//m_forward = m_cameraTargetpos - m_camerapos;
+	//m_forward = XMVector3Normalize(m_forward);
+	//m_right = XMVector3Cross(m_up, m_forward);
 }
