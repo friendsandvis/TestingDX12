@@ -33,8 +33,10 @@ public:
 	XMVECTOR GetCamUp() { return m_up; }
 	XMVECTOR GetCamForward() { return m_forward; }
 	XMVECTOR GetCamRight() { return m_right; }
+	XMVECTOR GetCamTargetPos() { return m_cameraTargetpos; }
 	void SetCamPos(XMVECTOR campos);
 	void UpdateCameraVectors(float pitch, float yaw);
+	void SetCamTargetPos(XMVECTOR targetpos) { m_cameraTargetpos = targetpos; }
 private:
 	XMVECTOR m_camerapos;
 	XMVECTOR m_cameraTargetpos;

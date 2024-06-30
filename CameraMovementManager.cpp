@@ -134,7 +134,10 @@ void DXFPSCameraController::Update()
 		camforward = XMVector3Normalize(camforward);
 		XMVECTOR campos = m_cameratocontrol->GetCamPos();
 		campos = campos + 0.01f* m_movefrontbackmodifier*camforward;
-		m_cameratocontrol->SetCamPos(campos);	
+		m_cameratocontrol->SetCamPos(campos);
+		XMVECTOR camTargetpos = m_cameratocontrol->GetCamTargetPos();
+		camTargetpos = camTargetpos + 0.01f * m_movefrontbackmodifier * camforward;
+		m_cameratocontrol->SetCamTargetPos(camTargetpos);
 	}
 	if (m_moveleftrightmodifier != 0.0f)
 	{
@@ -142,6 +145,10 @@ void DXFPSCameraController::Update()
 		XMVECTOR campos = m_cameratocontrol->GetCamPos();
 		campos = campos + 0.01f * m_moveleftrightmodifier * camright;
 		m_cameratocontrol->SetCamPos(campos);
+		//update target vector as well when moving leftright to keep the forward vvector same;else there could be a bug upon first mouse(rotation) movement after leftright movewment in some cases
+		XMVECTOR camTargetpos = m_cameratocontrol->GetCamTargetPos();
+		camTargetpos = camTargetpos + 0.01f * m_moveleftrightmodifier * camright;
+		m_cameratocontrol->SetCamTargetPos(camTargetpos);
 
 	}
 }

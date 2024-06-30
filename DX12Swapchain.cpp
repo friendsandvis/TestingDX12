@@ -79,6 +79,7 @@ void DX12Swapchain::RetiveBackBuffers()
 	for (size_t i = 0; i < BACKBUFFERCOUNT; i++)
 	{
 		DXASSERT(m_swapchain->GetBuffer(i, IID_PPV_ARGS(m_backbuffers[i].resource.GetAddressOf())))
+			m_backbuffers[i].resource->SetName(L"swapchainbackbuffer");
 			m_backbuffers[i].currentstate = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PRESENT;
 			
 	}

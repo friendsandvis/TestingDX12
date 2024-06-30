@@ -27,9 +27,9 @@ void TexturedQuadApplication::InitExtras()
 
 	//init assets
 	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
-	DXTexManager::LoadTexture(L"textures/texlargemiped.dds", m_redtexture.GetDXImageData());
-	bool initsuccess = m_redtexture.Init(m_creationdevice);
-	m_redtexture.SetName(L"GREENTEX");
+	DXTexManager::LoadTexture(L"textures/texlargemiped.dds", m_mainLoadedtexture.GetDXImageData());
+	bool initsuccess = m_mainLoadedtexture.Init(m_creationdevice);
+	m_mainLoadedtexture.SetName(L"MAINLOADEDTEX");
 	D3D12_PLACED_SUBRESOURCE_FOOTPRINT whitetexsubresfootprint;
 	{
 		DX12ResourceCreationProperties	whitetexresprops;
@@ -68,11 +68,11 @@ void TexturedQuadApplication::InitExtras()
 	{
 		D3D12_SHADER_RESOURCE_VIEW_DESC redtexsrvdesc = {};
 		redtexsrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		redtexsrvdesc.Texture2D.MipLevels = (UINT)m_redtexture.GetTotalMipCount();
+		redtexsrvdesc.Texture2D.MipLevels = (UINT)m_mainLoadedtexture.GetTotalMipCount();
 		redtexsrvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 
 
-		m_redtexture.CreateSRV(m_creationdevice, redtexsrvdesc, m_resaccessviewdescheap.GetCPUHandlefromstart());
+		m_mainLoadedtexture.CreateSRV(m_creationdevice, redtexsrvdesc, m_resaccessviewdescheap.GetCPUHandlefromstart());
 		{
 			D3D12_SHADER_RESOURCE_VIEW_DESC whitetexsrvdesc = {};
 			whitetexsrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -85,7 +85,7 @@ void TexturedQuadApplication::InitExtras()
 	//upload asset data
 	m_uploadcommandlist.Reset();
 	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
-	m_redtexture.UploadTexture(m_uploadcommandlist);
+	m_mainLoadedtexture.UploadTexture(m_uploadcommandlist);
 	D3D12_RESOURCE_BARRIER abarrier=m_whitetexuploadbuffer.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_SOURCE);
 	if (DXUtils::IsBarrierSafeToExecute(abarrier))
 	{
@@ -113,7 +113,9 @@ void TexturedQuadApplication::InitExtras()
 		m_uploadcommandlist->CopyTextureRegion(&dst, 0, 0, 0, &src, NULL);
 
 	}
-	abarrier = m_whitetexture.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	//this barrier with non pixel shader is raising a debug layer error do not understand  why
+	//abarrier = m_whitetexture.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	abarrier =  m_whitetexture.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	if (DXUtils::IsBarrierSafeToExecute(abarrier))
 	{
 		m_uploadcommandlist->ResourceBarrier(1, &abarrier);

@@ -1,8 +1,5 @@
 #include"DX12ApplicationManagerBase.h"
-
 #include<chrono>
-
-
 DX12ApplicationManagerBase::DX12ApplicationManagerBase()
 	:m_cmdlistidxinuse(0),
 	m_primarycmdlist(m_primarycmdlists[0]),
@@ -169,14 +166,13 @@ void DX12ApplicationManagerBase::BasicRender()
 	commandliststoexecute.push_back(m_primarycmdlist.GetcmdList());
 	commandliststoexecute.push_back(m_prepresentcommandlist.GetcmdList());
 	m_mainqueue.GetQueue()->ExecuteCommandLists(commandliststoexecute.size(), commandliststoexecute.data());
-
-	UINT64 fencevalue = m_syncunitprime.GetCurrentValue();
+	DXASSERT(m_swapchain.GetSwapchain()->Present(0, 0))
+		UINT64 fencevalue = m_syncunitprime.GetCurrentValue();
 	fencevalue += 1;
 	m_syncunitprime.SignalFence(m_mainqueue.GetQueue(), fencevalue);
-	
-	DXASSERT(m_swapchain.GetSwapchain()->Present(0, 0))
 		m_syncunitprime.WaitFence();
-		
+
+	m_presentIdx++;
 	m_swapchain.UpdatebackbufferIndex();
 	m_cmdlistidxinuse = (m_cmdlistidxinuse + 1) % NUMCOMMANDLISTSTOCK;
 	m_primarycmdlist = m_primarycmdlists[m_cmdlistidxinuse];

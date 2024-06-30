@@ -89,9 +89,13 @@ bool DXTexture::Init(ComPtr< ID3D12Device> creationdevice)
 
 void DXTexture::UploadTexture(DX12Commandlist& copycmdlist)
 {
+	//D3D12_RESOURCE_STATE_COPY_DEST
+	D3D12_RESOURCE_BARRIER thistexbarrier = TransitionResState(D3D12_RESOURCE_STATE_COPY_DEST);
+	if (DXUtils::IsBarrierSafeToExecute(thistexbarrier))
+	{
+		copycmdlist->ResourceBarrier(1, &thistexbarrier);
+	}
 	UpdateSubresources(copycmdlist.GetcmdList(), m_resource.Get(), m_uploadbuffer.GetResource().Get(), 0, 0, static_cast<UINT>(m_uploadsubresdata.size()), m_uploadsubresdata.data());
-	D3D12_RESOURCE_BARRIER barrier=TransitionResState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-	copycmdlist->ResourceBarrier(1, &barrier);
 }
 
 void DXTexture::CreateSRV(ComPtr< ID3D12Device> creationdevice, D3D12_SHADER_RESOURCE_VIEW_DESC srvdesc, D3D12_CPU_DESCRIPTOR_HANDLE srvhandle)
@@ -128,7 +132,7 @@ void DXTextureCube::Init(ComPtr< ID3D12Device> creationdevice)
 	DX12Buffer::InitResourceCreationProperties(uploadbufferresprops);
 	uploadbufferresprops.resdesc.Width = uploadbuffersize;
 	m_uploadbuffer.Init(creationdevice, uploadbufferresprops, ResourceCreationMode::COMMITED);
-	m_uploadbuffer.SetName(L"Texturecubeuploadbuffer");
+	m_uploadbuffer.SetName(L"uploadbuffer");
 
 }
 

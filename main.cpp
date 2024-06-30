@@ -3,7 +3,7 @@
 #include"DX12SimpleTexturedQuadApplication.h"
 #include"DX12SamplerfeedbackApplication.h"
 //#include"DX12ReservedResourceApplication.h"
-//#include"DX12SkyboxtestingApplication.h"
+#include"DX12SkyboxtestingApplication.h"
 #include"ModelTestApplication.h"
 //#include"MipTestApplication.h"
 //#include"DX12ComputeApplication.h"
@@ -20,7 +20,8 @@
 #else
 #define ENABLEDEBUGLAYER false
 #endif // _DEBUG
-
+//launch option 6 if used for skybox application if this maco is defined else it is a free slot used for otther needed utils(currently for stf creation)
+#define ALLOWSKYBOXTESTAPP 1
 
 
 typedef HRESULT(__stdcall* fPtr)(const IID&, void**);
@@ -35,7 +36,12 @@ int main()
 	std::cout << "3.ModelTestApplication.\n";
 	std::cout << "4.RaytracingApplicationAdvanced.\n";
 	std::cout << "5.SamplerFeedbackApplication.\n";
+#ifdef ALLOWSKYBOXTESTAPP
+	std::cout << "6.skyboxtestApplication.\n";
+#else
 	std::cout << "6.run stf creator.\n";
+#endif // ALLOWSKYBOXTESTAPP
+
 	std::cout << "7.run stf reader.\n";
 	std::cout << "8.RaytracingApplicationAdvancedAOTest.\n";
 	std::cout << "9.shadowtestApplication.\n";
@@ -58,16 +64,26 @@ int main()
 	case 5:
 		appmanager = new DX12SamplerfeedbackApplication(); break;
 	case 6:
+#ifdef ALLOWSKYBOXTESTAPP
+		{
+			appmanager = new SkyboxTestApplication(); break;
+	}
+#else
 	{
 		StreamableTextureFileCreator stfcreator;
-		int res=stfcreator.ExportToSTF(L"textures/texlargemiped.dds", "textures/stf/texlargemiped.stf");
+		int res = stfcreator.ExportToSTF(L"textures/texlargemiped.dds", "textures/stf/texlargemiped.stf");
 		assert(res != 0);
+		break;
 	}
+#endif // ALLOWSKYBOXTESTAPP
+
+	
 	case 7:
 	{
 		StreamableTextureFileReader stfreader;
 		int res=stfreader.Init("textures/stf/texlargemiped.stf");
 		stfreader.PrepSubResPixData();
+		break;
 	}
 	case 8:
 		appmanager = new RayTracingTestApplication_AdvancedAOTest(); break;

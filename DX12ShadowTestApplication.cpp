@@ -9,11 +9,13 @@
 #define RENDERENTITIESOPTION_MULTIPLANECUBEONLY 0
 #define RENDERENTITIESOPTION_CUSTOMCREATEDSCENE 1
 #define RENDERENTITIESOPTION_LOADEDSCENE 2
-#define RENDERENTITIESOPTION RENDERENTITIESOPTION_MULTIPLANECUBEONLY
+#define RENDERENTITIESOPTION RENDERENTITIESOPTION_CUSTOMCREATEDSCENE
 ShadowTestApplication::ShadowTestApplication()
 {
 	m_maincameracontroller.SetCameratoControl(&m_maincamera);
-	m_basicCubeEntitysharedPtr = std::make_shared<BasicRenderableEntity>(MODELTYPE::BASIC_CUBE);
+	m_basicCubeEntitysharedPtrNZ = std::make_shared<BasicRenderableEntity>(MODELTYPE::BASIC_CUBE);
+	m_basicCubeEntitysharedPtrPX = std::make_shared<BasicRenderableEntity>(MODELTYPE::BASIC_CUBE);
+	m_basicCubeEntitysharedPtrNX = std::make_shared<BasicRenderableEntity>(MODELTYPE::BASIC_CUBE);
 	m_basicPlaneEntitysharedPtr = std::make_shared<BasicRenderableEntity>(MODELTYPE::BASIC_PLANE);
 	m_testLightEntity = std::make_shared<LightEntity>();
 }
@@ -38,11 +40,30 @@ void ShadowTestApplication::InitExtras()
 
 	//init assets
 	BasicMaterialData basicMatData;
-	m_basicCubeEntitysharedPtr->Init(m_creationdevice, m_uploadcommandlist);
-	m_basicCubeEntitysharedPtr->SetName("Cube0");
-	m_basicCubeEntitysharedPtr->SetTransformationData(0.5f, DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 0.0f), 0.0f, DirectX::XMFLOAT4(0.0f, 1.0f, 0.0f, 0.0f));
-	basicMatData.m_albedo = {0.0f,1.0f,0.0f,1.0f};
-	m_basicCubeEntitysharedPtr->SetBasicMaterialData(basicMatData);
+	//cubes
+	{
+		//cube NZ
+		m_basicCubeEntitysharedPtrNZ->Init(m_creationdevice, m_uploadcommandlist);
+		m_basicCubeEntitysharedPtrNZ->SetName("CubeNZ");
+		m_basicCubeEntitysharedPtrNZ->SetTransformationData(0.5f, DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 0.0f), 0.0f, DirectX::XMFLOAT4(0.0f, 0.0f, -3.0f, 0.0f));
+		basicMatData.m_albedo = { 0.0f,1.0f,0.0f,1.0f };
+		m_basicCubeEntitysharedPtrNZ->SetBasicMaterialData(basicMatData);
+		m_cubeEntitiestoRender[0] = m_basicCubeEntitysharedPtrNZ;
+		//cube PX
+		m_basicCubeEntitysharedPtrPX->Init(m_creationdevice, m_uploadcommandlist);
+		m_basicCubeEntitysharedPtrPX->SetName("CubePX");
+		m_basicCubeEntitysharedPtrPX->SetTransformationData(0.5f, DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 0.0f), 0.0f, DirectX::XMFLOAT4(3.0f, 0.0f, 0.0f, 0.0f));
+		basicMatData.m_albedo = { 1.0f,0.0f,0.0f,1.0f };
+		m_basicCubeEntitysharedPtrPX->SetBasicMaterialData(basicMatData);
+		m_cubeEntitiestoRender[1] = m_basicCubeEntitysharedPtrPX;
+		//cube NX
+		m_basicCubeEntitysharedPtrNX->Init(m_creationdevice, m_uploadcommandlist);
+		m_basicCubeEntitysharedPtrNX->SetName("CubeNX");
+		m_basicCubeEntitysharedPtrNX->SetTransformationData(0.5f, DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 0.0f), 0.0f, DirectX::XMFLOAT4(-3.0f, 0.0f, 0.0f, 0.0f));
+		basicMatData.m_albedo = { 0.0f,0.0f,1.0f,1.0f };
+		m_basicCubeEntitysharedPtrNX->SetBasicMaterialData(basicMatData);
+		m_cubeEntitiestoRender[2] = m_basicCubeEntitysharedPtrNX;
+	}
 	m_basicPlaneEntitysharedPtr->Init(m_creationdevice, m_uploadcommandlist);
 	m_basicPlaneEntitysharedPtr->SetName("Plane0");
 	m_basicPlaneEntitysharedPtr->SetTransformationData(2.0f, DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 0.0f), 90.0f, DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f));
@@ -254,7 +275,7 @@ void ShadowTestApplication::Render()
 	EntityRenderer::RenderData renderData;
 	renderData.vpmat = vpmat;
 	
-switch(RENDERENTITIESOPTION)
+switch (RENDERENTITIESOPTION)
 {
 	case RENDERENTITIESOPTION_MULTIPLANECUBEONLY:
 	{
@@ -278,25 +299,27 @@ switch(RENDERENTITIESOPTION)
 	}
 	case RENDERENTITIESOPTION_CUSTOMCREATEDSCENE:
 	{
+		//render 4 cubes in 4 directions equal distance from origin
 		//draw plane model
-		{
+		/* {
 			m_mat.colour = m_basicPlaneEntitysharedPtr->GetBasicMaterialData().m_albedo;
 			m_shadertransformconsts.model = m_basicPlaneEntitysharedPtr->GetModelMatrix();
 			m_shadertransformconsts.mvp = DirectX::XMMatrixMultiply(m_shadertransformconsts.model, vpmat);
 			m_primarycmdlist->SetGraphicsRoot32BitConstants(1, sizeof(m_shadertransformconsts) / 4, &m_shadertransformconsts, 0);
 			m_primarycmdlist->SetGraphicsRoot32BitConstants(2, sizeof(m_mat) / 4, &m_mat, 0);
 			m_basicPlaneEntitysharedPtr->Render(m_primarycmdlist);
-		}
-		//draw cube model
+		}*/
+		//draw 6 cube models
+		for(std::shared_ptr<BasicRenderableEntity> cubeEntity:m_cubeEntitiestoRender)
 		{
 
-			m_mat.colour = m_basicCubeEntitysharedPtr->GetBasicMaterialData().m_albedo;
-			m_shadertransformconsts.model = m_basicCubeEntitysharedPtr->GetModelMatrix();
+			m_mat.colour = cubeEntity->GetBasicMaterialData().m_albedo;
+			m_shadertransformconsts.model = cubeEntity->GetModelMatrix();
 			m_shadertransformconsts.mvp = DirectX::XMMatrixMultiply(m_shadertransformconsts.model, vpmat);
 			m_primarycmdlist->SetGraphicsRoot32BitConstants(1, sizeof(m_shadertransformconsts) / 4, &m_shadertransformconsts, 0);
 			m_primarycmdlist->SetGraphicsRoot32BitConstants(2, sizeof(m_mat) / 4, &m_mat, 0);
 
-			m_basicCubeEntitysharedPtr->Render(m_primarycmdlist);
+			cubeEntity->Render(m_primarycmdlist);
 		}
 		break;
 	}
@@ -317,7 +340,6 @@ void ShadowTestApplication::PreRenderUpdate()
 }
 void ShadowTestApplication::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-
 	m_maincameracontroller.ProcessWindowProcEvent(hwnd, uMsg, wParam, lParam);
 
 }

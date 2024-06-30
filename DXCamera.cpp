@@ -11,8 +11,8 @@ DXCamera::DXCamera()
 	m_view = XMMatrixIdentity();
 	m_projection = XMMatrixIdentity();
 	m_model = XMMatrixIdentity();
-	m_camerapos = XMVectorSet(0.0f, 0.0f, 3.0f, 1.0f);//{ 0.0f,0.0f,3.0f };
-	m_cameraTargetpos = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+	m_camerapos = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);//{ 0.0f,0.0f,3.0f };
+	m_cameraTargetpos = XMVectorSet(0.0f, 0.0f, -3.0f, 1.0f);
 	m_up = {0.0f,1.0f,0.0f};
 	m_forward = m_cameraTargetpos - m_camerapos;//XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f);//{ 0.0f,0.0f,-1.0f };
 	m_forward = XMVector3Normalize(m_forward);
@@ -53,6 +53,7 @@ XMMATRIX DXCamera::GetView(bool update)
 	if (update)
 	{
 		m_view = XMMatrixLookAtLH(m_camerapos, m_camerapos + m_forward, m_up);
+		//m_view = XMMatrixLookAtLH(m_camerapos, m_cameraTargetpos, m_up);
 	}
 	return m_view;
 }

@@ -34,7 +34,9 @@ private:
 	DXFPSCameraController m_maincameracontroller;
 	ShaderTransformConstants_General m_shadertransformconsts;
 	SimpleMaterial m_mat;
-	std::shared_ptr<BasicRenderableEntity> m_basicCubeEntitysharedPtr, m_basicPlaneEntitysharedPtr;
+	std::shared_ptr<BasicRenderableEntity> m_cubeEntitiestoRender[3];
+	std::shared_ptr<BasicRenderableEntity> m_basicCubeEntitysharedPtrPZ, m_basicCubeEntitysharedPtrNZ, m_basicCubeEntitysharedPtrPX, m_basicCubeEntitysharedPtrNX;
+	std::shared_ptr<BasicRenderableEntity> m_basicPlaneEntitysharedPtr;
 	BasicEntityMultiPlaneCube m_multiplaneCube;
 	std::shared_ptr<LightEntity> m_testLightEntity;
 	BasicEntityRenderer m_basicEntityrenderer;
