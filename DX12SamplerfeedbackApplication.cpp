@@ -93,7 +93,7 @@ void DX12SamplerfeedbackApplication::InitExtras()
 			if (m_sfsupported)
 			{
 				m_redtexfeedbackunit.Init(device8, sfunitinitdata);
-				//start by loading the least  detailed mip 
+				//start by loading the least  detailed mip
 				m_redtexfeedbackunit.BindMipLevel(m_sfsreservedresourcetex.GetTotalMipCount() - 1,true);
 				
 				//imidiate update feedback unit to reflect the requested mip level.
@@ -385,6 +385,9 @@ void DX12SamplerfeedbackApplication::Render()
 	{
 		unsigned rootconst = m_redtexfeedbackunit.GetLODClampValue();
 		m_primarycmdlist->SetGraphicsRoot32BitConstants(1, 1, &rootconst, 0);
+		//trnslate the plane to correct location in world.
+		XMMATRIX modelmat = XMMatrixTranslation(0.0f, 0.0f, -3.0f);
+		m_maincamera.SetModel(modelmat);
 		XMMATRIX mvp = m_maincamera.GetMVP();
 		m_primarycmdlist->SetGraphicsRoot32BitConstants(2, sizeof(XMMATRIX) / 4, &mvp, 0);
 	}
@@ -464,7 +467,7 @@ void DX12SamplerfeedbackApplication::Render()
 		m_primarycmdlist->SetGraphicsRootDescriptorTable(1, m_overlayresheap.GetGPUHandleOffseted(0));
 		XMVECTOR scalevec = XMVectorSet(162.0f, 108.0f, 1.0f, 1.0f);
 		XMMATRIX modelmat = XMMatrixScalingFromVector(scalevec);
-		XMMATRIX translatemat = XMMatrixTranslation(600.0f, 200.0f, 0.0f);
+		XMMATRIX translatemat = XMMatrixTranslation(600.0f, 200.0f, -3.0f);
 		modelmat = XMMatrixMultiply(modelmat, translatemat);
 		m_maincamera.SetModel(modelmat);
 		XMMATRIX mvp = m_maincamera.GetMVP(true);

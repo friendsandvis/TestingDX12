@@ -140,11 +140,6 @@ void DX12ReservedResourceMemoryManager::UploadData(ComPtr< ID3D12Device> creatio
 		
 	}
 	m_subrestoupload.clear();
-	if (m_restomanage->GetCurrentResourceState() != D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
-	{
-		D3D12_RESOURCE_BARRIER barrier = m_restomanage->TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-		uploadcmdlist->ResourceBarrier(1, &barrier);
-	}
 
 }
 

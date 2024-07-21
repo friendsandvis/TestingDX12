@@ -59,6 +59,7 @@ public:
 	void UploadData(ComPtr< ID3D12Device> creationdevice,DX12Commandlist& uploadcmdlist);
 	void ClearUAV(DX12Commandlist& uploadcmdlist);
 	void BindMemory(UINT subresourceindex,bool makeunmapable=false);
+	//try bind subresourceidx  pass and all the following subresources 
 	void BindMemory2(UINT subresourceindex);
 	//returns if the unbind operation was issued for the requested resourceindex or not.
 	bool UnbindMemory(UINT subresourceindex);
