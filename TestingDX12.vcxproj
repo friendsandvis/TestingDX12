@@ -161,6 +161,7 @@
     <ClCompile Include="CameraMovementManager.cpp" />
     <ClCompile Include="DebugRenderableEntity.cpp" />
     <ClCompile Include="DX12ApplicationManagerBase.cpp" />
+    <ClCompile Include="DX12BlendingTestApplication.cpp" />
     <ClCompile Include="DX12Buffer.cpp" />
     <ClCompile Include="DX12Commandlist.cpp" />
     <ClCompile Include="DX12CommandQueue.cpp" />
@@ -226,6 +227,7 @@
     <ClInclude Include="CommonDataStructures.h" />
     <ClInclude Include="DebugRenderableEntity.h" />
     <ClInclude Include="DX12ApplicationManagerBase.h" />
+    <ClInclude Include="DX12BlendingTestApplication.h" />
     <ClInclude Include="DX12Buffer.h" />
     <ClInclude Include="DX12CommandList.h" />
     <ClInclude Include="DX12CommandQueue.h" />

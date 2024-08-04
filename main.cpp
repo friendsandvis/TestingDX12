@@ -15,6 +15,8 @@
 #include<iostream>
 #include"StreamableTextureFileCreator.h"
 #include"StreamableTextureFileReader.h"
+#include"DX12BlendingTestApplication.h"
+#define TESTBLENDINGAPP
 #ifdef _DEBUG
 #define ENABLEDEBUGLAYER true
 #else
@@ -44,7 +46,11 @@ int main()
 
 	std::cout << "7.run stf reader.\n";
 	std::cout << "8.RaytracingApplicationAdvancedAOTest.\n";
+#ifdef TESTBLENDINGAPP
+	std::cout << "9.blendingtestApplication.\n";
+#else
 	std::cout << "9.shadowtestApplication.\n";
+#endif // TESTBLENDINGAPP
 	std::cout << "Enter application number  to run:\n";
 	int appnumber;
 	std::cin >> appnumber;
@@ -88,7 +94,11 @@ int main()
 	case 8:
 		appmanager = new RayTracingTestApplication_AdvancedAOTest(); break;
 	case 9:
+#ifdef TESTBLENDINGAPP
+		appmanager = new BlendingTestApplication(); break;
+#else
 		appmanager = new ShadowTestApplication(); break;
+#endif // TESTBLENDINGAPP
 	default:
 		std::cout << "Invalid App number choosen";
 		return 1;
