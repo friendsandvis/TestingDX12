@@ -67,7 +67,7 @@ void BlendingTestApplication::InitExtras()
 	m_basicTransperentPlaneEntitysharedPtr->Init(m_creationdevice, m_uploadcommandlist);
 	m_basicTransperentPlaneEntitysharedPtr->SetName("TransperentPlane0");
 	m_basicTransperentPlaneEntitysharedPtr->SetTransformationData(0.5f, DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 0.0f), 0.0f, DirectX::XMFLOAT4(0.0f, 0.0f, -0.5f, 0.0f));
-	basicMatData.m_albedo = { 1.0f,0.0f,0.0f,1.0f };
+	basicMatData.m_albedo = { 1.0f,0.0f,0.0f,0.5f };
 	m_basicTransperentPlaneEntitysharedPtr->SetBasicMaterialData(basicMatData);
 	DXTexManager::LoadTexture(L"textures/texlargemiped.dds", m_redtexture.GetDXImageData());
 	bool initsuccess = m_redtexture.Init(m_creationdevice);
@@ -202,18 +202,25 @@ void BlendingTestApplication::InitBasicPSO()
 		basicpsodata.psodesc.graphicspsodesc.InputLayout.NumElements = 2;
 		basicpsodata.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = simplevsinputelementdesc;
 		basicpsodata.psodesc.graphicspsodesc.RasterizerState.FillMode = D3D12_FILL_MODE::D3D12_FILL_MODE_SOLID;
-
 	}
 
 
 
 	//blendstate setup
 	//blend state has fixed rt count of 8
+	//activate blending on all 8 render target.
 	for (size_t i = 0; i < 8; i++)
 	{
-		//same for all 8 rtvs
-		basicpsodata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].BlendEnable = FALSE;
-		basicpsodata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+		basicpsodata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].LogicOp = D3D12_LOGIC_OP::D3D12_LOGIC_OP_NOOP;
+		basicpsodata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].BlendEnable = TRUE;
+		basicpsodata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].LogicOpEnable = FALSE;
+		basicpsodata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].BlendOp = D3D12_BLEND_OP::D3D12_BLEND_OP_ADD;
+		basicpsodata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].BlendOpAlpha = D3D12_BLEND_OP::D3D12_BLEND_OP_ADD;
+		basicpsodata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].SrcBlend = D3D12_BLEND::D3D12_BLEND_SRC_ALPHA;
+		basicpsodata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].DestBlend = D3D12_BLEND::D3D12_BLEND_INV_SRC_ALPHA;
+		basicpsodata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].SrcBlendAlpha = D3D12_BLEND::D3D12_BLEND_SRC_ALPHA;
+		basicpsodata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].DestBlendAlpha = D3D12_BLEND::D3D12_BLEND_INV_SRC_ALPHA;
+		//basicpsodata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 	}
 
 
@@ -330,7 +337,6 @@ switch (RENDERENTITIESOPTION)
 			m_primarycmdlist->SetGraphicsRoot32BitConstants(2, sizeof(m_mat) / 4, &m_mat, 0);
 			m_basicCubeEntitysharedPtrNZ->Render(m_primarycmdlist);
 		}
-		//m_basicCubeEntitysharedPtrNZ->Render(m_primarycmdlist);
 		//draw a plane for alpha blending test
 		{
 			m_mat.colour = m_basicTransperentPlaneEntitysharedPtr->GetBasicMaterialData().m_albedo;
