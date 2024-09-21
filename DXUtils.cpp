@@ -45,3 +45,56 @@ DirectX::XMVECTOR DXUtils::Float4tovector(DirectX::XMFLOAT4 value)
 {
 	return (DirectX::XMVectorSet(value.x, value.y, value.z, value.w));
 }
+void DXUtils::GetIdxSuffix(unsigned idx, wstring& idxsuffix)
+{
+	idxsuffix = L"";
+	switch (idx)
+	{
+	case 0:
+	{
+		idxsuffix = L"0";
+		break;
+	}
+	case 1:
+	{
+		idxsuffix = L"1";
+		break;
+	}
+	case 2:
+	{
+		idxsuffix = L"2";
+		break;
+	}
+	case 3:
+	{
+		idxsuffix = L"3";
+		break;
+	}
+	default:
+		break;
+	}
+}
+void DXUtils::GetIdxSuffix(unsigned idx, string& idxsuffix)
+{
+	idxsuffix = "";
+	switch (idx)
+	{
+	case 0:
+	{
+		idxsuffix = "0";
+		break;
+	}
+	case 1:
+	{
+		idxsuffix = "1";
+		break;
+	}
+	case 2:
+	{
+		idxsuffix = "2";
+		break;
+	}
+	default:
+		break;
+	}
+}

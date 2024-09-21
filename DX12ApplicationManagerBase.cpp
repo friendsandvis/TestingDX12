@@ -102,15 +102,46 @@ void DX12ApplicationManagerBase::InitBase(ComPtr< ID3D12Device> creationdevice)
 	//commandlist init
 	for (unsigned i = 0; i < NUMCOMMANDLISTSTOCK; i++)
 	{
+		wstring commandlistbasename =L"primarycmd";
 		m_primarycmdlists[i].Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
-		m_primarycmdlists[i].SetName(L"primarycmd");
+		if (i == 0)
+		{
+			m_primarycmdlists[i].SetName(commandlistbasename);
+		}
+		else
+		{
+			wstring Idxsuffix;
+			DXUtils::GetIdxSuffix(i, Idxsuffix);
+			wstring commandlistfinalname = (commandlistbasename + L"_") + Idxsuffix;
+			m_primarycmdlists[i].SetName(commandlistfinalname);
+		}
 		
-		
+		commandlistbasename = L"uploadcmd";
 		m_uploadcommandlists[i].Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
-		m_uploadcommandlists[i].SetName(L"uploadcmd");
-
+		if (i == 0)
+		{
+			m_uploadcommandlists[i].SetName(commandlistbasename);
+		}
+		else
+		{
+			wstring Idxsuffix;
+			DXUtils::GetIdxSuffix(i, Idxsuffix);
+			wstring commandlistfinalname = (commandlistbasename + L"_") + Idxsuffix;
+			m_primarycmdlists[i].SetName(commandlistfinalname);
+		}
+		commandlistbasename = L"prepresentcmd";
 		m_prepresentcommandlists[i].Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
-		m_prepresentcommandlists[i].SetName(L"prepresentcmd");
+		if (i == 0)
+		{
+			m_prepresentcommandlists[i].SetName(commandlistbasename);
+		}
+		else
+		{
+			wstring Idxsuffix;
+			DXUtils::GetIdxSuffix(i, Idxsuffix);
+			wstring commandlistfinalname = (commandlistbasename + L"_") + Idxsuffix;
+			m_primarycmdlists[i].SetName(commandlistfinalname);
+		}
 		
 	}
 	m_primarycmdlist = m_primarycmdlists[0];

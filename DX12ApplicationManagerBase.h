@@ -13,7 +13,7 @@
 #include<backends/imgui_impl_dx12.h>
 #include<backends/imgui_impl_win32.h>
 
-#define NUMCOMMANDLISTSTOCK 2
+#define NUMCOMMANDLISTSTOCK BACKBUFFERCOUNT
 
 // interface for all dx12 applicationmanagers.Could help in creaing  speciialized dx12 applications
 class DX12ApplicationManagerBase:public WindowProcHook
