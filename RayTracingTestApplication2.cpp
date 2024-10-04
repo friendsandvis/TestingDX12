@@ -19,6 +19,7 @@ RayTracingApplication2::~RayTracingApplication2()
 void RayTracingApplication2::PreRenderUpdate()
 {
 	m_maincameracontroller.Update();
+	DX12ApplicationManagerBase::PreRenderUpdate();
 }
 
 void RayTracingApplication2::RenderRaster()

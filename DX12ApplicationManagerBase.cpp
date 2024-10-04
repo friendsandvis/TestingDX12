@@ -11,9 +11,11 @@ DX12ApplicationManagerBase::DX12ApplicationManagerBase()
 DX12ApplicationManagerBase::~DX12ApplicationManagerBase()
 {
 	//cleanup IMGUI
-	/*ImGui_ImplWin32_Shutdown();
+#ifdef USEIMGUI
+	ImGui_ImplWin32_Shutdown();
 	ImGui_ImplDX12_Shutdown();
-	ImGui::DestroyContext();*/
+	ImGui::DestroyContext();
+#endif // USEIMGUI
 }
 
 D3D12_VIEWPORT DX12ApplicationManagerBase::GetViewport()
@@ -81,8 +83,10 @@ void DX12ApplicationManagerBase::Init(ComPtr< ID3D12Device> creationdevice, ComP
 	//basic initialization first
 	InitBase(creationdevice);
 	Initswapchain(factory, swapchainwidth, swapchainheight, hwnd);
+#ifdef USEIMGUI
 	//init imgui
-	//InitIMGUI(creationdevice,hwnd);
+	InitIMGUI(creationdevice,hwnd);
+#endif // USEIMGUI
 	//extra init maybe specialized by specialized classes
 	InitExtras();
 }
@@ -162,27 +166,37 @@ void DX12ApplicationManagerBase::InitBase(ComPtr< ID3D12Device> creationdevice)
 
 void DX12ApplicationManagerBase::BasicRender()
 {
+
+
+
+#ifdef USEIMGUI
 	//simple imgui test window
-	/* {
+	 {
 		ImGui::Begin("test imguiwindow", nullptr);
 		ImGui::Text("testimgui TEXT line 1");
+		ImGui::Text("testimgui TEXT line 2");
+		ImGui::Text("testimgui TEXT line 3");
+		ImGui::Text("testimgui TEXT line 4");
+		ImGui::Text("testimgui TEXT line 5");
 		ImGui::End();
-	}*/
+	}
+
 
 	m_prepresentcommandlist.Reset();
 	UINT currentbackbufferidx=m_swapchain.GetCurrentbackbufferIndex();
 	{
-		//ImGui::Render();
+		ImGui::Render();
 		D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(currentbackbufferidx);
 		D3D12_RESOURCE_BARRIER barrier = m_swapchain.TransitionBackBuffer(currentbackbufferidx, D3D12_RESOURCE_STATE_RENDER_TARGET);
 		if (DXUtils::IsBarrierSafeToExecute(barrier))
 		{
 			m_prepresentcommandlist->ResourceBarrier(1, &barrier);
 		}
-		/*ID3D12DescriptorHeap* descheapstoset[1];
+		ID3D12DescriptorHeap* descheapstoset[1];
 		descheapstoset[0]=m_imguisrvdescheap.GetDescHeap();
-		m_prepresentcommandlist->SetDescriptorHeaps(1, descheapstoset);*/
-		//ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_prepresentcommandlist.GetcmdList());
+		m_prepresentcommandlist->OMSetRenderTargets(1, &rtvhandle, FALSE, nullptr);
+		m_prepresentcommandlist->SetDescriptorHeaps(1, descheapstoset);
+		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_prepresentcommandlist.GetcmdList());
 
 	}
 	D3D12_RESOURCE_BARRIER barrier=m_swapchain.TransitionBackBuffer(currentbackbufferidx, D3D12_RESOURCE_STATE_PRESENT);
@@ -191,12 +205,18 @@ void DX12ApplicationManagerBase::BasicRender()
 		m_prepresentcommandlist->ResourceBarrier(1,&barrier );
 	}
 	m_prepresentcommandlist.Close();
-	
+#endif // USEIMGUI
 	std::vector<ID3D12CommandList*> commandliststoexecute;
 	commandliststoexecute.push_back(m_uploadcommandlist.GetcmdList());
+	m_mainqueue.GetQueue()->ExecuteCommandLists(commandliststoexecute.size(), commandliststoexecute.data());
+	commandliststoexecute.clear();
 	commandliststoexecute.push_back(m_primarycmdlist.GetcmdList());
+	m_mainqueue.GetQueue()->ExecuteCommandLists(commandliststoexecute.size(), commandliststoexecute.data());
+#ifdef USEIMGUI
+	commandliststoexecute.clear();
 	commandliststoexecute.push_back(m_prepresentcommandlist.GetcmdList());
 	m_mainqueue.GetQueue()->ExecuteCommandLists(commandliststoexecute.size(), commandliststoexecute.data());
+#endif //USEIMGUI
 	DXASSERT(m_swapchain.GetSwapchain()->Present(0, 0))
 		UINT64 fencevalue = m_syncunitprime.GetCurrentValue();
 	fencevalue += 1;
@@ -246,6 +266,8 @@ void DX12ApplicationManagerBase::IMGUIPrerender()
 }
 void DX12ApplicationManagerBase::PreRenderUpdate()
 {
-	//IMGUIPrerender();
+#ifdef USEIMGUI
+	IMGUIPrerender();
+#endif // USEIMGUI
 }
 	

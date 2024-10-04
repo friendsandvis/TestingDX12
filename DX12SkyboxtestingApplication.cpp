@@ -15,6 +15,7 @@ SkyboxTestApplication::~SkyboxTestApplication()
 void SkyboxTestApplication::PreRenderUpdate()
 {
 	m_maincameracontroller.Update();
+	DX12ApplicationManagerBase::PreRenderUpdate();
 }
 
 void SkyboxTestApplication::Render()

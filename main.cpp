@@ -16,7 +16,7 @@
 #include"StreamableTextureFileCreator.h"
 #include"StreamableTextureFileReader.h"
 #include"DX12BlendingTestApplication.h"
-#define TESTBLENDINGAPP
+//#define TESTBLENDINGAPP
 #ifdef _DEBUG
 #define ENABLEDEBUGLAYER true
 #else

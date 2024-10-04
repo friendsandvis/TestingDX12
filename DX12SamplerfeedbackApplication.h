@@ -12,7 +12,6 @@ class DX12SamplerfeedbackApplication :public DX12ApplicationManagerBase
 public:
 	DX12SamplerfeedbackApplication();
 	~DX12SamplerfeedbackApplication();
-	void PreRenderUpdate()override;
 	void PostRenderUpdate()override;
 	void Render()override;
 	void ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)override;

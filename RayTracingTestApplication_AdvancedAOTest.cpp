@@ -43,6 +43,7 @@ RayTracingTestApplication_AdvancedAOTest::~RayTracingTestApplication_AdvancedAOT
 void RayTracingTestApplication_AdvancedAOTest::PreRenderUpdate()
 {
 	m_maincameracontroller.Update();
+	DX12ApplicationManagerBase::PreRenderUpdate();
 }
 
 void RayTracingTestApplication_AdvancedAOTest::RenderRaster()

@@ -362,6 +362,7 @@ switch (RENDERENTITIESOPTION)
 void BlendingTestApplication::PreRenderUpdate()
 {
 	m_maincameracontroller.Update();
+	DX12ApplicationManagerBase::PreRenderUpdate();
 }
 void BlendingTestApplication::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {

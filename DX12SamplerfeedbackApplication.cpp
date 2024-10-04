@@ -368,10 +368,6 @@ void DX12SamplerfeedbackApplication::InitOverlayPSO()
 	m_overlaypso.Init(m_creationdevice, overlaypsoinitdata);
 }
 
-
-void DX12SamplerfeedbackApplication::PreRenderUpdate()
-{}
-
 void DX12SamplerfeedbackApplication::Render()
 {
 	m_primarycmdlist.Reset();

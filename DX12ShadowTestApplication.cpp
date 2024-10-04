@@ -337,6 +337,7 @@ switch (RENDERENTITIESOPTION)
 void ShadowTestApplication::PreRenderUpdate()
 {
 	m_maincameracontroller.Update();
+	DX12ApplicationManagerBase::PreRenderUpdate();
 }
 void ShadowTestApplication::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {

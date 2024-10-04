@@ -21,6 +21,7 @@ ModelTestApplication::~ModelTestApplication()
 void ModelTestApplication::PreRenderUpdate()
 {
 	m_maincameracontroller.Update();
+	DX12ApplicationManagerBase::PreRenderUpdate();
 }
 
 void ModelTestApplication::Render()

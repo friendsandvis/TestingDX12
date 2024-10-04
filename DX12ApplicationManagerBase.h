@@ -14,6 +14,7 @@
 #include<backends/imgui_impl_win32.h>
 
 #define NUMCOMMANDLISTSTOCK BACKBUFFERCOUNT
+//#define USEIMGUI
 
 // interface for all dx12 applicationmanagers.Could help in creaing  speciialized dx12 applications
 class DX12ApplicationManagerBase:public WindowProcHook
