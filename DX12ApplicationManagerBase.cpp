@@ -170,6 +170,7 @@ void DX12ApplicationManagerBase::BasicRender()
 
 
 #ifdef USEIMGUI
+	ImGuiIO& io = ImGui::GetIO();
 	//simple imgui test window
 	 {
 		ImGui::Begin("test imguiwindow", nullptr);
@@ -178,6 +179,7 @@ void DX12ApplicationManagerBase::BasicRender()
 		ImGui::Text("testimgui TEXT line 3");
 		ImGui::Text("testimgui TEXT line 4");
 		ImGui::Text("testimgui TEXT line 5");
+		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 		ImGui::End();
 	}
 
