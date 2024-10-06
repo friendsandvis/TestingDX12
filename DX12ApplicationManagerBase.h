@@ -67,6 +67,5 @@ protected:
 	DX12Resource m_depthbuffer;
 	//imgui related
 	DX12DESCHEAP m_imguisrvdescheap;
-	unsigned int m_presentIdx = 0;
 };
 

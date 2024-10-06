@@ -224,8 +224,6 @@ void DX12ApplicationManagerBase::BasicRender()
 	fencevalue += 1;
 	m_syncunitprime.SignalFence(m_mainqueue.GetQueue(), fencevalue);
 		m_syncunitprime.WaitFence();
-
-	m_presentIdx++;
 	m_swapchain.UpdatebackbufferIndex();
 	m_cmdlistidxinuse = (m_cmdlistidxinuse + 1) % NUMCOMMANDLISTSTOCK;
 	m_primarycmdlist = m_primarycmdlists[m_cmdlistidxinuse];
