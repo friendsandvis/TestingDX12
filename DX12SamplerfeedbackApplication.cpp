@@ -4,8 +4,7 @@
 
 DX12SamplerfeedbackApplication::DX12SamplerfeedbackApplication()
 	:m_planemodel(ModelDataUploadMode::COPY),
-	m_sfsupported(false),
-	m_reservedresuploadcmdlist(m_reservedresuploadcmdlists[0])
+	m_sfsupported(false)
 {
 }
 
@@ -42,11 +41,8 @@ void DX12SamplerfeedbackApplication::InitExtras()
 	//init pso
 	InitBasicPSO();
 	InitOverlayPSO();
-	for (unsigned i = 0; i < NUMCOMMANDLISTSTOCK; i++)
-	{
-		m_reservedresuploadcmdlists[i].Init(D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
-		m_reservedresuploadcmdlists[i].SetName(L"ReservedResUploadcmd");
-	}
+		m_reservedresuploadcmdlist.Init(D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice, NUMCOMMANDLISTSTOCK);
+		m_reservedresuploadcmdlist.SetName(L"ReservedResUploadcmd");
 
 
 	//init desc heaps
@@ -370,7 +366,7 @@ void DX12SamplerfeedbackApplication::InitOverlayPSO()
 
 void DX12SamplerfeedbackApplication::Render()
 {
-	m_primarycmdlist.Reset();
+	m_primarycmdlist.Reset(false,true,m_frameIdx);
 	m_primarycmdlist->SetPipelineState(m_basicpso.GetPSO());
 	m_primarycmdlist->SetGraphicsRootSignature(m_emptyrootsignature.Get());
 	ID3D12DescriptorHeap* descheapstoset[1];
@@ -419,12 +415,7 @@ void DX12SamplerfeedbackApplication::Render()
 	//set rtv
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
 
-	D3D12_RESOURCE_BARRIER backbufferbarrier = {};
-	backbufferbarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	backbufferbarrier.Transition.pResource = m_swapchain.GetBackBuffer(m_swapchain.GetCurrentbackbufferIndex());
-	backbufferbarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-	backbufferbarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-	backbufferbarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	D3D12_RESOURCE_BARRIER backbufferbarrier = m_swapchain.TransitionBackBuffer(m_swapchain.GetCurrentbackbufferIndex(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 	m_primarycmdlist->ResourceBarrier(1, &backbufferbarrier);
 	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, nullptr);
 	float rtclearcolour[4] = { 1.0f,1.0f,1.0f,1.0f };
@@ -498,8 +489,7 @@ void DX12SamplerfeedbackApplication::PostRenderUpdate()
 	//process the feedback data after renderend(i.e. feedback written by draw calls)
 	m_redtexfeedbackunit.ProcessReadbackdata();
 	m_redtexfeedbackunit.UpdateMemoryMappings(m_mainqueue.GetQueue(), m_creationdevice);
-	m_reservedresuploadcmdlist = m_reservedresuploadcmdlists[m_cmdlistidxinuse];
-	m_reservedresuploadcmdlist.Reset();
+	m_reservedresuploadcmdlist.Reset(false, true, m_frameIdx);
 	//m_redtexfeedbackunit.AllClearReservedResourceMip(m_reservedresuploadcmdlist);
 	m_redtexfeedbackunit.UploadTextureData(m_creationdevice, m_reservedresuploadcmdlist);
 	DXASSERT(m_reservedresuploadcmdlist->Close())

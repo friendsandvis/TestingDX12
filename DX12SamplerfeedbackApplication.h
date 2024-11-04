@@ -32,8 +32,7 @@ private:
 	DX12ReservedResource m_sfsreservedresourcetex;
 	bool m_sfsupported;
 	DX12RootSignature m_rootsignature;
-	DX12Commandlist m_reservedresuploadcmdlists[NUMCOMMANDLISTSTOCK];
-	DX12Commandlist& m_reservedresuploadcmdlist;
+	DX12Commandlist m_reservedresuploadcmdlist;
 	
 	
 
