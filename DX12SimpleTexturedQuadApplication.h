@@ -26,7 +26,6 @@ private:
 	DX12TextureSimple m_whitetexture;
 	DX12Buffer m_whitetexuploadbuffer;
 	DX12DESCHEAP m_resaccessviewdescheap;//CBV/SRV/UAV
-
 	void InitBasicPSO();
 
 };

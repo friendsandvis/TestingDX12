@@ -20,9 +20,9 @@ void SkyboxTestApplication::PreRenderUpdate()
 
 void SkyboxTestApplication::Render()
 {
-	m_primarycmdlist.Reset();
+	m_primarycmdlist.Reset(false,true,m_frameIdx);
 	//set rtv
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_frameIdx);
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
 	m_primarycmdlist->SetPipelineState(m_pso.GetPSO());
 	m_primarycmdlist->SetGraphicsRootSignature(m_pso.GetRootSignature());
@@ -75,8 +75,6 @@ void SkyboxTestApplication::Render()
 		camconst.mvp = m_maincamera.GetMVP(true,true);
 		m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(CameraConstants) / 4, &camconst, 0);
 		m_primarycmdlist->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);
-
-
 	}
 	DXASSERT(m_primarycmdlist->Close())
 		BasicRender();

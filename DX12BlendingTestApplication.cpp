@@ -230,7 +230,7 @@ void BlendingTestApplication::InitBasicPSO()
 
 void BlendingTestApplication::Render()
 {
-	m_primarycmdlist.Reset();
+	m_primarycmdlist.Reset(false, true, m_frameIdx);
 	m_primarycmdlist->SetPipelineState(m_basicpso.GetPSO());
 	//m_primarycmdlist->SetGraphicsRootSignature(m_emptyrootsignature.Get());
 	m_primarycmdlist->SetGraphicsRootSignature(m_basicpso.GetRootSignature());
@@ -267,12 +267,7 @@ void BlendingTestApplication::Render()
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
 
-	D3D12_RESOURCE_BARRIER backbufferbarrier = {};
-	backbufferbarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	backbufferbarrier.Transition.pResource = m_swapchain.GetBackBuffer(m_swapchain.GetCurrentbackbufferIndex());
-	backbufferbarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-	backbufferbarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-	backbufferbarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	D3D12_RESOURCE_BARRIER backbufferbarrier = m_swapchain.TransitionBackBuffer(m_swapchain.GetCurrentbackbufferIndex(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 	m_primarycmdlist->ResourceBarrier(1, &backbufferbarrier);
 	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, &dsvhandle);
 	float rtclearcolour[4] = { 1.0f,1.0f,1.0f,1.0f };
@@ -349,11 +344,6 @@ switch (RENDERENTITIESOPTION)
 		break;
 	}
 }
-
-	backbufferbarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	backbufferbarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-	m_primarycmdlist->ResourceBarrier(1, &backbufferbarrier);
-
 	DXASSERT(m_primarycmdlist->Close())
 
 

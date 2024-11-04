@@ -1,10 +1,14 @@
 #include"DX12ApplicationManagerBase.h"
 #include<chrono>
+#define USEFRAMEBUFFERING
 DX12ApplicationManagerBase::DX12ApplicationManagerBase()
 	:m_cmdlistidxinuse(0),
 	m_primarycmdlist(m_primarycmdlists[0]),
 	m_uploadcommandlist(m_uploadcommandlists[0]),
-	m_prepresentcommandlist(m_prepresentcommandlists[0])
+	m_prepresentcommandlist(m_prepresentcommandlists[0]),
+	m_lastSignaledFenceValue(0),
+	m_frameIdx(0),
+	m_executedUploadcmdlist(false)
 {
 }
 
@@ -107,7 +111,7 @@ void DX12ApplicationManagerBase::InitBase(ComPtr< ID3D12Device> creationdevice)
 	for (unsigned i = 0; i < NUMCOMMANDLISTSTOCK; i++)
 	{
 		wstring commandlistbasename =L"primarycmd";
-		m_primarycmdlists[i].Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
+		m_primarycmdlists[i].Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice, NUMCOMMANDLISTSTOCK);
 		if (i == 0)
 		{
 			m_primarycmdlists[i].SetName(commandlistbasename);
@@ -121,7 +125,7 @@ void DX12ApplicationManagerBase::InitBase(ComPtr< ID3D12Device> creationdevice)
 		}
 		
 		commandlistbasename = L"uploadcmd";
-		m_uploadcommandlists[i].Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
+		m_uploadcommandlists[i].Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice, NUMCOMMANDLISTSTOCK);
 		if (i == 0)
 		{
 			m_uploadcommandlists[i].SetName(commandlistbasename);
@@ -131,10 +135,10 @@ void DX12ApplicationManagerBase::InitBase(ComPtr< ID3D12Device> creationdevice)
 			wstring Idxsuffix;
 			DXUtils::GetIdxSuffix(i, Idxsuffix);
 			wstring commandlistfinalname = (commandlistbasename + L"_") + Idxsuffix;
-			m_primarycmdlists[i].SetName(commandlistfinalname);
+			m_uploadcommandlists[i].SetName(commandlistfinalname);
 		}
 		commandlistbasename = L"prepresentcmd";
-		m_prepresentcommandlists[i].Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
+		m_prepresentcommandlists[i].Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice, NUMCOMMANDLISTSTOCK);
 		if (i == 0)
 		{
 			m_prepresentcommandlists[i].SetName(commandlistbasename);
@@ -144,7 +148,7 @@ void DX12ApplicationManagerBase::InitBase(ComPtr< ID3D12Device> creationdevice)
 			wstring Idxsuffix;
 			DXUtils::GetIdxSuffix(i, Idxsuffix);
 			wstring commandlistfinalname = (commandlistbasename + L"_") + Idxsuffix;
-			m_primarycmdlists[i].SetName(commandlistfinalname);
+			m_prepresentcommandlists[i].SetName(commandlistfinalname);
 		}
 		
 	}
@@ -166,9 +170,8 @@ void DX12ApplicationManagerBase::InitBase(ComPtr< ID3D12Device> creationdevice)
 
 void DX12ApplicationManagerBase::BasicRender()
 {
-
-
-
+	//m_prepresentcommandlist.Reset();
+	m_prepresentcommandlist.Reset(false, true, m_frameIdx);
 #ifdef USEIMGUI
 	ImGuiIO& io = ImGui::GetIO();
 	//simple imgui test window
@@ -182,11 +185,8 @@ void DX12ApplicationManagerBase::BasicRender()
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 		ImGui::End();
 	}
-
-
-	m_prepresentcommandlist.Reset();
-	UINT currentbackbufferidx=m_swapchain.GetCurrentbackbufferIndex();
 	{
+		 UINT currentbackbufferidx = m_swapchain.GetCurrentbackbufferIndex();
 		ImGui::Render();
 		D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(currentbackbufferidx);
 		D3D12_RESOURCE_BARRIER barrier = m_swapchain.TransitionBackBuffer(currentbackbufferidx, D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -201,33 +201,67 @@ void DX12ApplicationManagerBase::BasicRender()
 		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_prepresentcommandlist.GetcmdList());
 
 	}
-	D3D12_RESOURCE_BARRIER barrier=m_swapchain.TransitionBackBuffer(currentbackbufferidx, D3D12_RESOURCE_STATE_PRESENT);
+#endif // USEIMGUI
+	D3D12_RESOURCE_BARRIER barrier=m_swapchain.TransitionBackBuffer(m_swapchain.GetCurrentbackbufferIndex(), D3D12_RESOURCE_STATE_PRESENT);
 	if (DXUtils::IsBarrierSafeToExecute(barrier))
 	{
 		m_prepresentcommandlist->ResourceBarrier(1,&barrier );
 	}
 	m_prepresentcommandlist.Close();
-#endif // USEIMGUI
 	std::vector<ID3D12CommandList*> commandliststoexecute;
 	commandliststoexecute.push_back(m_uploadcommandlist.GetcmdList());
-	m_mainqueue.GetQueue()->ExecuteCommandLists(commandliststoexecute.size(), commandliststoexecute.data());
+	//upload commandlist should be executed only once before primary commandlist
+	if (!m_executedUploadcmdlist)
+	{
+		m_mainqueue.GetQueue()->ExecuteCommandLists(commandliststoexecute.size(), commandliststoexecute.data());
+		m_executedUploadcmdlist = true;
+	}
 	commandliststoexecute.clear();
 	commandliststoexecute.push_back(m_primarycmdlist.GetcmdList());
 	m_mainqueue.GetQueue()->ExecuteCommandLists(commandliststoexecute.size(), commandliststoexecute.data());
-#ifdef USEIMGUI
+
 	commandliststoexecute.clear();
 	commandliststoexecute.push_back(m_prepresentcommandlist.GetcmdList());
 	m_mainqueue.GetQueue()->ExecuteCommandLists(commandliststoexecute.size(), commandliststoexecute.data());
-#endif //USEIMGUI
 	DXASSERT(m_swapchain.GetSwapchain()->Present(0, 0))
+#ifdef USEFRAMEBUFFERING
+		ComPtr<ID3D12Fence> fence = m_syncunitprime.GetInternalFence();
+		//add signal command for current frame
+		UINT64 fenceValueTosignal=m_lastSignaledFenceValue + 1;
+		m_mainqueue.GetQueue()->Signal(fence.Get(), fenceValueTosignal);
+		m_lastSignaledFenceValue = fenceValueTosignal;
+		m_frameFenceValue[m_frameIdx] = fenceValueTosignal;
+		
+		//wait if next frame is not rendered yet.
+	//update frameidx
+		m_swapchain.UpdatebackbufferIndex();
+		UINT prevframeIdx = m_frameIdx;
+		UINT nextframeIdx = m_swapchain.GetCurrentbackbufferIndex();
+		m_frameIdx = nextframeIdx;
+		UINT64 fencevaluecurrent = fence->GetCompletedValue();
+	if (fencevaluecurrent < m_frameFenceValue[m_frameIdx])
+	{
+		//todo add code to wait for fence value to let the frame complete
+		HANDLE fencewaitevent = m_syncunitprime.GetInternalEvent();
+		DXASSERT(fence->SetEventOnCompletion(m_frameFenceValue[m_frameIdx], fencewaitevent))
+			DWORD waitstatus = WaitForSingleObject(fencewaitevent, INFINITE);
+		assert(waitstatus == WAIT_OBJECT_0);
+	}
+	UINT64 fencevaluecurrentafterwaitproc = fence->GetCompletedValue();
+	assert(fencevaluecurrentafterwaitproc >= m_frameFenceValue[m_frameIdx]);
+#else
+		m_frameIdx = m_swapchain.GetCurrentbackbufferIndex();
 		UINT64 fencevalue = m_syncunitprime.GetCurrentValue();
 	fencevalue += 1;
 	m_syncunitprime.SignalFence(m_mainqueue.GetQueue(), fencevalue);
 		m_syncunitprime.WaitFence();
+	//m_cmdlistidxinuse = (m_cmdlistidxinuse + 1) % NUMCOMMANDLISTSTOCK;
+	m_primarycmdlist = m_primarycmdlists[m_frameIdx];//m_primarycmdlists[m_cmdlistidxinuse];
+	m_uploadcommandlist = m_uploadcommandlists[m_frameIdx];//m_uploadcommandlists[m_cmdlistidxinuse];
+	//update frameidx
 	m_swapchain.UpdatebackbufferIndex();
-	m_cmdlistidxinuse = (m_cmdlistidxinuse + 1) % NUMCOMMANDLISTSTOCK;
-	m_primarycmdlist = m_primarycmdlists[m_cmdlistidxinuse];
-	m_uploadcommandlist = m_uploadcommandlists[m_cmdlistidxinuse];
+	m_frameIdx = m_swapchain.GetCurrentbackbufferIndex();
+#endif // USEFRAMEBUFFERING
 }
 void DX12ApplicationManagerBase::ClearBackBuffer(unsigned backbufferindex, DX12Commandlist& cmdlisttouse,float clearvalue[4])
 {
@@ -235,9 +269,14 @@ void DX12ApplicationManagerBase::ClearBackBuffer(unsigned backbufferindex, DX12C
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(backbufferindex);
 	D3D12_RESOURCE_BARRIER barrier=m_swapchain.TransitionBackBuffer(backbufferindex, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	bool shouldexecutebarriertransitiontoRT = DXUtils::IsBarrierSafeToExecute(barrier);
+	//assert(shouldexecutebarriertransitiontoRT);
 	if(shouldexecutebarriertransitiontoRT)
 	{
 		cmdlisttouse->ResourceBarrier(1, &barrier);
+	}
+	else
+	{
+		int y = 0;
 	}
 	//issue clear rtv call
 	cmdlisttouse->ClearRenderTargetView(rtvhandle, clearvalue, 0, nullptr);

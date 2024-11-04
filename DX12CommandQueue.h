@@ -11,6 +11,8 @@ public:
 	UINT64 GetCurrentValue() { return m_currentvalue; }
 	void SignalFence(ComPtr<ID3D12CommandQueue> queue,UINT64 signalvalue);//signals fence from gpu
 	void WaitFence();
+	ComPtr<ID3D12Fence> GetInternalFence() { return m_fence; }
+	HANDLE GetInternalEvent() { return m_event; }
 
 private:
 	ComPtr<ID3D12Fence> m_fence;

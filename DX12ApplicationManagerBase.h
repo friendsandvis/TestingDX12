@@ -67,5 +67,12 @@ protected:
 	DX12Resource m_depthbuffer;
 	//imgui related
 	DX12DESCHEAP m_imguisrvdescheap;
+
+	//frame buffering stuff
+	UINT64 m_lastSignaledFenceValue;
+	UINT m_frameIdx;
+	UINT64 m_frameFenceValue[BACKBUFFERCOUNT] = {0};
+	//to allow upload commandlist to execute only once
+	bool m_executedUploadcmdlist;
 };
 

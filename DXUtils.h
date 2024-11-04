@@ -8,7 +8,7 @@
 #include<d3dx12.h>
 #include<DirectXMath.h>
 
-#define BACKBUFFERCOUNT 3
+#define BACKBUFFERCOUNT 2
 #define MAXACCESSABLERESOURCEVIEWCOUNT 5
 //#define USEIMGUI
 

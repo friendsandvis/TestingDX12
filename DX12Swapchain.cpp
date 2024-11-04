@@ -44,6 +44,7 @@ D3D12_RESOURCE_BARRIER DX12Swapchain::TransitionBackBuffer(UINT backbufferindex,
 	transitionbarrier.Type = D3D12_RESOURCE_BARRIER_TYPE::D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	transitionbarrier.Flags = D3D12_RESOURCE_BARRIER_FLAGS::D3D12_RESOURCE_BARRIER_FLAG_NONE;
 	transitionbarrier.Transition.pResource = m_backbuffers[backbufferindex].resource.Get();
+	transitionbarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 	transitionbarrier.Transition.StateAfter = targetstate;
 	transitionbarrier.Transition.StateBefore = m_backbuffers[backbufferindex].currentstate;
 	m_backbuffers[backbufferindex].currentstate = targetstate;
@@ -60,6 +61,7 @@ void DX12Swapchain::Init(ComPtr<IDXGIFactory2> factory, unsigned width, unsigned
 	swapchaindesc.Width = width;
 	swapchaindesc.Height = height;
 	swapchaindesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	swapchaindesc.Flags = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
 	swapchaindesc.Stereo = FALSE;
 	swapchaindesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	
@@ -78,6 +80,9 @@ void DX12Swapchain::RetiveBackBuffers()
 	
 	for (size_t i = 0; i < BACKBUFFERCOUNT; i++)
 	{
+		DX12ResourceWrapper tmpresourcewrapper = {};
+		tmpresourcewrapper.currentstate = D3D12_RESOURCE_STATE_PRESENT;
+		m_backbuffers[i] = tmpresourcewrapper;
 		DXASSERT(m_swapchain->GetBuffer(i, IID_PPV_ARGS(m_backbuffers[i].resource.GetAddressOf())))
 			m_backbuffers[i].resource->SetName(L"swapchainbackbuffer");
 			m_backbuffers[i].currentstate = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PRESENT;

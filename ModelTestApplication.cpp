@@ -26,7 +26,7 @@ void ModelTestApplication::PreRenderUpdate()
 
 void ModelTestApplication::Render()
 {
-	m_primarycmdlist.Reset();
+	m_primarycmdlist.Reset(false, true, m_frameIdx);
 #if defined(USESPHONZAMODEL)//only have sponza textures right now.
 	//upload compoundmodel textures over frames
 	{
