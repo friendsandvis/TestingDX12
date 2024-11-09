@@ -87,7 +87,7 @@ void RayTracingApplication::RenderRaster_NoProjection()
 	float clearvalue[4] = { 1.0f,1.0f,1.0f,1.0f };
 	float blackclearvalue[4] = { 0.0f,0.0f,0.0f,1.0f };
 	m_primarycmdlist->ClearRenderTargetView(m_gbufferrtvheaps.GetCPUHandleOffseted(0), blackclearvalue, 0, nullptr);
-	m_primarycmdlist->ClearRenderTargetView(rtvhandle, clearvalue, 0, nullptr);
+	ClearBackBuffer(m_swapchain.GetCurrentbackbufferIndex(), m_primarycmdlist, clearvalue);
 	m_primarycmdlist->ClearDepthStencilView(dsvhandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	{
 		m_primarycmdlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
