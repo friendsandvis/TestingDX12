@@ -24,7 +24,7 @@ void RayTracingApplication::PreRenderUpdate()
 
 void RayTracingApplication::RenderRaster()
 {
-	m_primarycmdlist.Reset();
+	m_primarycmdlist.Reset(false,true,m_frameIdx);
 	//set rtv
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
@@ -69,7 +69,7 @@ void RayTracingApplication::RenderRaster()
 }
 void RayTracingApplication::RenderRaster_NoProjection()
 {
-	m_primarycmdlist.Reset();
+	m_primarycmdlist.Reset(false,true,m_frameIdx);
 	//set rtv
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
@@ -205,7 +205,7 @@ void RayTracingApplication::RenderRT()
 }
 void RayTracingApplication::Render()
 {
-	//RenderRaster_NoProjection();
+	RenderRaster_NoProjection();
 	RenderRT();
 }
 
