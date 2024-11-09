@@ -24,7 +24,7 @@ void RayTracingApplication2::PreRenderUpdate()
 
 void RayTracingApplication2::RenderRaster()
 {
-	m_primarycmdlist.Reset();
+	m_primarycmdlist.Reset(false,true,m_frameIdx);
 	//set rtv
 	UINT currentbackbufferIdx = m_swapchain.GetCurrentbackbufferIndex();
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(currentbackbufferIdx);
@@ -72,7 +72,7 @@ void RayTracingApplication2::RenderRaster()
 
 void RayTracingApplication2::RenderRT()
 {
-	m_primarycmdlist.Reset();
+	m_primarycmdlist.Reset(false, true, m_frameIdx);
 	//set rtv
 	UINT currentbackbufferIdx = m_swapchain.GetCurrentbackbufferIndex();
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(currentbackbufferIdx);
@@ -113,7 +113,7 @@ void RayTracingApplication2::RenderRT()
 		dispatchraysdesc.HitGroupTable.StrideInBytes = sizeof(BasicShaderRecord);
 
 
-		m_rtcommandlist.Reset();
+		m_rtcommandlist.Reset(false,true,m_frameIdx);
 		if (m_rgsrecords.GetCurrentResourceState()!= D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)
 		{
 			D3D12_RESOURCE_BARRIER rgsrecordbuffertransitionbarrier = m_rgsrecords.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
@@ -339,7 +339,7 @@ void RayTracingApplication2::InitExtras()
 	//ray tracing inits
 	if(m_raytracingsupported)
 	{
-		m_rtcommandlist.Init(D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
+		m_rtcommandlist.Init(D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice,NUMCOMMANDLISTSTOCK);
 		m_rtcommandlist.SetName(L"RTCommandlist");
 		DXASSERT(m_creationdevice.As(&m_device5))
 		loadedmodelasblas.Init(m_creationdevice,m_trianglemodel);

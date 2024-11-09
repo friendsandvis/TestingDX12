@@ -48,7 +48,7 @@ void RayTracingTestApplication_AdvancedAOTest::PreRenderUpdate()
 
 void RayTracingTestApplication_AdvancedAOTest::RenderRaster()
 {
-	m_primarycmdlist.Reset();
+	m_primarycmdlist.Reset(false,true,m_frameIdx);
 	//set rtv
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
@@ -91,7 +91,7 @@ void RayTracingTestApplication_AdvancedAOTest::RenderRaster()
 }
 void RayTracingTestApplication_AdvancedAOTest::RenderGbuffer()
 {
-	m_gbufferrendercommandlist.Reset();
+	m_gbufferrendercommandlist.Reset(false, true, m_frameIdx);
 	m_gbufferrendercommandlist->SetPipelineState(m_gbufferpso.GetPSO());
 	m_gbufferrendercommandlist->SetGraphicsRootSignature(m_gbufferpso.GetRootSignature());
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
@@ -133,7 +133,7 @@ void RayTracingTestApplication_AdvancedAOTest::RenderGbuffer()
 }
 void RayTracingTestApplication_AdvancedAOTest::RenderTextureOnScreenRT()
 {
-	m_primarycmdlist.Reset();
+	m_primarycmdlist.Reset(false, true, m_frameIdx);
 	//set rtv
 	UINT currentBackBufferidx = m_swapchain.GetCurrentbackbufferIndex();
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(currentBackBufferidx);
@@ -178,7 +178,7 @@ void RayTracingTestApplication_AdvancedAOTest::RenderTextureOnScreenRT()
 }
 void RayTracingTestApplication_AdvancedAOTest::RenderTextureOnScreenGBuffer()
 {
-	m_primarycmdlist.Reset();
+	m_primarycmdlist.Reset(false, true, m_frameIdx);
 	//set rtv
 	UINT currentBackBufferIdx=m_swapchain.GetCurrentbackbufferIndex();
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(currentBackBufferIdx);
@@ -248,7 +248,7 @@ void RayTracingTestApplication_AdvancedAOTest::RTAccumulation()
 	{
 		ResetAccumulation();
 	}
-	m_accumulationcommandlist.Reset();
+	m_accumulationcommandlist.Reset(false, true, m_frameIdx);
 	m_accumulationcommandlist->SetPipelineState(m_psortaccumulation.GetPSO());
 	m_accumulationcommandlist->SetGraphicsRootSignature(m_psortaccumulation.GetRootSignature());
 	D3D12_CPU_DESCRIPTOR_HANDLE accumresultrtv = m_rtaccumrtvheap.GetCPUHandleOffseted(0);
@@ -348,7 +348,7 @@ void RayTracingTestApplication_AdvancedAOTest::RenderRT()
 		dispatchraysdesc.HitGroupTable.StrideInBytes = sizeof(BasicShaderRecord);
 
 
-		m_rtcommandlist.Reset();
+		m_rtcommandlist.Reset(false, true, m_frameIdx);
 		if (m_rgsrecords.GetCurrentResourceState()!= D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)
 		{
 			D3D12_RESOURCE_BARRIER rgsrecordbuffertransitionbarrier = m_rgsrecords.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
@@ -663,7 +663,7 @@ void RayTracingTestApplication_AdvancedAOTest::InitExtras()
 	//ray tracing inits
 	if(m_raytracingsupported)
 	{
-		m_rtcommandlist.Init(D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
+		m_rtcommandlist.Init(D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice,NUMCOMMANDLISTSTOCK);
 		m_rtcommandlist.SetName(L"RTCommandlist");
 		DXASSERT(m_creationdevice.As(&m_device5))
 		loadedmodelasblas.Init(m_creationdevice,m_loadedmodel);
@@ -697,11 +697,11 @@ void RayTracingTestApplication_AdvancedAOTest::InitExtras()
 	}
 	
 	{
-		m_gbufferrendercommandlist.Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
+		m_gbufferrendercommandlist.Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice, NUMCOMMANDLISTSTOCK);
 		m_gbufferrendercommandlist.SetName(L"Gbuffer render commandlist");
 	}
 	{
-		m_accumulationcommandlist.Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
+		m_accumulationcommandlist.Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice,NUMCOMMANDLISTSTOCK);
 		m_accumulationcommandlist.SetName(L"Accumulation commandlist");
 	}
 

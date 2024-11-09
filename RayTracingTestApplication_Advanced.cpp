@@ -29,7 +29,7 @@ void RayTracingApplicationAdvanced::PreRenderUpdate()
 
 void RayTracingApplicationAdvanced::RenderRaster()
 {
-	m_primarycmdlist.Reset();
+	m_primarycmdlist.Reset(false, true, m_frameIdx);
 	//set rtv
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
@@ -72,7 +72,7 @@ void RayTracingApplicationAdvanced::RenderRaster()
 }
 void RayTracingApplicationAdvanced::RenderGbuffer()
 {
-	m_gbufferrendercommandlist.Reset();
+	m_gbufferrendercommandlist.Reset(false, true, m_frameIdx);
 	m_gbufferrendercommandlist->SetPipelineState(m_gbufferpso.GetPSO());
 	m_gbufferrendercommandlist->SetGraphicsRootSignature(m_gbufferpso.GetRootSignature());
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
@@ -144,7 +144,7 @@ void RayTracingApplicationAdvanced::RenderGbuffer()
 }
 void RayTracingApplicationAdvanced::RenderTextureOnScreenRT()
 {
-	m_primarycmdlist.Reset();
+	m_primarycmdlist.Reset(false,true,m_frameIdx);
 	//set rtv
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(m_swapchain.GetCurrentbackbufferIndex());
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvhandle = m_dsvdescheap.GetCPUHandlefromstart();
@@ -180,7 +180,7 @@ void RayTracingApplicationAdvanced::RenderTextureOnScreenRT()
 }
 void RayTracingApplicationAdvanced::RenderTextureOnScreenGBuffer()
 {
-	m_primarycmdlist.Reset();
+	m_primarycmdlist.Reset(false, true, m_frameIdx);
 	//set rtv
 	UINT  currentBackBufferIdx = m_swapchain.GetCurrentbackbufferIndex();
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(currentBackBufferIdx);
@@ -238,7 +238,7 @@ void RayTracingApplicationAdvanced::RenderRT()
 		dispatchraysdesc.HitGroupTable.StrideInBytes = sizeof(BasicShaderRecord);
 
 
-		m_rtcommandlist.Reset();
+		m_rtcommandlist.Reset(false, true, m_frameIdx);
 		if (m_rgsrecords.GetCurrentResourceState()!= D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE)
 		{
 			D3D12_RESOURCE_BARRIER rgsrecordbuffertransitionbarrier = m_rgsrecords.TransitionResState(D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
@@ -469,7 +469,7 @@ void RayTracingApplicationAdvanced::InitExtras()
 	//ray tracing inits
 	if(m_raytracingsupported)
 	{
-		m_rtcommandlist.Init(D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
+		m_rtcommandlist.Init(D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice,NUMCOMMANDLISTSTOCK);
 		m_rtcommandlist.SetName(L"RTCommandlist");
 		DXASSERT(m_creationdevice.As(&m_device5))
 		loadedmodelasblas.Init(m_creationdevice,m_loadedmodel);
@@ -503,7 +503,7 @@ void RayTracingApplicationAdvanced::InitExtras()
 	}
 	
 	{
-		m_gbufferrendercommandlist.Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice);
+		m_gbufferrendercommandlist.Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice, NUMCOMMANDLISTSTOCK);
 		m_gbufferrendercommandlist.SetName(L"Gbuffer render commandlist");
 	}
 
