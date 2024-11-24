@@ -252,12 +252,14 @@ void DX12ApplicationManagerBase::BasicRender()
 	assert(fencevaluecurrentafterwaitproc >= m_frameFenceValue[m_frameIdx]);
 #else
 		m_frameIdx = m_swapchain.GetCurrentbackbufferIndex();
+	/*syncunit simply groups everything needed for basic syncronization of frame it is up to us to utilize it.
+	 hence we retrive the current fence value here and increment it to signal next
+	 upon signaling sync unit internally updatess its current fence value and hence the simple sync flow can continue.
+	 */ 
 		UINT64 fencevalue = m_syncunitprime.GetCurrentValue();
 	fencevalue += 1;
 	m_syncunitprime.SignalFence(m_mainqueue.GetQueue(), fencevalue);
 		m_syncunitprime.WaitFence();
-	m_primarycmdlist = m_primarycmdlists[m_frameIdx];
-	m_uploadcommandlist = m_uploadcommandlists[m_frameIdx];
 	//update frameidx
 	m_swapchain.UpdatebackbufferIndex();
 	m_frameIdx = m_swapchain.GetCurrentbackbufferIndex();
