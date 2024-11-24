@@ -3,9 +3,6 @@
 #define USEFRAMEBUFFERING
 DX12ApplicationManagerBase::DX12ApplicationManagerBase()
 	:m_cmdlistidxinuse(0),
-	m_primarycmdlist(m_primarycmdlists[0]),
-	m_uploadcommandlist(m_uploadcommandlists[0]),
-	m_prepresentcommandlist(m_prepresentcommandlists[0]),
 	m_lastSignaledFenceValue(0),
 	m_frameIdx(0),
 	m_executedUploadcmdlist(false)
@@ -108,6 +105,13 @@ void DX12ApplicationManagerBase::InitBase(ComPtr< ID3D12Device> creationdevice)
 	m_syncunitprime.Init(m_creationdevice, 0);
 
 	//commandlist init
+	m_primarycmdlist.Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice, NUMCOMMANDLISTSTOCK);
+	m_primarycmdlist.SetName(L"primarycmd");
+	m_uploadcommandlist.Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice, NUMCOMMANDLISTSTOCK);
+	m_uploadcommandlist.SetName(L"uploadcmd");
+	m_prepresentcommandlist.Init(D3D12_COMMAND_LIST_TYPE_DIRECT, m_creationdevice, NUMCOMMANDLISTSTOCK);
+	m_prepresentcommandlist.SetName(L"prepresentcmd");
+
 	for (unsigned i = 0; i < NUMCOMMANDLISTSTOCK; i++)
 	{
 		wstring commandlistbasename =L"primarycmd";
@@ -152,9 +156,6 @@ void DX12ApplicationManagerBase::InitBase(ComPtr< ID3D12Device> creationdevice)
 		}
 		
 	}
-	m_primarycmdlist = m_primarycmdlists[0];
-	m_uploadcommandlist = m_uploadcommandlists[0];
-	m_prepresentcommandlist = m_prepresentcommandlists[0];
 	m_cmdlistidxinuse = 0;
 
 	//dsv heap
@@ -255,9 +256,8 @@ void DX12ApplicationManagerBase::BasicRender()
 	fencevalue += 1;
 	m_syncunitprime.SignalFence(m_mainqueue.GetQueue(), fencevalue);
 		m_syncunitprime.WaitFence();
-	//m_cmdlistidxinuse = (m_cmdlistidxinuse + 1) % NUMCOMMANDLISTSTOCK;
-	m_primarycmdlist = m_primarycmdlists[m_frameIdx];//m_primarycmdlists[m_cmdlistidxinuse];
-	m_uploadcommandlist = m_uploadcommandlists[m_frameIdx];//m_uploadcommandlists[m_cmdlistidxinuse];
+	m_primarycmdlist = m_primarycmdlists[m_frameIdx];
+	m_uploadcommandlist = m_uploadcommandlists[m_frameIdx];
 	//update frameidx
 	m_swapchain.UpdatebackbufferIndex();
 	m_frameIdx = m_swapchain.GetCurrentbackbufferIndex();
@@ -308,5 +308,21 @@ void DX12ApplicationManagerBase::PreRenderUpdate()
 #ifdef USEIMGUI
 	IMGUIPrerender();
 #endif // USEIMGUI
+}
+void DX12ApplicationManagerBase::Destroy()
+{
+#ifdef USEFRAMEBUFFERING
+	ComPtr<ID3D12Fence> fence = m_syncunitprime.GetInternalFence();
+	//do not know if this should be 0(aka a custom value) or "m_frameFenceValue[m_frameIdx]" will be ok too.
+	UINT64 fenceValueTowaitFor = 0;
+	UINT64 currentfenceValue = fence->GetCompletedValue();
+	m_mainqueue.GetQueue()->Signal(fence.Get(), fenceValueTowaitFor);
+	HANDLE fencewaitevent = m_syncunitprime.GetInternalEvent();
+	DXASSERT(fence->SetEventOnCompletion(fenceValueTowaitFor, fencewaitevent))
+		DWORD waitstatus = WaitForSingleObject(fencewaitevent, INFINITE);
+	assert(waitstatus == WAIT_OBJECT_0);
+	currentfenceValue = fence->GetCompletedValue();
+	assert(currentfenceValue == fenceValueTowaitFor);
+#endif
 }
 	

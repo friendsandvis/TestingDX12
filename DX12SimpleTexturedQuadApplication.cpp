@@ -293,7 +293,7 @@ void TexturedQuadApplication::Render()
 	float rtclearcolour[4] = { 1.0f,1.0f,1.0f,1.0f };
 	m_primarycmdlist->ClearRenderTargetView(rtvhandle, rtclearcolour, 0, nullptr);
 	m_primarycmdlist->DrawIndexedInstanced(m_planemodel.GetIndiciesCount(), 1, 0, 0, 0);	
-	DXASSERT(m_primarycmdlist->Close())
+	m_primarycmdlist.Close();
 	
 
 	BasicRender();

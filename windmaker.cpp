@@ -6,6 +6,7 @@
 // Forward declare message handler from imgui_impl_win32.cpp
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 WindowProcHook* WindProcManager::s_prochook = nullptr;
+Renderable* WindProcManager::s_dx12manager = nullptr;
 LRESULT CALLBACK WindProcManager::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 #ifdef USEIMGUI
@@ -20,11 +21,20 @@ LRESULT CALLBACK WindProcManager::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam
 	}
 	switch (uMsg)
 	{
-	case WM_CLOSE:
 	case WM_DESTROY:
+	{
 		PostQuitMessage(0);
-		break;
-		
+		return 0;
+	}
+	case WM_PAINT:
+	{
+			//draw here
+			if (s_dx12manager)
+			{
+				s_dx12manager->Render();
+			}
+			return 0;
+	}
 	default:
 		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 		
@@ -55,51 +65,28 @@ void WindMaker::CreateWind(unsigned width, unsigned height,LPCWSTR windowname)
 
 void WindMaker::RunMessageloop(Renderable* dx12manager)
 {
-	
+	WindProcManager::SetDX12Manager(dx12manager);
 	
 
 	//using hwnd here instead of null causes window created to be in stuck state
-	
-	
-	 bool running = true;
-	while(running)
-	{
-		if (IsWindow(m_hwnd))
-		{
-			//draw here
-			if (dx12manager)
-			{
-				dx12manager->Render();
-			}
-		}
 		MSG msg = {0};
-		while (PeekMessage(&msg, m_hwnd, 0, 0, PM_REMOVE))
+		while (msg.message != WM_QUIT)
 		{
-
-
-
-
-			if (msg.message == WM_QUIT)
+			if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 			{
-				running = false;
-			}
-			else
-			{
+				if (msg.message == WM_QUIT)
+				{
+					bool requestquit = true;
+				}
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);
 			}
 		}
 		
 		
-
-		
-		//do check for the validity of window before drawing upon it(if you try to prresent upon a destroyed window then app crashs.
 		
 		
 		
 		
-		
-		
-	}
 	
 }

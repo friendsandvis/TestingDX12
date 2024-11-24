@@ -11,6 +11,9 @@ public:
 	static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 private:
 	static WindowProcHook* s_prochook;
+	static Renderable* s_dx12manager;
+public:
+	static void SetDX12Manager(Renderable* dx12manager) { s_dx12manager = dx12manager; }
 };
 
 class WindMaker

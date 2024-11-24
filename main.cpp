@@ -127,6 +127,7 @@ int main()
 	
 	if (appmanager)
 	{
+		appmanager->Destroy();
 		delete appmanager;
 	}
 

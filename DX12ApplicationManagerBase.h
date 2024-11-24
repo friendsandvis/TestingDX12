@@ -26,6 +26,7 @@ public:
 	virtual void Render() = 0;
 	virtual void PreRenderUpdate();
 	virtual void PostRenderUpdate() {}
+	virtual void Destroy();
 	//called inside init function san be overriden by child class to init other app specific members at app init time
 	
 
@@ -49,7 +50,7 @@ protected:
 	DX12CommandQueue m_mainqueue;
 
 	// base app has 2 commandlists(1 for general render other for upload before render
-	DX12Commandlist& m_primarycmdlist, m_uploadcommandlist, m_prepresentcommandlist;
+	DX12Commandlist m_primarycmdlist, m_uploadcommandlist, m_prepresentcommandlist;
 	DX12Commandlist m_primarycmdlists[NUMCOMMANDLISTSTOCK], m_uploadcommandlists[NUMCOMMANDLISTSTOCK],m_prepresentcommandlists[NUMCOMMANDLISTSTOCK];
 	unsigned m_cmdlistidxinuse;
 
