@@ -66,6 +66,10 @@ DX12RaytracingCommandlist::DX12RaytracingCommandlist()
 
 DX12RaytracingCommandlist::~DX12RaytracingCommandlist()
 {
+	if (m_allocators)
+	{
+		delete[] m_allocators;
+	}
 }
 
 void DX12RaytracingCommandlist::Close()
