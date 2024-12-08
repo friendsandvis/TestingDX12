@@ -110,7 +110,6 @@ void RayTracingApplication::RenderRaster_NoProjection()
 	}
 	m_primarycmdlist->DrawIndexedInstanced(m_trianglemodel.GetIndiciesCount(), 1, 0, 0, 0);
 	DXASSERT(m_primarycmdlist->Close())
-		BasicRender();
 }
 void RayTracingApplication::RenderRT()
 {

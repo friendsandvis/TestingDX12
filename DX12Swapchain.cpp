@@ -53,18 +53,18 @@ D3D12_RESOURCE_BARRIER DX12Swapchain::TransitionBackBuffer(UINT backbufferindex,
 
 void DX12Swapchain::Init(ComPtr<IDXGIFactory2> factory, unsigned width, unsigned height, HWND hwnd, ComPtr<ID3D12CommandQueue> creationqueue)
 {
-	m_width = width;
-	m_height = height;
 	DXGI_SWAP_CHAIN_DESC1 swapchaindesc = {};
 	swapchaindesc.BufferCount = BACKBUFFERCOUNT;
 	swapchaindesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
-	swapchaindesc.Width = width;
-	swapchaindesc.Height = height;
+	//using width & height selected by create swapchain command helps fix imgui bug where imgui has y offseted a little;hence we pass 0 as dimensions and retrive it later to be saved as members
+	swapchaindesc.Width = 0;
+		swapchaindesc.Height = 0;
 	swapchaindesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	swapchaindesc.Flags = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
 	swapchaindesc.Stereo = FALSE;
 	swapchaindesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	
+	////lets use scaling as we are not deciding the swapchain size anymore(seen in imgui sample)
+	swapchaindesc.Scaling = DXGI_SCALING_STRETCH;
 	swapchaindesc.SampleDesc.Count = 1;
 	swapchaindesc.SampleDesc.Quality = 0;
 	swapchaindesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
@@ -72,6 +72,12 @@ void DX12Swapchain::Init(ComPtr<IDXGIFactory2> factory, unsigned width, unsigned
 	DXASSERT(factory->CreateSwapChainForHwnd(creationqueue.Get(), hwnd, &swapchaindesc, nullptr, nullptr, m_swapchain.GetAddressOf()))
 		DXASSERT(m_swapchain.As< IDXGISwapChain4>(&m_swapchainv4))
 		m_currentbackbufferindex = m_swapchainv4->GetCurrentBackBufferIndex();
+	DXGI_SWAP_CHAIN_DESC1 swapchaindescretrived = {};
+	m_swapchain->GetDesc1(&swapchaindescretrived);
+	//we are retriving width & heigght of swapchain selected by swapchsain creation from hwnd usually smaller than the window size
+	m_width = swapchaindescretrived.Width;
+	m_height = swapchaindescretrived.Height;
+
 		RetiveBackBuffers();
 }
 
