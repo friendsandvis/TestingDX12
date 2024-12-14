@@ -1,15 +1,18 @@
 #include"DX12Manager.h"
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
-
+//if we want to use agility sdk downloaded from nuget we can uncomment this and set sdk version properly in the variable.
+//#define USEAGILITYSDK
 
 //exports to use agility sdk...
 
 //version of agility sdk nuget used(update if using another version.
+#ifdef USEAGILITYSDK
+
 extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 600; }
 
 extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = u8".\\D3D12\\"; }
-
+#endif // USEAGILITYSDK
 
 
 DX12Manager::DX12Manager()
