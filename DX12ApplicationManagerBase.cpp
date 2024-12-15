@@ -5,7 +5,8 @@ DX12ApplicationManagerBase::DX12ApplicationManagerBase()
 	:m_cmdlistidxinuse(0),
 	m_lastSignaledFenceValue(0),
 	m_frameIdx(0),
-	m_executedUploadcmdlist(false)
+	m_executedUploadcmdlist(false),
+	m_imguiAllowed(false)
 {
 }
 
@@ -13,9 +14,12 @@ DX12ApplicationManagerBase::~DX12ApplicationManagerBase()
 {
 	//cleanup IMGUI
 #ifdef USEIMGUI
-	ImGui_ImplWin32_Shutdown();
-	ImGui_ImplDX12_Shutdown();
-	ImGui::DestroyContext();
+	if (m_imguiAllowed)
+	{
+		ImGui_ImplWin32_Shutdown();
+		ImGui_ImplDX12_Shutdown();
+		ImGui::DestroyContext();
+	}
 #endif // USEIMGUI
 }
 
@@ -86,7 +90,10 @@ void DX12ApplicationManagerBase::Init(ComPtr< ID3D12Device> creationdevice, ComP
 	Initswapchain(factory, swapchainwidth, swapchainheight, hwnd);
 #ifdef USEIMGUI
 	//init imgui
-	InitIMGUI(creationdevice,hwnd);
+	if (m_imguiAllowed)
+	{
+		InitIMGUI(creationdevice, hwnd);
+	}
 #endif // USEIMGUI
 	//extra init maybe specialized by specialized classes
 	InitExtras();
@@ -174,33 +181,38 @@ void DX12ApplicationManagerBase::BasicRender()
 	//m_prepresentcommandlist.Reset();
 	m_prepresentcommandlist.Reset(false, true, m_frameIdx);
 #ifdef USEIMGUI
-	ImGuiIO& io = ImGui::GetIO();
 	//simple imgui test window
-	 {
-		ImGui::Begin("test imguiwindow", nullptr);
-		ImGui::Text("testimgui TEXT line 1");
-		ImGui::Text("testimgui TEXT line 2");
-		ImGui::Text("testimgui TEXT line 3");
-		ImGui::Text("testimgui TEXT line 4");
-		ImGui::Text("testimgui TEXT line 5");
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-		ImGui::End();
-	}
+	if (m_imguiAllowed)
 	{
-		 UINT currentbackbufferidx = m_swapchain.GetCurrentbackbufferIndex();
-		ImGui::Render();
-		D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(currentbackbufferidx);
-		D3D12_RESOURCE_BARRIER barrier = m_swapchain.TransitionBackBuffer(currentbackbufferidx, D3D12_RESOURCE_STATE_RENDER_TARGET);
-		if (DXUtils::IsBarrierSafeToExecute(barrier))
+		
 		{
-			m_prepresentcommandlist->ResourceBarrier(1, &barrier);
+			ImGuiIO& io = ImGui::GetIO();
+			ImGui::Begin("test imguiwindow", nullptr);
+			ImGui::Text("testimgui TEXT line 1");
+			ImGui::Text("testimgui TEXT line 2");
+			ImGui::Text("testimgui TEXT line 3");
+			ImGui::Text("testimgui TEXT line 4");
+			ImGui::Text("testimgui TEXT line 5");
+			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+			IMGUIRenderAdditional();
+			ImGui::End();
 		}
-		ID3D12DescriptorHeap* descheapstoset[1];
-		descheapstoset[0]=m_imguisrvdescheap.GetDescHeap();
-		m_prepresentcommandlist->OMSetRenderTargets(1, &rtvhandle, FALSE, nullptr);
-		m_prepresentcommandlist->SetDescriptorHeaps(1, descheapstoset);
-		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_prepresentcommandlist.GetcmdList());
+		{
+			UINT currentbackbufferidx = m_swapchain.GetCurrentbackbufferIndex();
+			ImGui::Render();
+			D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(currentbackbufferidx);
+			D3D12_RESOURCE_BARRIER barrier = m_swapchain.TransitionBackBuffer(currentbackbufferidx, D3D12_RESOURCE_STATE_RENDER_TARGET);
+			if (DXUtils::IsBarrierSafeToExecute(barrier))
+			{
+				m_prepresentcommandlist->ResourceBarrier(1, &barrier);
+			}
+			ID3D12DescriptorHeap* descheapstoset[1];
+			descheapstoset[0]=m_imguisrvdescheap.GetDescHeap();
+			m_prepresentcommandlist->OMSetRenderTargets(1, &rtvhandle, FALSE, nullptr);
+			m_prepresentcommandlist->SetDescriptorHeaps(1, descheapstoset);
+			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_prepresentcommandlist.GetcmdList());
 
+		}
 	}
 #endif // USEIMGUI
 	D3D12_RESOURCE_BARRIER barrier=m_swapchain.TransitionBackBuffer(m_swapchain.GetCurrentbackbufferIndex(), D3D12_RESOURCE_STATE_PRESENT);
@@ -308,7 +320,10 @@ void DX12ApplicationManagerBase::IMGUIPrerender()
 void DX12ApplicationManagerBase::PreRenderUpdate()
 {
 #ifdef USEIMGUI
-	IMGUIPrerender();
+	if (m_imguiAllowed)
+	{
+		IMGUIPrerender();
+	}
 #endif // USEIMGUI
 }
 void DX12ApplicationManagerBase::Destroy()

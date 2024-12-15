@@ -27,6 +27,9 @@ public:
 	virtual void PreRenderUpdate();
 	virtual void PostRenderUpdate() {}
 	virtual void Destroy();
+	virtual void IMGUIRenderAdditional() {}
+	inline bool IsIMGUIAllowed()
+	{ return m_imguiAllowed; }
 	//called inside init function san be overriden by child class to init other app specific members at app init time
 	
 
@@ -75,5 +78,6 @@ protected:
 	UINT64 m_frameFenceValue[BACKBUFFERCOUNT] = {0};
 	//to allow upload commandlist to execute only once
 	bool m_executedUploadcmdlist;
+	bool m_imguiAllowed;
 };
 

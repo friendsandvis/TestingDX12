@@ -12,8 +12,13 @@ public:
 private:
 	static WindowProcHook* s_prochook;
 	static Renderable* s_dx12manager;
+	static bool s_dx12managerAllowsIMGUI;
 public:
-	static void SetDX12Manager(Renderable* dx12manager) { s_dx12manager = dx12manager; }
+	static void SetDX12Manager(Renderable* dx12manager, bool allowIMGUI = false)
+	{ 
+		s_dx12manager = dx12manager;
+		s_dx12managerAllowsIMGUI = allowIMGUI;
+	}
 };
 
 class WindMaker
@@ -29,7 +34,7 @@ public:
 	}
 	
 	void CreateWind(unsigned width,unsigned height, LPCWSTR windowname);
-	void RunMessageloop(Renderable* dx12manager =nullptr);
+	void RunMessageloop(Renderable* dx12manager =nullptr,bool AllowIMGUI = false);
 private:
 	
 	HWND m_hwnd;

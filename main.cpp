@@ -122,7 +122,7 @@ int main()
 	
 	
 	dxmanager.Init(winmaker.GetWidth(), winmaker.GetHeight(), winmaker.Gethwnd(), ENABLEDEBUGLAYER, appmanager);
-	winmaker.RunMessageloop(&dxmanager);
+	winmaker.RunMessageloop(&dxmanager, appmanager->IsIMGUIAllowed());
 
 	
 	if (appmanager)

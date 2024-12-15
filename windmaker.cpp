@@ -7,12 +7,16 @@
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 WindowProcHook* WindProcManager::s_prochook = nullptr;
 Renderable* WindProcManager::s_dx12manager = nullptr;
+bool WindProcManager::s_dx12managerAllowsIMGUI = false;
 LRESULT CALLBACK WindProcManager::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 #ifdef USEIMGUI
-	if (ImGui_ImplWin32_WndProcHandler(hwnd, uMsg, wParam, lParam))
+	if (s_dx12managerAllowsIMGUI)
 	{
-		return true;
+		if (ImGui_ImplWin32_WndProcHandler(hwnd, uMsg, wParam, lParam))
+		{
+			return true;
+		}
 	}
 #endif // USEIMGUI
 	if (s_prochook != nullptr)
@@ -63,9 +67,9 @@ void WindMaker::CreateWind(unsigned width, unsigned height,LPCWSTR windowname)
 	
 }
 
-void WindMaker::RunMessageloop(Renderable* dx12manager)
+void WindMaker::RunMessageloop(Renderable* dx12manager,bool AllowIMGUI)
 {
-	WindProcManager::SetDX12Manager(dx12manager);
+	WindProcManager::SetDX12Manager(dx12manager, AllowIMGUI);
 	
 
 	//using hwnd here instead of null causes window created to be in stuck state

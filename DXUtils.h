@@ -10,7 +10,7 @@
 
 #define BACKBUFFERCOUNT 2
 #define MAXACCESSABLERESOURCEVIEWCOUNT 5
-//#define USEIMGUI
+#define USEIMGUI
 
 //used for selecting hardware adaptor
 //currently set to nvidia
