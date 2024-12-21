@@ -54,7 +54,6 @@ protected:
 
 	// base app has 2 commandlists(1 for general render other for upload before render
 	DX12Commandlist m_primarycmdlist, m_uploadcommandlist, m_prepresentcommandlist;
-	DX12Commandlist m_primarycmdlists[NUMCOMMANDLISTSTOCK], m_uploadcommandlists[NUMCOMMANDLISTSTOCK],m_prepresentcommandlists[NUMCOMMANDLISTSTOCK];
 	unsigned m_cmdlistidxinuse;
 
 	SyncronizationUnit m_syncunitprime;
