@@ -234,6 +234,9 @@
     <ClCompile Include="DX12BlendingTestApplication.cpp">
       <Filter>Applications</Filter>
     </ClCompile>
+    <ClCompile Include="DX12ScenebuilderApplication.cpp">
+      <Filter>Applications</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="windmaker.h">
@@ -426,6 +429,9 @@
       <Filter>framework\Entity\entitytypes</Filter>
     </ClInclude>
     <ClInclude Include="DX12BlendingTestApplication.h">
+      <Filter>Applications</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12ScenebuilderApplication.h">
       <Filter>Applications</Filter>
     </ClInclude>
   </ItemGroup>

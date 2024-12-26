@@ -11,6 +11,7 @@ public:
 	void SetCameratoControl(DXCamera* cameratocontrol) { m_cameratocontrol = cameratocontrol; }
 	void ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void Update();
+	void ResetMouseFirstMove() { m_mousefirstmove = true; }
 private:
 	DXCamera* m_cameratocontrol;
 	float m_movefrontbackmodifier,m_moveleftrightmodifier;

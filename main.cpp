@@ -16,6 +16,7 @@
 #include"StreamableTextureFileCreator.h"
 #include"StreamableTextureFileReader.h"
 #include"DX12BlendingTestApplication.h"
+#include"DX12ScenebuilderApplication.h"
 //#define TESTBLENDINGAPP
 #ifdef _DEBUG
 #define ENABLEDEBUGLAYER true
@@ -44,7 +45,7 @@ int main()
 	std::cout << "6.run stf creator.\n";
 #endif // ALLOWSKYBOXTESTAPP
 
-	std::cout << "7.run stf reader.\n";
+	std::cout << "7.run scenebuilder.\n";
 	std::cout << "8.RaytracingApplicationAdvancedAOTest.\n";
 #ifdef TESTBLENDINGAPP
 	std::cout << "9.blendingtestApplication.\n";
@@ -86,9 +87,7 @@ int main()
 	
 	case 7:
 	{
-		StreamableTextureFileReader stfreader;
-		int res=stfreader.Init("textures/stf/texlargemiped.stf");
-		stfreader.PrepSubResPixData();
+		appmanager = new SceneBuilderApplication();
 		break;
 	}
 	case 8:
