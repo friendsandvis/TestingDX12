@@ -47,6 +47,7 @@ protected:
 	 void ClearBackBuffer(unsigned backbufferindex, DX12Commandlist& cmdlisttouse, float clearvalue[4]);
 	 void InitIMGUI(ComPtr< ID3D12Device> creationdevice, HWND hwnd);
 	 void IMGUIPrerender();
+	 void IMGUISimpleTestRender();
 	
 
 	ComPtr< ID3D12Device> m_creationdevice;

@@ -141,14 +141,8 @@ void DX12ApplicationManagerBase::BasicRender()
 	{
 		
 		{
-			ImGuiIO& io = ImGui::GetIO();
 			ImGui::Begin("test imguiwindow", nullptr);
-			ImGui::Text("testimgui TEXT line 1");
-			ImGui::Text("testimgui TEXT line 2");
-			ImGui::Text("testimgui TEXT line 3");
-			ImGui::Text("testimgui TEXT line 4");
-			ImGui::Text("testimgui TEXT line 5");
-			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+			IMGUISimpleTestRender();
 			IMGUIRenderAdditional();
 			ImGui::End();
 		}
@@ -296,5 +290,15 @@ void DX12ApplicationManagerBase::Destroy()
 	currentfenceValue = fence->GetCompletedValue();
 	assert(currentfenceValue == fenceValueTowaitFor);
 #endif
+}
+void DX12ApplicationManagerBase::IMGUISimpleTestRender()
+{
+	ImGuiIO& io = ImGui::GetIO();
+	ImGui::Text("testimgui TEXT line 1");
+	ImGui::Text("testimgui TEXT line 2");
+	ImGui::Text("testimgui TEXT line 3");
+	ImGui::Text("testimgui TEXT line 4");
+	ImGui::Text("testimgui TEXT line 5");
+	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 }
 	
