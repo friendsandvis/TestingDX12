@@ -55,6 +55,8 @@ public:
 	//load from file the texture data imp:no resource creation here
 	void LoadMetalnessTexture(std::wstring texname);
 	void GetMaterialTextures(vector< DXTexture*>& textures);
+	void SetTexPath(wstring texfilesPath) { m_texfilepath = texfilesPath; }
+	wstring GetTexPath() { return m_texfilepath; }
 
 	ModelMaterial();
 	~ModelMaterial();
@@ -69,6 +71,7 @@ private:
 	DXTexture* m_normaltexture;
 	DXTexture* m_roughnesstexture;
 	DXTexture* m_metalnesstexture;
+	wstring m_texfilepath = L"";
 
 };
 //hold texture index for each material texture srv parameter in srvheap(pbr material only for now)
@@ -121,6 +124,8 @@ public:
 	void SetNormaltextureIdx(unsigned idx) { m_materialdata_gpu.normaltexidx = idx; }
 	void SetRoughnesstextureIdx(unsigned idx) { m_materialdata_gpu.roughnesstexidx = idx; }
 	MaterialDataGPU GetMaterialDataGPU() { return m_materialdata_gpu; }
+	void SetTexPath(wstring texfilesPath) { m_texfilepath = texfilesPath; }
+	wstring GetTexPath() { return m_texfilepath;}
 
 private:
 	ShaderTransformConstants_General m_shadertransformconsts;
@@ -142,11 +147,12 @@ private:
 	ModelMaterial m_loadedmaterial;
 	MaterialConstants m_matconsts;
 	bool m_Allowrender;
+	wstring m_texfilepath = L"";
 	//an index used to refer in a global descriptor heap/mat table or similar
 	unsigned m_tmpmaterialgpuindex,m_diffusetexidx;
 	void GetVertexArray(vector<VertexBase*>& outverticies, AssimpLoadedMesh& ameshtoadd,VertexVersion vertversion);
 	void BuildVertexRawData();
-	void InitMaterial(ComPtr< ID3D12Device> creationdevice);
+	void InitMaterial(ComPtr< ID3D12Device> creationdevice, wstring texfilepath);
 };
 //contains various basic models
 class CompoundModel
@@ -167,6 +173,8 @@ public:
 	~CompoundModel();
 	void Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimpModel, VertexVersion modelvertexversion,bool supportmaterial=false);
 	void AddModel(Model* abasicModel) { m_models.push_back(abasicModel); }
+	void SetTexPath(wstring texfilesPath) { m_texfilepath = texfilesPath; }
+	wstring GetTexPath() { return m_texfilepath; }
 	ModelDataUploadMode m_datauploadmode;
 	VertexVersion m_vertexversion;
 	vector<Model*> m_models;
@@ -179,6 +187,7 @@ public:
 	
 	std::vector<MaterialDataGPU> m_allmaterialsused;
 	DX12Buffer m_materialtable;
+	wstring m_texfilepath = L"";
 	//local textures upload helper utils
 	size_t m_currenttexidxtoupload;
 	bool m_supportmaterial;
@@ -195,7 +204,7 @@ public:
 	static void InitCubeModel(ComPtr< ID3D12Device> creationdevice, Model& cubemodel);
 	static void InitTriangleModel(ComPtr< ID3D12Device> creationdevice, Model& trianglemodel);
 	static void LoadModel(ComPtr< ID3D12Device> creationdevice,std::string modelfilepath, Model& outmodel, VertexVersion requiredvertexversion);
-	static void LoadModel(ComPtr< ID3D12Device> creationdevice, std::string modelfilepath, CompoundModel& outmodel, VertexVersion requiredvertexversion,bool supportmaterial=false);
+	static void LoadModel(ComPtr< ID3D12Device> creationdevice, std::string modelfilepath, CompoundModel& outmodel, VertexVersion requiredvertexversion, wstring texfilepath = L"", bool supportmaterial = false);
 	static void GetTriangleRTVertexData(vector<RTVertexDataV0>& rtvertexdata);
 
 private:

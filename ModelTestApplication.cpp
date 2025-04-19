@@ -100,7 +100,7 @@ void ModelTestApplication::InitExtras()
 #if defined(USESPHONZAMODEL)
 	float scalefactor = 1.0f;
 	XMMATRIX scalemat = XMMatrixScalingFromVector(XMVectorSet(scalefactor, scalefactor, scalefactor, 1.0f));
-	BasicModelManager::LoadModel(m_creationdevice, "models/Sponza.gltf", m_loadedcompoundmodel, VERTEXVERSION3,true);
+	BasicModelManager::LoadModel(m_creationdevice, "models/Sponza.gltf", m_loadedcompoundmodel, VERTEXVERSION3, L"textures/modeltextures/sponza/",true);
 #endif//defined(USESPHONZAMODEL)
 #ifdef USECUBEMODEL
 	BasicModelManager::LoadModel(m_creationdevice, "models/cubes2.dae", m_loadedcompoundmodel, VERTEXVERSION2);

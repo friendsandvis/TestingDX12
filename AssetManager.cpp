@@ -217,7 +217,7 @@ void Model::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimp
 	if (supportmaterial)
 	{
 		m_material = meshtoload.material;
-		InitMaterial(creationdevice);
+		InitMaterial(creationdevice,m_texfilepath);
 	}
 	
 	
@@ -383,8 +383,9 @@ void Model::TransitionVextexAndIndexBufferState(D3D12_RESOURCE_STATES state, Com
 		cmdlist->ResourceBarrier(1, &barrier);
 	}
 }
-void Model::InitMaterial(ComPtr< ID3D12Device> creationdevice)
+void Model::InitMaterial(ComPtr< ID3D12Device> creationdevice, wstring texfilepath)
 {
+	m_loadedmaterial.SetTexPath(texfilepath);
 	//diffuse texture load
 	{
 	std::set<std::string>& texnames = m_material.GetDiffuseTextureNames();
@@ -564,6 +565,7 @@ void CompoundModel::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel
 	for (size_t i = 0; i < assimpModel.m_meshes.size(); i++)
 	{
 		Model* amodel = new Model(m_datauploadmode);
+		amodel->SetTexPath(m_texfilepath);
 		amodel->Init(creationdevice, assimpModel, (UINT)i, modelvertexversion,m_supportmaterial);
 		if (m_supportmaterial)
 		{
@@ -775,9 +777,10 @@ void BasicModelManager::LoadModel(ComPtr< ID3D12Device> creationdevice,std::stri
 	AssimpManager assimpmodel(modelfilepath);
 	outmodel.Init(creationdevice,assimpmodel.GetProcessedModel(),0, requiredvertexversion);
 }
-void BasicModelManager::LoadModel(ComPtr< ID3D12Device> creationdevice, std::string modelfilepath, CompoundModel& outmodel, VertexVersion requiredvertexversion, bool supportmaterial)
+void BasicModelManager::LoadModel(ComPtr< ID3D12Device> creationdevice, std::string modelfilepath, CompoundModel& outmodel, VertexVersion requiredvertexversion, wstring texfilepath, bool supportmaterial)
 {
 	AssimpManager assimpmodel(modelfilepath);
+	outmodel.SetTexPath(texfilepath);
 	outmodel.Init(creationdevice, assimpmodel.GetProcessedModel(), requiredvertexversion,supportmaterial);
 }
 
@@ -953,7 +956,7 @@ void ModelMaterial::LoadMetalnessTexture(std::wstring texname)
 std::wstring ModelMaterial::GetTextureFilePath(std::wstring texname)
 {
 	//just for testing sponza model textures we have hardcoded path
-	wstring texfilepath = (L"textures/modeltextures/sponza/") + texname;
+	wstring texfilepath = m_texfilepath + texname;
 	return texfilepath;
 }
 void ModelMaterial::UploadTextures(DX12Commandlist& copycmdlist)
