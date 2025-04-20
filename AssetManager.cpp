@@ -1,5 +1,6 @@
 #include"AssetManager.h"
 #include"DX12CommandList.h"
+#define ALLOWRENDERINGNONOPAQUEMODELS true
 
 
 
@@ -218,6 +219,16 @@ void Model::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimp
 	{
 		m_material = meshtoload.material;
 		InitMaterial(creationdevice,m_texfilepath);
+		bool hasTransparentMaterial = HasTransparentMaterial(m_texfilepath);
+		//if model has a transparent material avoid rendering it for now.
+		if (hasTransparentMaterial)
+		{
+			m_hasOpaqueMaterial = false;
+			if (!ALLOWRENDERINGNONOPAQUEMODELS)
+			{
+				m_Allowrender = false;
+			}
+		}
 	}
 	
 	
@@ -440,6 +451,26 @@ void Model::InitMaterial(ComPtr< ID3D12Device> creationdevice, wstring texfilepa
 void Model::GetMaterialTextures(vector< DXTexture*>& textures)
 {
 	m_loadedmaterial.GetMaterialTextures(textures);
+}
+bool Model::HasTransparentMaterial(wstring texfilepath)
+{
+	//m_loadedmaterial.SetTexPath(texfilepath);
+	//diffuse texture check for any being transparent
+	{
+		std::set<std::string>& texnames = m_material.GetDiffuseTextureNames();
+		if (texnames.size() > 0)
+		{
+
+			std::string texfilename = *(texnames.begin());
+			wstring texfilenamewstr(texfilename.begin(), texfilename.end());
+			wstring texpath = texfilepath + texfilenamewstr;
+			if (DXTexManager::IsTextureTransparent(texpath.c_str()))
+			{
+				return true;
+			}
+		}
+	}
+	return false;
 }
 CompoundModel::CompoundModel(ModelDataUploadMode uploadmode)
 	:m_datauploadmode(uploadmode),
@@ -955,7 +986,6 @@ void ModelMaterial::LoadMetalnessTexture(std::wstring texname)
 }
 std::wstring ModelMaterial::GetTextureFilePath(std::wstring texname)
 {
-	//just for testing sponza model textures we have hardcoded path
 	wstring texfilepath = m_texfilepath + texname;
 	return texfilepath;
 }

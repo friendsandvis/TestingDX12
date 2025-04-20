@@ -143,5 +143,16 @@ void DXTextureCube::UploadTexureData(DX12Commandlist& copycmdlist)
 	D3D12_RESOURCE_BARRIER barrier = TransitionResState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	copycmdlist->ResourceBarrier(1, &barrier);
 }
+bool DXTexManager::IsTextureTransparent(const wchar_t* imagefile)
+{
+	//for now assuming every .png texture file is transparent until we find a better way(ahould work for sfonza model
+	wstring extension = PathFindExtension(imagefile);
+	assert(!extension.empty());
+	if (extension == L".png")
+	{
+		return true;
+	}
+	return false;
+}
 
 

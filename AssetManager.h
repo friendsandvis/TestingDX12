@@ -57,7 +57,6 @@ public:
 	void GetMaterialTextures(vector< DXTexture*>& textures);
 	void SetTexPath(wstring texfilesPath) { m_texfilepath = texfilesPath; }
 	wstring GetTexPath() { return m_texfilepath; }
-
 	ModelMaterial();
 	~ModelMaterial();
 	DXTexture* GetDiffuseTexture() { return m_diffusetexture; }
@@ -126,6 +125,7 @@ public:
 	MaterialDataGPU GetMaterialDataGPU() { return m_materialdata_gpu; }
 	void SetTexPath(wstring texfilesPath) { m_texfilepath = texfilesPath; }
 	wstring GetTexPath() { return m_texfilepath;}
+	bool HasOpaqueMaterial() { return m_hasOpaqueMaterial; }
 
 private:
 	ShaderTransformConstants_General m_shadertransformconsts;
@@ -148,11 +148,13 @@ private:
 	MaterialConstants m_matconsts;
 	bool m_Allowrender;
 	wstring m_texfilepath = L"";
+	bool m_hasOpaqueMaterial = true;
 	//an index used to refer in a global descriptor heap/mat table or similar
 	unsigned m_tmpmaterialgpuindex,m_diffusetexidx;
 	void GetVertexArray(vector<VertexBase*>& outverticies, AssimpLoadedMesh& ameshtoadd,VertexVersion vertversion);
 	void BuildVertexRawData();
 	void InitMaterial(ComPtr< ID3D12Device> creationdevice, wstring texfilepath);
+	bool HasTransparentMaterial(wstring texfilepath);
 };
 //contains various basic models
 class CompoundModel
