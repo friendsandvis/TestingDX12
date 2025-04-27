@@ -1,7 +1,7 @@
 #include"AssetManager.h"
 #include"DX12CommandList.h"
 //during model loading this macro is used to determine if we need to set rendering for non opaque models to allow rendering them or not.
-#define ALLOWRENDERINGNONOPAQUEMODELS false
+#define ALLOWRENDERINGNONOPAQUEMODELS true
 
 
 
@@ -471,11 +471,32 @@ CompoundModel::~CompoundModel()
 		delete m_models[i];
 	}
 }
-void CompoundModel::Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix, UINT mvpmatrixrootparamindex,UINT materialconstsrootparamindex)
+void CompoundModel::Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix, UINT mvpmatrixrootparamindex,UINT materialconstsrootparamindex, bool drawNonOpaqueModels)
 {
+	vector<Model*> opaqueModels, nonOpaqueModels;
 	for (size_t i = 0; i < m_models.size(); i++)
 	{
-		m_models[i]->Draw(renderingcmdlist,vpmatrix,mvpmatrixrootparamindex,materialconstsrootparamindex,true,true,m_supportmaterial);
+		if (m_models[i]->HasOpaqueMaterial())
+		{
+			opaqueModels.push_back(m_models[i]);
+		}
+		else
+		{
+			nonOpaqueModels.push_back(m_models[i]);
+		}
+	}
+	//draw opaque models
+	for (size_t i = 0; i < opaqueModels.size(); i++)
+	{
+		opaqueModels[i]->Draw(renderingcmdlist, vpmatrix, mvpmatrixrootparamindex, materialconstsrootparamindex, true, true, m_supportmaterial);
+	}
+	//draw nonopaque models
+	if (drawNonOpaqueModels)
+	{
+		for (size_t i = 0; i < nonOpaqueModels.size(); i++)
+		{
+			nonOpaqueModels[i]->Draw(renderingcmdlist, vpmatrix, mvpmatrixrootparamindex, materialconstsrootparamindex, true, true, m_supportmaterial);
+		}
 	}
 }
 void CompoundModel::Extratransform(XMMATRIX extratransformmat)

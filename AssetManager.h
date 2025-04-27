@@ -162,7 +162,7 @@ class CompoundModel
 public:
 	//set ib & vb and issue draw command.
 	void Extratransform(XMMATRIX extratransformmat);
-	void Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix,UINT mvpmatrixrootparamindex, UINT materialconstsrootparamindex=2);
+	void Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix,UINT mvpmatrixrootparamindex, UINT materialconstsrootparamindex=2, bool drawNonOpaqueModels = true);
 	void UploadModelDatatoBuffers();
 	void UploadModelDatatoGPUBuffers(DX12Commandlist& copycmdlist);
 	void UploadModelDataDefaultTexture(DX12Commandlist& copycmdlist);

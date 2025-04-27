@@ -80,7 +80,8 @@ void ModelTestApplication::Render()
 	//set general constants
 	GeneralConstants generalconstants = {};
 	generalconstants.usematerialtextures = static_cast<unsigned int>(m_loadedcompoundmodel.SupportMaterial());
-	m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 3);
+	//draw opaque models only for testing
+	m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 3,false);
 	
 	DXASSERT(m_primarycmdlist->Close())
 	BasicRender();
