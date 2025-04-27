@@ -195,6 +195,7 @@ public:
 	bool m_supportmaterial;
 	bool SupportMaterial() { return m_supportmaterial; }
 	void UploadCurrentFrameModelTextureData(DX12Commandlist& copycmdlist,bool increment =true);
+	void UploadAllModelTextureData(DX12Commandlist& copycmdlist);
 	bool NeedToUploadTextures() { return (m_currenttexidxtoupload<m_texturestoupload.size()); }
 	
 };

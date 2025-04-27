@@ -594,6 +594,20 @@ void CompoundModel::UploadCurrentFrameModelTextureData(DX12Commandlist& copycmdl
 		m_currenttexidxtoupload++;
 	}
 }
+void CompoundModel::UploadAllModelTextureData(DX12Commandlist& copycmdlist)
+{
+	if (!NeedToUploadTextures())
+	{
+		return;
+	}
+	//upload all textures's data sequentially
+	for (size_t i = 0; i < m_texturestoupload.size(); i++)
+	{
+		m_texturestoupload[i]->UploadTexture(copycmdlist);
+	}
+	//update currenttexidxtoupload variable such that internal function can indicate no textures need upload. 
+	m_currenttexidxtoupload = m_texturestoupload.size();
+}
 
 void CompoundModel::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimpModel, VertexVersion modelvertexversion, bool supportmaterial)
 {
