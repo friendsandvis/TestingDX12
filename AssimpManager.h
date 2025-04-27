@@ -29,8 +29,11 @@ public:
 	void AddNormalTexture(std::string normaltexpath) { m_normaltextureNames.insert(normaltexpath); }
 	void AddMetalnessTexture(std::string metalnesstexpath) { m_metalnesstextureNames.insert(metalnesstexpath); }
 	void AddRoughnessTexture(std::string roughnesstexpath) { m_roughnesstextureNames.insert(roughnesstexpath); }
+	void SetTransparent(bool isTransparent) { m_opaque = (!isTransparent); }
+	bool IsTransparent() { return !m_opaque; }
 private:
 	std::set<std::string> m_diffusetextureNames,m_normaltextureNames,m_metalnesstextureNames, m_roughnesstextureNames;
+	bool m_opaque = true;
 };
 struct AssimpLoadedMesh
 {
@@ -48,7 +51,7 @@ class AssimpManager
 {
 public:
 	AssimpLoadedModel& GetProcessedModel() { return m_processedmodel; }
-	AssimpManager(std::string filename);
+	AssimpManager(std::string filename, wstring texfilepath = L"");
 	~AssimpManager();
 	static XMMATRIX ToXMMatrix(aiMatrix4x4 assimpmatrix);
 private:
@@ -57,5 +60,6 @@ private:
 	
 	const aiScene* m_scene;
 	AssimpLoadedModel m_processedmodel;
+	wstring m_texturefilepath;
 };
 

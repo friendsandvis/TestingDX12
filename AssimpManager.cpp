@@ -1,11 +1,15 @@
 #include"AssimpManager.h"
 #include<assert.h>
+#include"DXTexManager.h"
+#include<assimp/StringUtils.h>
+#include<assimp/material.h>
 #pragma comment(lib,"assimp-vc143-mt.lib")
 
 
 
-AssimpManager::AssimpManager(std::string filename)
+AssimpManager::AssimpManager(std::string filename, wstring texfilepath)
 {
+	m_texturefilepath = texfilepath;
 	Assimp::Importer animporter;
 	m_scene = animporter.ReadFile(filename,aiProcess_MakeLeftHanded);
 	
@@ -93,6 +97,18 @@ void AssimpManager::ProcessMesh(aiMesh* amesh, aiMatrix4x4 finaltrasform)
 			aiString texname;
 			mat->GetTexture(aiTextureType_BASE_COLOR, i, &texname);
 			aprocessedmesh.material.AddDiffuseTexture(texname.C_Str());
+			std::string texfilename = texname.C_Str();
+			wstring texfilenamewstr(texfilename.begin(), texfilename.end());
+			wstring texpath = m_texturefilepath + texfilenamewstr;
+			if (DXTexManager::IsTextureTransparent(texpath.c_str()))
+			{
+				aiBlendMode blend_mode = aiBlendMode::aiBlendMode_Default;
+				aiString blend_mode_str;
+				if (mat->Get(AI_MATKEY_BLEND_FUNC, blend_mode_str) == aiReturn_SUCCESS) {
+					blend_mode = (aiBlendMode)std::stoi(blend_mode_str.C_Str());
+				}
+				aprocessedmesh.material.SetTransparent(true);
+			}
 		}
 		//retrive normal map textures
 		unsigned normaltexcount = mat->GetTextureCount(aiTextureType_NORMALS);

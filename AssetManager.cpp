@@ -1,6 +1,7 @@
 #include"AssetManager.h"
 #include"DX12CommandList.h"
-#define ALLOWRENDERINGNONOPAQUEMODELS true
+//during model loading this macro is used to determine if we need to set rendering for non opaque models to allow rendering them or not.
+#define ALLOWRENDERINGNONOPAQUEMODELS false
 
 
 
@@ -454,23 +455,8 @@ void Model::GetMaterialTextures(vector< DXTexture*>& textures)
 }
 bool Model::HasTransparentMaterial(wstring texfilepath)
 {
-	//m_loadedmaterial.SetTexPath(texfilepath);
-	//diffuse texture check for any being transparent
-	{
-		std::set<std::string>& texnames = m_material.GetDiffuseTextureNames();
-		if (texnames.size() > 0)
-		{
-
-			std::string texfilename = *(texnames.begin());
-			wstring texfilenamewstr(texfilename.begin(), texfilename.end());
-			wstring texpath = texfilepath + texfilenamewstr;
-			if (DXTexManager::IsTextureTransparent(texpath.c_str()))
-			{
-				return true;
-			}
-		}
-	}
-	return false;
+	//during assimp model loading itself it can be has been determined if material supports transparency.
+	return m_material.IsTransparent();
 }
 CompoundModel::CompoundModel(ModelDataUploadMode uploadmode)
 	:m_datauploadmode(uploadmode),
@@ -810,7 +796,7 @@ void BasicModelManager::LoadModel(ComPtr< ID3D12Device> creationdevice,std::stri
 }
 void BasicModelManager::LoadModel(ComPtr< ID3D12Device> creationdevice, std::string modelfilepath, CompoundModel& outmodel, VertexVersion requiredvertexversion, wstring texfilepath, bool supportmaterial)
 {
-	AssimpManager assimpmodel(modelfilepath);
+	AssimpManager assimpmodel(modelfilepath, texfilepath);
 	outmodel.SetTexPath(texfilepath);
 	outmodel.Init(creationdevice, assimpmodel.GetProcessedModel(), requiredvertexversion,supportmaterial);
 }
