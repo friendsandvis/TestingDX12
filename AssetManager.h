@@ -220,9 +220,12 @@ public:
 	bool m_supportmaterial;
 	bool SupportMaterial() { return m_supportmaterial; }
 	void UploadCurrentFrameModelTextureData(DX12Commandlist& copycmdlist,bool increment =true);
+	void UploadCurrentFrameModelTextureData(ComPtr< ID3D12Device> creationdevice, DX12Commandlist& copycmdlist, bool increment = true);
 	void UploadAllModelTextureData(DX12Commandlist& copycmdlist);
 	void UploadAllModelTextureData(ComPtr< ID3D12Device> creationdevice,  DX12Commandlist& copycmdlist);
+	void UploadModelTextureData(ModelMaterial::TextureUploadInfo& texUploadinfo,ComPtr< ID3D12Device> creationdevice, DX12Commandlist& copycmdlist);
 	bool NeedToUploadTextures() { return (m_currenttexidxtoupload<m_texturestoupload.size()); }
+	bool NeedToUploadTextureInfos() { return (m_currenttexidxtoupload < m_textureuploadInfos.size()); }
 private:
 	void UpdateTexUploadInfoSRVcreationData(vector< ModelMaterial::TextureUploadInfo>& texUploadInfos, DXTexture* targetTexture, D3D12_SHADER_RESOURCE_VIEW_DESC& srvdesc, D3D12_CPU_DESCRIPTOR_HANDLE srvDescHandle);
 };

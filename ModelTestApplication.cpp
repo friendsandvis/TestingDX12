@@ -30,7 +30,7 @@ void ModelTestApplication::Render()
 #if defined(USESPHONZAMODEL)//only have sponza textures right now.
 	//upload compoundmodel textures over frames
 	{
-		//m_loadedcompoundmodel.UploadCurrentFrameModelTextureData(m_primarycmdlist);
+		//m_loadedcompoundmodel.UploadCurrentFrameModelTextureData(m_creationdevice, m_primarycmdlist);
 		m_loadedcompoundmodel.UploadAllModelTextureData(m_creationdevice, m_primarycmdlist);
 	}
 #endif
@@ -82,7 +82,7 @@ void ModelTestApplication::Render()
 	GeneralConstants generalconstants = {};
 	generalconstants.usematerialtextures = static_cast<unsigned int>(m_loadedcompoundmodel.SupportMaterial());
 	//draw opaque models only for testing
-	m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 3,false);
+	m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 3, false);
 	
 	DXASSERT(m_primarycmdlist->Close())
 	BasicRender();

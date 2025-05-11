@@ -608,6 +608,22 @@ void CompoundModel::UploadCurrentFrameModelTextureData(DX12Commandlist& copycmdl
 		m_currenttexidxtoupload++;
 	}
 }
+void CompoundModel::UploadCurrentFrameModelTextureData(ComPtr< ID3D12Device> creationdevice, DX12Commandlist& copycmdlist, bool increment)
+{
+	if (!m_supportmaterial)
+	{
+		return;
+	}
+	if (!NeedToUploadTextureInfos())
+	{
+		return;
+	}
+	UploadModelTextureData(m_textureuploadInfos[m_currenttexidxtoupload],creationdevice,copycmdlist);
+	if (increment)
+	{
+		m_currenttexidxtoupload++;
+	}
+}
 void CompoundModel::UploadAllModelTextureData(DX12Commandlist& copycmdlist)
 {
 	if (!NeedToUploadTextures())
@@ -624,14 +640,15 @@ void CompoundModel::UploadAllModelTextureData(DX12Commandlist& copycmdlist)
 }
 void CompoundModel::UploadAllModelTextureData(ComPtr< ID3D12Device> creationdevice, DX12Commandlist& copycmdlist)
 {
-	if (!NeedToUploadTextures())
+	if (!NeedToUploadTextureInfos())
 	{
 		return;
 	}
 
 	for (int i = 0; i < m_textureuploadInfos.size(); i++)
 	{
-		if (!m_textureuploadInfos[i].dataloaded)
+		UploadModelTextureData(m_textureuploadInfos[i],creationdevice,copycmdlist);
+		/*if (!m_textureuploadInfos[i].dataloaded)
 		{
 			m_textureuploadInfos[i].ModelMaterialholdingTexture->LoadTextureData(m_textureuploadInfos[i].texture);
 			m_textureuploadInfos[i].dataloaded = true;
@@ -649,11 +666,33 @@ void CompoundModel::UploadAllModelTextureData(ComPtr< ID3D12Device> creationdevi
 				m_textureuploadInfos[i].createSRVfrominfo = false;
 			}
 		}
-		m_textureuploadInfos[i].texture->UploadTexture(copycmdlist);
+		m_textureuploadInfos[i].texture->UploadTexture(copycmdlist);*/
 
 	}
 	//update currenttexidxtoupload variable such that internal function can indicate no textures need upload. 
-	m_currenttexidxtoupload = m_texturestoupload.size();
+	m_currenttexidxtoupload = m_textureuploadInfos.size();
+}
+void CompoundModel::UploadModelTextureData(ModelMaterial::TextureUploadInfo& texUploadinfo, ComPtr< ID3D12Device> creationdevice, DX12Commandlist& copycmdlist)
+{
+	if (!texUploadinfo.dataloaded)
+	{
+		texUploadinfo.ModelMaterialholdingTexture->LoadTextureData(texUploadinfo.texture);
+		texUploadinfo.dataloaded = true;
+	}
+	if (texUploadinfo.needTextureInit)
+	{
+		texUploadinfo.texture->Init(creationdevice);
+		//srv entries need to be updated which are dependent on loaded texture data(make sure these properties are not set beforehard as thry will be invalid before loading)
+		texUploadinfo.srvdesc.Texture2D.MipLevels = texUploadinfo.texture->GetTotalMipCount();
+		texUploadinfo.srvdesc.Format = texUploadinfo.texture->GetDXImageData().m_imagemetadata.format;
+		texUploadinfo.needTextureInit = false;
+		if (texUploadinfo.createSRVfrominfo)
+		{
+			texUploadinfo.texture->CreateSRV(creationdevice, texUploadinfo.srvdesc, texUploadinfo.srvCreationDescHandle);
+			texUploadinfo.createSRVfrominfo = false;
+		}
+	}
+	texUploadinfo.texture->UploadTexture(copycmdlist);
 }
 void CompoundModel::Init(ComPtr< ID3D12Device> creationdevice, AssimpLoadedModel& assimpModel, VertexVersion modelvertexversion, bool supportmaterial)
 {
