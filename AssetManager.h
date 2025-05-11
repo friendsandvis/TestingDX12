@@ -42,35 +42,58 @@ class DX12Commandlist;
 class ModelMaterial
 {
 public:
-	//create the texture objects if the textures are loaded.
-	void Init(ComPtr< ID3D12Device> creationdevice);
+	struct TextureUploadInfo
+	{
+		DXTexture* texture = nullptr;
+		ModelMaterial* ModelMaterialholdingTexture = nullptr;
+		bool dataloaded = false;
+		bool textureInitialized = false;
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvdesc;
+		D3D12_CPU_DESCRIPTOR_HANDLE srvCreationDescHandle;
+		bool createSRVfrominfo = false;
+		bool needTextureInit = false;
+	};
+	void Init(ComPtr< ID3D12Device> creationdevice, bool allowTextureDataloading = false);
 	//upload data to gpu resource.
 	void UploadTextures(DX12Commandlist& copycmdlist);
-	//load from file the texture data imp:no resource creation here
+	//load from file the texture data imp:no texture resource creation here
 	void LoadDifuseTexture(std::wstring texname);
-	//load from file the texture data imp:no resource creation here
+	//load from file the texture data imp:no texture resource creation here
 	void LoadNormalTexture(std::wstring texname);
-	//load from file the texture data imp:no resource creation here
+	//load from file the texture data imp:no texture resource creation here
 	void LoadRoughnessTexture(std::wstring texname);
-	//load from file the texture data imp:no resource creation here
+	//load from file the texture data imp:no texture resource creation here
 	void LoadMetalnessTexture(std::wstring texname);
 	void GetMaterialTextures(vector< DXTexture*>& textures);
+	void GetMaterialTexturesUploadInfo(vector< TextureUploadInfo>& textureUploadInfos);
 	void SetTexPath(wstring texfilesPath) { m_texfilepath = texfilesPath; }
 	wstring GetTexPath() { return m_texfilepath; }
+	void ContainCombinedMetalnessRoughnessTex(bool ContaincombinedMetalnessRoughnessTex) { m_Containscombinedroughnessmetalnesstexture = ContaincombinedMetalnessRoughnessTex; }
+	bool ContainCombinedMetalnessRoughnessTex() { return m_Containscombinedroughnessmetalnesstexture; }
 	ModelMaterial();
 	~ModelMaterial();
 	DXTexture* GetDiffuseTexture() { return m_diffusetexture; }
 	DXTexture* GetNormalTexture() { return m_normaltexture; }
 	DXTexture* GetRoughnessTexture() { return m_roughnesstexture; }
 	DXTexture* GetMetalnessTexture() { return m_metalnesstexture; }
+	void LoadTextureData(DXTexture* texptr);
 private:
+
 	std::wstring GetTextureFilePath(std::wstring texname);
+
+	void LoadTextureDataInternal(DXTexture* & desttexptr);
+	void CreateTextureFileInternal(DXTexture*& desttexptr, std::wstring texname);
 	//pbr texture set
 	DXTexture* m_diffusetexture;
 	DXTexture* m_normaltexture;
 	DXTexture* m_roughnesstexture;
 	DXTexture* m_metalnesstexture;
 	wstring m_texfilepath = L"";
+	bool m_diffusetextureDataLoaded;
+	bool m_normaltextureDataLoaded;
+	bool m_roughnesstextureDataLoaded;
+	bool m_metalnesstextureDataLoaded;
+	bool m_Containscombinedroughnessmetalnesstexture = false;
 
 };
 //hold texture index for each material texture srv parameter in srvheap(pbr material only for now)
@@ -117,6 +140,7 @@ public:
 	}
 	unsigned GetMatGPUIdx() { return m_tmpmaterialgpuindex; }
 	void GetMaterialTextures(vector< DXTexture*>& textures);
+	void GetMaterialTexturesUploadInfo(vector< ModelMaterial::TextureUploadInfo>& textureUploadInfos);
 	void AllowRender(bool allow = true) { m_Allowrender=allow; }
 	//materialdata gpu control functions
 	void SetDiffusetextureIdx(unsigned idx) { m_materialdata_gpu.diffusetexidx=idx; }
@@ -186,6 +210,7 @@ public:
 	D3D12_PLACED_SUBRESOURCE_FOOTPRINT m_whitetexsubresfootprint;
 	DX12Buffer m_whitetexuploadbuffer;
 	vector< DXTexture*> m_texturestoupload;
+	vector< ModelMaterial::TextureUploadInfo> m_textureuploadInfos;
 	
 	std::vector<MaterialDataGPU> m_allmaterialsused;
 	DX12Buffer m_materialtable;
@@ -196,8 +221,10 @@ public:
 	bool SupportMaterial() { return m_supportmaterial; }
 	void UploadCurrentFrameModelTextureData(DX12Commandlist& copycmdlist,bool increment =true);
 	void UploadAllModelTextureData(DX12Commandlist& copycmdlist);
+	void UploadAllModelTextureData(ComPtr< ID3D12Device> creationdevice,  DX12Commandlist& copycmdlist);
 	bool NeedToUploadTextures() { return (m_currenttexidxtoupload<m_texturestoupload.size()); }
-	
+private:
+	void UpdateTexUploadInfoSRVcreationData(vector< ModelMaterial::TextureUploadInfo>& texUploadInfos, DXTexture* targetTexture, D3D12_SHADER_RESOURCE_VIEW_DESC& srvdesc, D3D12_CPU_DESCRIPTOR_HANDLE srvDescHandle);
 };
 
 class BasicModelManager

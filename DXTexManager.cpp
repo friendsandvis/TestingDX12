@@ -47,7 +47,10 @@ shared_ptr<StreamableTextureFileReader> DXTexManager::LoadSTFTexture(const char*
 }
 
 
-
+DXTexture::DXTexture(std::wstring externalTexfileName)
+{
+	m_TextureFileName = externalTexfileName;
+}
 bool DXTexture::Init(ComPtr< ID3D12Device> creationdevice)
 {
 	m_currentresstate = D3D12_RESOURCE_STATE_COPY_DEST;

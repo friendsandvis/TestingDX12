@@ -30,7 +30,8 @@ void ModelTestApplication::Render()
 #if defined(USESPHONZAMODEL)//only have sponza textures right now.
 	//upload compoundmodel textures over frames
 	{
-		m_loadedcompoundmodel.UploadCurrentFrameModelTextureData(m_primarycmdlist);
+		//m_loadedcompoundmodel.UploadCurrentFrameModelTextureData(m_primarycmdlist);
+		m_loadedcompoundmodel.UploadAllModelTextureData(m_creationdevice, m_primarycmdlist);
 	}
 #endif
 	//set rtv
