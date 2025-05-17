@@ -24,7 +24,7 @@ private:
 	{
 		unsigned int usematerialtextures;
 	};
-	DX12PSO m_pso;
+	DX12PSO m_pso,m_pso_alphablending;
 	Model m_planemodel,m_trianglemodel;
 	Model m_cubemodel;
 	Model m_loadedmodel;

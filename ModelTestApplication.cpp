@@ -81,8 +81,11 @@ void ModelTestApplication::Render()
 	//set general constants
 	GeneralConstants generalconstants = {};
 	generalconstants.usematerialtextures = static_cast<unsigned int>(m_loadedcompoundmodel.SupportMaterial());
-	//draw opaque models only for testing
-	m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 3, false);
+	//draw opaque models only with opaque pso and switch to alpha blending pso to render non opaque data
+	m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 3,true,false);
+	m_primarycmdlist->SetPipelineState(m_pso_alphablending.GetPSO());
+	m_primarycmdlist->SetGraphicsRootSignature(m_pso_alphablending.GetRootSignature());
+	m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 3,false,true);
 	
 	DXASSERT(m_primarycmdlist->Close())
 	BasicRender();
@@ -245,6 +248,30 @@ void ModelTestApplication::InitPSO()
 		}
 	}
 	m_pso.Init(m_creationdevice, psoinitdata);
+	{
+		//for alpha blending version of pso set alpha blending properties to basic pso settings.
+		//blendstate setup
+		DX12PSO::SetPSOData_DefaultAlphaSettings(psoinitdata, DX12PSO::PSOBlendingSetting::STRAIGHT_ALPHA);
+		/*for (size_t i = 0; i < 8; i++)
+		{
+			//same for all 8 rtvs
+			psoinitdata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].BlendEnable = TRUE;
+			psoinitdata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+			psoinitdata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].BlendOp = D3D12_BLEND_OP::D3D12_BLEND_OP_ADD;
+			psoinitdata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].BlendOpAlpha = D3D12_BLEND_OP::D3D12_BLEND_OP_ADD;
+			psoinitdata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].DestBlend = D3D12_BLEND::D3D12_BLEND_DEST_COLOR;
+			psoinitdata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].DestBlendAlpha = D3D12_BLEND::D3D12_BLEND_DEST_ALPHA;
+			psoinitdata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].SrcBlend = D3D12_BLEND::D3D12_BLEND_SRC_ALPHA;
+			psoinitdata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].SrcBlendAlpha = D3D12_BLEND::D3D12_BLEND_SRC_ALPHA;
+			psoinitdata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].DestBlend = D3D12_BLEND::D3D12_BLEND_INV_SRC_ALPHA;
+			psoinitdata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].DestBlendAlpha = D3D12_BLEND::D3D12_BLEND_INV_SRC_ALPHA;
+		}*/
+		//turn off z write for alphablending
+		psoinitdata.psodesc.graphicspsodesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+		//we do not need to rehold the shaders here in blending pso so clear held shaders list(already passed and hence managed in non alpha blending version of pso and shaders used for both psos are same hence not required to pass the same list of shaders to be managed to alpha version of pso as well).
+		psoinitdata.m_shaderstouse.clear();
+		m_pso_alphablending.Init(m_creationdevice, psoinitdata);
+	}
 }
 
 void ModelTestApplication::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)

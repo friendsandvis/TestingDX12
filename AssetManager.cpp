@@ -485,7 +485,7 @@ CompoundModel::~CompoundModel()
 		delete m_models[i];
 	}
 }
-void CompoundModel::Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix, UINT mvpmatrixrootparamindex,UINT materialconstsrootparamindex, bool drawNonOpaqueModels)
+void CompoundModel::Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix, UINT mvpmatrixrootparamindex,UINT materialconstsrootparamindex, bool drawOpaque, bool drawNonOpaque)
 {
 	vector<Model*> opaqueModels, nonOpaqueModels;
 	for (size_t i = 0; i < m_models.size(); i++)
@@ -500,12 +500,15 @@ void CompoundModel::Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix, U
 		}
 	}
 	//draw opaque models
-	for (size_t i = 0; i < opaqueModels.size(); i++)
+	if (drawOpaque)
 	{
-		opaqueModels[i]->Draw(renderingcmdlist, vpmatrix, mvpmatrixrootparamindex, materialconstsrootparamindex, true, true, m_supportmaterial);
+		for (size_t i = 0; i < opaqueModels.size(); i++)
+		{
+			opaqueModels[i]->Draw(renderingcmdlist, vpmatrix, mvpmatrixrootparamindex, materialconstsrootparamindex, true, true, m_supportmaterial);
+		}
 	}
-	//draw nonopaque models
-	if (drawNonOpaqueModels)
+		//draw nonopaque models
+	if(drawNonOpaque)
 	{
 		for (size_t i = 0; i < nonOpaqueModels.size(); i++)
 		{

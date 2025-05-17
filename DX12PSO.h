@@ -31,11 +31,20 @@ class DX12PSO
 public:
 	DX12PSO();
 	~DX12PSO();
+	enum PSOBlendingSetting
+	{
+		STRAIGHT_ALPHA,
+		ADDITIVE_BLEND,
+		PREMULTIPLIED_ALPHA
+
+
+	};
 
 	inline ID3D12PipelineState* GetPSO() { return m_pso.Get(); }
 	ID3D12RootSignature* GetRootSignature() { return m_initdata.rootsignature.GetRootSignature(); }
 	void Init(ComPtr< ID3D12Device> creationdevice,PSOInitData initdata);
 	static void DefaultInitPSOData(PSOInitData& initdata);
+	static void SetPSOData_DefaultAlphaSettings(PSOInitData& psoinitdata, PSOBlendingSetting blendingSetting = PSOBlendingSetting::STRAIGHT_ALPHA);
 private:
 	ComPtr< ID3D12PipelineState> m_pso;
 	PSOInitData m_initdata;
