@@ -2,6 +2,7 @@
 //only 1 model define to be active at a time
 //#define USECONFERENCEROOMCOMPOUNDMODEL
 #define USESPHONZAMODEL
+//#define USEREVOLVERMODEL
 //#define USECUBEMODEL
 
 
@@ -27,13 +28,19 @@ void ModelTestApplication::PreRenderUpdate()
 void ModelTestApplication::Render()
 {
 	m_primarycmdlist.Reset(false, true, m_frameIdx);
-#if defined(USESPHONZAMODEL)//only have sponza textures right now.
-	//upload compoundmodel textures over frames
+	bool uploadModelTextureData = false;
+#if defined(USESPHONZAMODEL) || defined(USEREVOLVERMODEL)
+	uploadModelTextureData = true;
+#endif //defined(USESPHONZAMODEL) || defined(USEREVOLVERMODEL)
+
+
+	
+	//upload compoundmodel textures over frames or all at once
+	if (uploadModelTextureData)
 	{
 		//m_loadedcompoundmodel.UploadCurrentFrameModelTextureData(m_creationdevice, m_primarycmdlist);
 		m_loadedcompoundmodel.UploadAllModelTextureData(m_creationdevice, m_primarycmdlist);
 	}
-#endif
 	//set rtv
 	UINT currentbackbufferidx=m_swapchain.GetCurrentbackbufferIndex();
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(currentbackbufferidx);
@@ -81,11 +88,20 @@ void ModelTestApplication::Render()
 	//set general constants
 	GeneralConstants generalconstants = {};
 	generalconstants.usematerialtextures = static_cast<unsigned int>(m_loadedcompoundmodel.SupportMaterial());
-	//draw opaque models only with opaque pso and switch to alpha blending pso to render non opaque data
-	m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 3,true,false);
-	m_primarycmdlist->SetPipelineState(m_pso_alphablending.GetPSO());
-	m_primarycmdlist->SetGraphicsRootSignature(m_pso_alphablending.GetRootSignature());
-	m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 3,false,true);
+	
+	//we draw opaque non opaque with diffrent [pso only if compound model supports nonopaque otherwise all rendered by default pso.
+	if (m_loadedcompoundmodel.SupportNonOpaqueMaterial())
+	{
+		//draw opaque models only with opaque pso and switch to alpha blending pso to render non opaque data
+		m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 3, true, false);
+		m_primarycmdlist->SetPipelineState(m_pso_alphablending.GetPSO());
+		m_primarycmdlist->SetGraphicsRootSignature(m_pso_alphablending.GetRootSignature());
+		m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 3, false, true);
+	}
+	else
+	{
+		m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 3, true, true);
+	}
 	
 	DXASSERT(m_primarycmdlist->Close())
 	BasicRender();
@@ -110,6 +126,15 @@ void ModelTestApplication::InitExtras()
 #ifdef USECUBEMODEL
 	BasicModelManager::LoadModel(m_creationdevice, "models/cubes2.dae", m_loadedcompoundmodel, VERTEXVERSION2);
 #endif // USECUBEMODEL
+#if defined(USEREVOLVERMODEL)
+	float scalefactor = 0.15f;
+	XMMATRIX scalemat = XMMatrixScalingFromVector(XMVectorSet(scalefactor, scalefactor, scalefactor, 1.0f));
+	BasicModelManager::LoadModel(m_creationdevice, "models/revolver/scene.gltf", m_loadedcompoundmodel, VERTEXVERSION3, L"textures/modeltextures/revolver/", true);
+	//revolver model has albedo as png but it is not expected to be rendered by alphablending.
+	m_loadedcompoundmodel.m_supportNonOpaqueMaterial = false;
+
+	m_loadedcompoundmodel.Extratransform(scalemat);
+#endif//defined(USEREVOLVERMODEL)
 
 
 	

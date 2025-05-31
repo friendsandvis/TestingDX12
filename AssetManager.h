@@ -218,7 +218,9 @@ public:
 	//local textures upload helper utils
 	size_t m_currenttexidxtoupload;
 	bool m_supportmaterial;
+	bool m_supportNonOpaqueMaterial = true;
 	bool SupportMaterial() { return m_supportmaterial; }
+	bool SupportNonOpaqueMaterial() { return m_supportNonOpaqueMaterial; }
 	void UploadCurrentFrameModelTextureData(DX12Commandlist& copycmdlist,bool increment =true);
 	void UploadCurrentFrameModelTextureData(ComPtr< ID3D12Device> creationdevice, DX12Commandlist& copycmdlist, bool increment = true);
 	void UploadAllModelTextureData(DX12Commandlist& copycmdlist);

@@ -33,7 +33,7 @@ void AssimpManager::ProcessNode(aiNode* annode)
 	aiMatrix4x4 finaltransform=annode->mTransformation;
 	if (annode->mParent)
 	{
-		finaltransform=finaltransform*annode->mTransformation;
+		finaltransform=finaltransform* annode->mParent->mTransformation;
 	}
 
 	for (unsigned i = 0; i < annode->mNumMeshes;i++)

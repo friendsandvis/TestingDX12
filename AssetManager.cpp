@@ -490,7 +490,8 @@ void CompoundModel::Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix, U
 	vector<Model*> opaqueModels, nonOpaqueModels;
 	for (size_t i = 0; i < m_models.size(); i++)
 	{
-		if (m_models[i]->HasOpaqueMaterial())
+		//if not supporting nonopaque materials for this compound model then all models are sent to opaque node list
+		if (m_models[i]->HasOpaqueMaterial() && m_supportNonOpaqueMaterial)
 		{
 			opaqueModels.push_back(m_models[i]);
 		}
