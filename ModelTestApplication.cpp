@@ -36,10 +36,17 @@ void ModelTestApplication::Render()
 
 	
 	//upload compoundmodel textures over frames or all at once
+	const bool loadModelTextureDataOverFrames = false;
 	if (uploadModelTextureData)
 	{
-		//m_loadedcompoundmodel.UploadCurrentFrameModelTextureData(m_creationdevice, m_primarycmdlist);
-		m_loadedcompoundmodel.UploadAllModelTextureData(m_creationdevice, m_primarycmdlist);
+		if (loadModelTextureDataOverFrames)
+		{
+			m_loadedcompoundmodel.UploadCurrentFrameModelTextureData(m_creationdevice, m_primarycmdlist);
+		}
+		else
+		{
+			m_loadedcompoundmodel.UploadAllModelTextureData(m_creationdevice, m_primarycmdlist);
+		}
 	}
 	//set rtv
 	UINT currentbackbufferidx=m_swapchain.GetCurrentbackbufferIndex();
