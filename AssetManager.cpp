@@ -17,6 +17,49 @@ std::vector<Vertex>  cubeverticices = {
 	{ 1.0f, 1.0f, 1.0f,0.0,0.0f},	//6
 	{ 1.0f,-1.0f, 1.0f,0.0,0.0f},	//7
 };
+float cubeverticicesV3[] = {
+	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+
+	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+	 0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+	 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+	 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+	-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+
+	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+	-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+	-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+
+	 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+	 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+	 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+	 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+	 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+	 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+
+	-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+	 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+	 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+	 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+
+	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+	 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+	 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+	 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+	-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+};
 
 /*std::vector<Vertex>  cubeverticices2 = {
 	{-1.0f, -1.0f, -1.0f,0.0,0.0f,0.0f},	//0
@@ -87,7 +130,6 @@ void Model::Draw(DX12Commandlist& renderingcmdlist,XMMATRIX vpmatrix, UINT mvpma
 		return;
 	}
 	renderingcmdlist->IASetVertexBuffers(0, 1, &m_vertexbufferview);
-	renderingcmdlist->IASetIndexBuffer(&m_indexbufferview);
 	XMMATRIX mvp = vpmatrix;
 	if (usemodelmatrix)
 	{
@@ -105,7 +147,15 @@ void Model::Draw(DX12Commandlist& renderingcmdlist,XMMATRIX vpmatrix, UINT mvpma
 	{
 		renderingcmdlist->SetGraphicsRoot32BitConstants(materialconstsrootparamindex, sizeof(m_matconsts) / 4, &m_matconsts, 0);
 	}
-	renderingcmdlist->DrawIndexedInstanced(GetIndiciesCount(), 1, 0, 0, 0);
+	if (HasIndexBuffer())
+	{
+		renderingcmdlist->IASetIndexBuffer(&m_indexbufferview);
+		renderingcmdlist->DrawIndexedInstanced(GetIndiciesCount(), 1, 0, 0, 0);
+	}
+	else
+	{
+		renderingcmdlist->DrawInstanced(m_verticies.size(), 1, 0, 0);
+	}
 }
 void Model::Extratransform(XMMATRIX extratransformmat)
 {
@@ -337,6 +387,7 @@ void Model::UploadModelDatatoBuffers()
 	}
 
 	//upload indexdata
+	if(HasIndexBuffer())
 	{
 		BufferMapParams ibmapparams = {};
 		ibmapparams.subresource = 0;
@@ -369,11 +420,14 @@ void Model::UploadModelDatatoGPUBuffers(DX12Commandlist& copycmdlist)
 	copycmdlist->ResourceBarrier(1, &barrier);
 
 	//copy ib
-	barrier=m_indexbuffer.TransitionResState(D3D12_RESOURCE_STATE_COPY_DEST);
-	copycmdlist->ResourceBarrier(1, &barrier);
-	copycmdlist->CopyResource(m_indexbuffer.GetResource().Get(), m_indexuploadbuffer.GetResource().Get());
-	barrier = m_indexbuffer.TransitionResState(D3D12_RESOURCE_STATE_INDEX_BUFFER);
-	copycmdlist->ResourceBarrier(1, &barrier);
+	if (HasIndexBuffer())
+	{
+		barrier = m_indexbuffer.TransitionResState(D3D12_RESOURCE_STATE_COPY_DEST);
+		copycmdlist->ResourceBarrier(1, &barrier);
+		copycmdlist->CopyResource(m_indexbuffer.GetResource().Get(), m_indexuploadbuffer.GetResource().Get());
+		barrier = m_indexbuffer.TransitionResState(D3D12_RESOURCE_STATE_INDEX_BUFFER);
+		copycmdlist->ResourceBarrier(1, &barrier);
+	}
 
 }
 void Model::UploadModelTextureData(DX12Commandlist& copycmdlist)
@@ -918,13 +972,22 @@ void BasicModelManager::InitPlaneModel(ComPtr< ID3D12Device> creationdevice, Mod
 	planemodel.InitIndexBuffer(creationdevice, planeindicies);
 	planemodel.UploadModelDatatoBuffers();
 }
-void BasicModelManager::InitCubeModel(ComPtr< ID3D12Device> creationdevice, Model& cubemodel)
+void BasicModelManager::InitCubeModel(ComPtr< ID3D12Device> creationdevice, Model& cubemodel, VertexVersion vertexVersion)
 {
 	vector<VertexBase*> verticies;
-	GetCubeVerticiesV0(verticies);
-	cubemodel.SetVertexVersionUsed(VERTEXVERSION0);
-	cubemodel.InitVertexBuffer(creationdevice, verticies);
-	cubemodel.InitIndexBuffer(creationdevice,cubeindicies);
+	if (vertexVersion == VertexVersion::VERTEXVERSION0)
+	{
+		GetCubeVerticiesV0(verticies);
+		cubemodel.SetVertexVersionUsed(VERTEXVERSION0);
+		cubemodel.InitVertexBuffer(creationdevice, verticies);
+		cubemodel.InitIndexBuffer(creationdevice, cubeindicies);
+	}
+	else if (vertexVersion == VertexVersion::VERTEXVERSION3)
+	{
+		GetCubeVerticiesV3(verticies);
+		cubemodel.SetVertexVersionUsed(VertexVersion::VERTEXVERSION3);
+		cubemodel.InitVertexBuffer(creationdevice, verticies);
+	}
 	cubemodel.UploadModelDatatoBuffers();
 }
 void BasicModelManager::InitTriangleModel(ComPtr< ID3D12Device> creationdevice, Model& trianglemodel)
@@ -1028,6 +1091,21 @@ void BasicModelManager::GetCubeVerticiesV0(vector<VertexBase*>& outverticies)
 	vert->m_position = { 1.0f,-1.0f, 1.0f };
 	vert->m_uv = { 0.0,0.0f };
 	outverticies.push_back(vert);
+}
+void BasicModelManager::GetCubeVerticiesV3(vector<VertexBase*>& outverticies)
+{
+	int numvalues = sizeof(cubeverticicesV3) / sizeof(float);
+	const int numValuesperVertex = 6;
+	int numverticies = numvalues/ numValuesperVertex;
+	for (int i = 0; i < numverticies; i++)
+	{
+		float* ptrToVertexValues = cubeverticicesV3 + (i * numValuesperVertex);
+		VertexV3* vert = new VertexV3();
+		vert->m_position = { ptrToVertexValues[0],ptrToVertexValues[1],ptrToVertexValues[2] };
+		vert->m_uv = { 0.0f,0.0f };
+		vert->m_normal = { ptrToVertexValues[3],ptrToVertexValues[4],ptrToVertexValues[5] };
+		outverticies.push_back(vert);
+	}
 }
 void BasicModelManager::GetTriangleVerticiesV0(vector<VertexBase*>& outverticies)
 {

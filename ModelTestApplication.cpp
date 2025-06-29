@@ -1,6 +1,7 @@
 #include"ModelTestApplication.h"
 //only 1 model define to be active at a time
 //#define USECONFERENCEROOMCOMPOUNDMODEL
+//#define USETESTBASICMODELCUBE
 #define USESPHONZAMODEL
 //#define USEREVOLVERMODEL
 //#define USECUBEMODEL
@@ -95,7 +96,14 @@ void ModelTestApplication::Render()
 	//set general constants
 	GeneralConstants generalconstants = {};
 	generalconstants.usematerialtextures = static_cast<unsigned int>(m_loadedcompoundmodel.SupportMaterial());
-	
+#ifdef USETESTBASICMODELCUBE
+	{
+		m_cubemodel.Draw(m_primarycmdlist, vpmat, 0, 3,true,true,true);
+	}
+	DXASSERT(m_primarycmdlist->Close())
+		BasicRender();
+	return;
+#endif
 	//we draw opaque non opaque with diffrent [pso only if compound model supports nonopaque otherwise all rendered by default pso.
 	if (m_loadedcompoundmodel.SupportNonOpaqueMaterial())
 	{
@@ -150,7 +158,11 @@ void ModelTestApplication::InitExtras()
 	
 	BasicModelManager::InitTriangleModel(m_creationdevice, m_trianglemodel);
 	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
-	BasicModelManager::InitCubeModel(m_creationdevice, m_cubemodel);
+	BasicModelManager::InitCubeModel(m_creationdevice, m_cubemodel,VertexVersion::VERTEXVERSION3);
+	Model::MaterialConstants cubeMaterialConstants = m_cubemodel.GetMaterialConstants();
+	cubeMaterialConstants.usecustomMaterial = true;
+	cubeMaterialConstants.texsrvidx = 0;//arbatary unused for test cube model.
+	m_cubemodel.SetMaterialConstants(cubeMaterialConstants);
 	InitPSO();
 	
 	m_planemodel.UploadModelDatatoBuffers();

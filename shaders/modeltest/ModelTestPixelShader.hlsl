@@ -15,6 +15,7 @@ uint texidx;
 
 struct MaterialConstants
 {
+bool useCustomMaterial;
 uint matidx;
 };
 
@@ -34,8 +35,11 @@ struct VSOut
 
 float4 main(VSOut psin) : SV_TARGET0
 {
-	
-	
+	bool useCustomMaterial = matgeneralconsts.useCustomMaterial;
+	if(useCustomMaterial)
+	{
+	return float4(0.0f,1.0f,0.0f,1.0f);
+	}
 	
 	float2 uvnew=float2(psin.uv.x,1.0f-psin.uv.y);
 	MaterialDataGPU mattmp=mattable[matgeneralconsts.matidx];

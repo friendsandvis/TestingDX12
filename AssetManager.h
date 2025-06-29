@@ -109,6 +109,7 @@ class Model
 public:
 	struct MaterialConstants
 	{
+		bool usecustomMaterial = false;
 		unsigned int texsrvidx;
 	};
 	XMMATRIX GetTransform() { return m_transform; }
@@ -129,6 +130,7 @@ public:
 	void UploadModelDatatoGPUBuffers(DX12Commandlist& copycmdlist);
 	void UploadModelTextureData(DX12Commandlist& copycmdlist);
 	inline size_t GetIndiciesCount() { return m_indicies.size(); }
+	inline bool HasIndexBuffer() { return (m_indicies.size() > 0); }
 	inline size_t GetVerticiesCount() { return m_verticies.size(); }
 	inline ModelDataUploadMode GetUploadMode() { return m_uploadmode; }
 	inline VertexVersion GetVertexVersionUsed() { return m_vertexversion; }
@@ -142,6 +144,8 @@ public:
 	void GetMaterialTextures(vector< DXTexture*>& textures);
 	void GetMaterialTexturesUploadInfo(vector< ModelMaterial::TextureUploadInfo>& textureUploadInfos);
 	void AllowRender(bool allow = true) { m_Allowrender=allow; }
+	MaterialConstants& GetMaterialConstants(){return m_matconsts;}
+	void SetMaterialConstants(const MaterialConstants& matConst) { m_matconsts = matConst; }
 	//materialdata gpu control functions
 	void SetDiffusetextureIdx(unsigned idx) { m_materialdata_gpu.diffusetexidx=idx; }
 	void SetNormaltextureIdx(unsigned idx) { m_materialdata_gpu.normaltexidx = idx; }
@@ -236,7 +240,7 @@ class BasicModelManager
 {
 public:
 	static void InitPlaneModel(ComPtr< ID3D12Device> creationdevice, Model& planemodel);
-	static void InitCubeModel(ComPtr< ID3D12Device> creationdevice, Model& cubemodel);
+	static void InitCubeModel(ComPtr< ID3D12Device> creationdevice, Model& cubemodel, VertexVersion vertexVersion = VertexVersion::VERTEXVERSION0);
 	static void InitTriangleModel(ComPtr< ID3D12Device> creationdevice, Model& trianglemodel);
 	static void LoadModel(ComPtr< ID3D12Device> creationdevice,std::string modelfilepath, Model& outmodel, VertexVersion requiredvertexversion);
 	static void LoadModel(ComPtr< ID3D12Device> creationdevice, std::string modelfilepath, CompoundModel& outmodel, VertexVersion requiredvertexversion, wstring texfilepath = L"", bool supportmaterial = false);
@@ -245,6 +249,7 @@ public:
 private:
 	static void GetPlaneVerticiesV0(vector<VertexBase*>& outverticies);
 	static void GetCubeVerticiesV0(vector<VertexBase*>& outverticies);
+	static void GetCubeVerticiesV3(vector<VertexBase*>& outverticies);
 	static void GetTriangleVerticiesV0(vector<VertexBase*>& outverticies);
 };
 
