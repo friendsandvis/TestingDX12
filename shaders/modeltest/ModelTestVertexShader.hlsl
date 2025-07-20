@@ -17,6 +17,7 @@ struct VSOut
 {
     float4 pos : SV_Position;
 	float3 normal: NORM;
+	float4 pixelpos : PIXPOS;
 	float2 uv:UV;
 };
 
@@ -27,7 +28,8 @@ VSOut main(VSIn input)
 		
 		
 		output.pos =mul(vertexconsts.mvp,float4(input.vpos,1.0f));
-		output.normal=input.normal;
+		output.normal=normalize(input.normal);
+		output.pixelpos = mul(vertexconsts.model,float4(input.vpos,1.0f));
 		output.uv=input.vuv;
 
     return output;

@@ -1,8 +1,8 @@
 #include"ModelTestApplication.h"
 //only 1 model define to be active at a time
 //#define USECONFERENCEROOMCOMPOUNDMODEL
-//#define USETESTBASICMODELCUBE
-#define USESPHONZAMODEL
+#define USETESTBASICMODELCUBE
+//#define USESPHONZAMODEL
 //#define USEREVOLVERMODEL
 //#define USECUBEMODEL
 
@@ -61,7 +61,7 @@ void ModelTestApplication::Render()
 	m_primarycmdlist->SetPipelineState(m_pso.GetPSO());
 	m_primarycmdlist->SetGraphicsRootSignature(m_pso.GetRootSignature());
 	//XMMATRIX mvp = m_maincamera.GetMVP();
-	XMMATRIX orthoproj = XMMatrixOrthographicLH(2.0F, 2.0F, -1.0f, 1.0f);
+	XMMATRIX orthoproj = XMMatrixOrthographicLH(2.0f, 2.0f, -1.0f, 1.0f);
 	XMMATRIX model = XMMatrixIdentity();
 	XMMATRIX mvp = XMMatrixMultiply(model,orthoproj);
 	m_primarycmdlist->SetGraphicsRoot32BitConstants(0,sizeof(XMMATRIX)/4, &mvp, 0);
@@ -93,12 +93,28 @@ void ModelTestApplication::Render()
 		m_primarycmdlist->SetDescriptorHeaps(1, heapstoset);
 		m_primarycmdlist->SetGraphicsRootDescriptorTable(1, loadedcompoundmodelmatsrvheap.GetGPUHandleOffseted(0));
 	}
-	//set general constants
+	//set general constants(not used  currently is it even needed in this app at this point
 	GeneralConstants generalconstants = {};
 	generalconstants.usematerialtextures = static_cast<unsigned int>(m_loadedcompoundmodel.SupportMaterial());
+	CustomMaterial customMaterial = {};
+	customMaterial.usecustomMaterial = 0.0f;
+#ifdef USETESTBASICMODELCUBE
+	customMaterial.usecustomMaterial = 1.0f;
+#endif // USETESTBASICMODELCUBE
+
+	
+	customMaterial.albedo = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
+	customMaterial.ambientfactor = 0.1f;
+	customMaterial.specularValue = 256.0f;
+	DirectX::XMStoreFloat4(&customMaterial.viewPos, m_maincamera.GetCamPos());
+	m_primarycmdlist->SetGraphicsRoot32BitConstants(4, sizeof(customMaterial) / 4, &customMaterial, 0);
+	TestLight testLightProperties = {};
+	testLightProperties.lightPos = XMFLOAT3(1.2f, 1.0f, 2.0f);
+	testLightProperties.lightCol = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	m_primarycmdlist->SetGraphicsRoot32BitConstants(5, sizeof(testLightProperties) / 4, &testLightProperties, 0);
 #ifdef USETESTBASICMODELCUBE
 	{
-		m_cubemodel.Draw(m_primarycmdlist, vpmat, 0, 3,true,true,true);
+		m_cubemodel.Draw(m_primarycmdlist, vpmat, 0, 3, true, true, true);
 	}
 	DXASSERT(m_primarycmdlist->Close())
 		BasicRender();
@@ -160,7 +176,6 @@ void ModelTestApplication::InitExtras()
 	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
 	BasicModelManager::InitCubeModel(m_creationdevice, m_cubemodel,VertexVersion::VERTEXVERSION3);
 	Model::MaterialConstants cubeMaterialConstants = m_cubemodel.GetMaterialConstants();
-	cubeMaterialConstants.usecustomMaterial = true;
 	cubeMaterialConstants.texsrvidx = 0;//arbatary unused for test cube model.
 	m_cubemodel.SetMaterialConstants(cubeMaterialConstants);
 	InitPSO();
@@ -198,7 +213,7 @@ void ModelTestApplication::InitPSO()
 	psoinitdata.psodesc.graphicspsodesc.PS.pShaderBytecode = ps->GetCompiledCode();
 	psoinitdata.psodesc.graphicspsodesc.VS.BytecodeLength = vs->GetCompiledCodeSize();
 	psoinitdata.psodesc.graphicspsodesc.VS.pShaderBytecode = vs->GetCompiledCode();
-	//psoinitdata.psodesc.graphicspsodesc.RasterizerState.CullMode = D3D12_CULL_MODE_FRONT;
+	//psoinitdata.psodesc.graphicspsodesc.RasterizerState.CullMode = D3D12_CULL_MODE::D3D12_CULL_MODE_FRONT;
 	//root signature setup
 	vector < D3D12_DESCRIPTOR_RANGE> descrangestouserootparam1;
 	vector<D3D12_ROOT_PARAMETER> rootparams;
@@ -249,12 +264,6 @@ void ModelTestApplication::InitPSO()
 		rootparam1.ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_PIXEL;
 		rootparams.push_back(rootparam1);
 		D3D12_ROOT_PARAMETER rootparam2 = {};
-		/*rootparam2.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-		rootparam2.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-		rootparam2.Constants.Num32BitValues = sizeof(MaterialDataGPU) / 4;
-		rootparam2.Constants.RegisterSpace = 0;
-		rootparam2.Constants.ShaderRegister = 1;
-		*/
 		rootparam2.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
 		rootparam2.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 		rootparam2.Constants.Num32BitValues = sizeof(MaterialDataGPU) / 4;
@@ -268,6 +277,20 @@ void ModelTestApplication::InitPSO()
 		rootparam3.Constants.RegisterSpace = 1;
 		rootparam3.Constants.ShaderRegister = 1;
 		rootparams.push_back(rootparam3);
+		D3D12_ROOT_PARAMETER rootparam4 = {};
+		rootparam4.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+		rootparam4.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+		rootparam4.Constants.Num32BitValues = sizeof(CustomMaterial) / 4;
+		rootparam4.Constants.RegisterSpace = 0;
+		rootparam4.Constants.ShaderRegister = 2;
+		rootparams.push_back(rootparam4);
+		D3D12_ROOT_PARAMETER rootparam5 = {};
+		rootparam5.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+		rootparam5.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+		rootparam5.Constants.Num32BitValues = sizeof(TestLight) / 4;
+		rootparam5.Constants.RegisterSpace = 0;
+		rootparam5.Constants.ShaderRegister = 3;
+		rootparams.push_back(rootparam5);
 
 		
 		vector<D3D12_STATIC_SAMPLER_DESC> staticsamplers;

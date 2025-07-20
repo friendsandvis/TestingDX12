@@ -109,7 +109,6 @@ class Model
 public:
 	struct MaterialConstants
 	{
-		bool usecustomMaterial = false;
 		unsigned int texsrvidx;
 	};
 	XMMATRIX GetTransform() { return m_transform; }
