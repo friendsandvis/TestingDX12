@@ -1,13 +1,13 @@
-#include"ModelTestApplication.h"
+#include"LightingTestApplication.h"
 //only 1 model define to be active at a time
 //#define USECONFERENCEROOMCOMPOUNDMODEL
-//#define USETESTBASICMODELCUBE
-#define USESPHONZAMODEL
+#define USETESTBASICMODELCUBE
+//#define USESPHONZAMODEL
 //#define USEREVOLVERMODEL
 //#define USECUBEMODEL
 
 
-ModelTestApplication::ModelTestApplication()
+LightingTestApplication::LightingTestApplication()
 	:m_planemodel(ModelDataUploadMode::COPY),
 	m_cubemodel(ModelDataUploadMode::COPY),
 	m_loadedmodel(ModelDataUploadMode::COPY),
@@ -16,17 +16,17 @@ ModelTestApplication::ModelTestApplication()
 {
 	m_maincameracontroller.SetCameratoControl(&m_maincamera);
 }
-ModelTestApplication::~ModelTestApplication()
+LightingTestApplication::~LightingTestApplication()
 {
-	
+
 }
-void ModelTestApplication::PreRenderUpdate()
+void LightingTestApplication::PreRenderUpdate()
 {
 	m_maincameracontroller.Update();
 	DX12ApplicationManagerBase::PreRenderUpdate();
 }
 
-void ModelTestApplication::Render()
+void LightingTestApplication::Render()
 {
 	m_primarycmdlist.Reset(false, true, m_frameIdx);
 	bool uploadModelTextureData = false;
@@ -35,7 +35,7 @@ void ModelTestApplication::Render()
 #endif //defined(USESPHONZAMODEL) || defined(USEREVOLVERMODEL)
 
 
-	
+
 	//upload compoundmodel textures over frames or all at once
 	const bool loadModelTextureDataOverFrames = false;
 	if (uploadModelTextureData)
@@ -50,9 +50,9 @@ void ModelTestApplication::Render()
 		}
 	}
 	//set rtv
-	UINT currentbackbufferidx=m_swapchain.GetCurrentbackbufferIndex();
+	UINT currentbackbufferidx = m_swapchain.GetCurrentbackbufferIndex();
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(currentbackbufferidx);
-	D3D12_RESOURCE_BARRIER barrier=m_swapchain.TransitionBackBuffer(currentbackbufferidx, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	D3D12_RESOURCE_BARRIER barrier = m_swapchain.TransitionBackBuffer(currentbackbufferidx, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	if (DXUtils::IsBarrierSafeToExecute(barrier))
 	{
 		m_primarycmdlist->ResourceBarrier(1, &barrier);
@@ -63,18 +63,18 @@ void ModelTestApplication::Render()
 	//XMMATRIX mvp = m_maincamera.GetMVP();
 	XMMATRIX orthoproj = XMMatrixOrthographicLH(2.0f, 2.0f, -1.0f, 1.0f);
 	XMMATRIX model = XMMatrixIdentity();
-	XMMATRIX mvp = XMMatrixMultiply(model,orthoproj);
-	m_primarycmdlist->SetGraphicsRoot32BitConstants(0,sizeof(XMMATRIX)/4, &mvp, 0);
-	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE,&dsvhandle);
-	float clearvalue[4] = {1.0f,1.0f,1.0f,1.0f};
-	ClearBackBuffer(currentbackbufferidx,m_primarycmdlist, clearvalue);
+	XMMATRIX mvp = XMMatrixMultiply(model, orthoproj);
+	m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvp, 0);
+	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, &dsvhandle);
+	float clearvalue[4] = { 1.0f,1.0f,1.0f,1.0f };
+	ClearBackBuffer(currentbackbufferidx, m_primarycmdlist, clearvalue);
 	m_primarycmdlist->ClearDepthStencilView(dsvhandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	{
 		m_primarycmdlist->IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		
-		
+
+
 	}
-	
+
 	{
 		D3D12_VIEWPORT aviewport = GetViewport();
 
@@ -86,7 +86,7 @@ void ModelTestApplication::Render()
 	//m_trianglemodel.Draw(m_primarycmdlist,vpmat);
 	m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &vpmat, 0);
 	//a specialized way to test out model's material(diffuse textures) 
-	if(m_loadedcompoundmodel.SupportMaterial())
+	if (m_loadedcompoundmodel.SupportMaterial())
 	{
 		DX12DESCHEAP& loadedcompoundmodelmatsrvheap = m_loadedcompoundmodel.GetResourceviewHeap();
 		ID3D12DescriptorHeap* heapstoset[1] = { loadedcompoundmodelmatsrvheap.GetDescHeap() };
@@ -102,7 +102,7 @@ void ModelTestApplication::Render()
 	customMaterial.usecustomMaterial = 1.0f;
 #endif // USETESTBASICMODELCUBE
 
-	
+
 	customMaterial.albedo = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
 	customMaterial.ambientfactor = 0.1f;
 	customMaterial.specularValue = 256.0f;
@@ -133,26 +133,26 @@ void ModelTestApplication::Render()
 	{
 		m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 3, true, true);
 	}
-	
+
 	DXASSERT(m_primarycmdlist->Close())
-	BasicRender();
+		BasicRender();
 }
 
-void ModelTestApplication::InitExtras()
+void LightingTestApplication::InitExtras()
 {
-	BasicModelManager::LoadModel(m_creationdevice,"models/cube.dae",m_loadedmodel,VERTEXVERSION2);
+	BasicModelManager::LoadModel(m_creationdevice, "models/cube.dae", m_loadedmodel, VERTEXVERSION2);
 #ifdef USECONFERENCEROOMCOMPOUNDMODEL
 	float scalefactor = 0.01f;
 	XMMATRIX scalemat = XMMatrixScalingFromVector(XMVectorSet(scalefactor, scalefactor, scalefactor, 1.0f));
 	BasicModelManager::LoadModel(m_creationdevice, "models/conference.obj", m_loadedcompoundmodel, VERTEXVERSION2);
 	m_loadedcompoundmodel.Extratransform(scalemat);
 #endif // USECONFERENCEROOMCOMPOUNDMODEL
-	
-	
+
+
 #if defined(USESPHONZAMODEL)
 	float scalefactor = 1.0f;
 	XMMATRIX scalemat = XMMatrixScalingFromVector(XMVectorSet(scalefactor, scalefactor, scalefactor, 1.0f));
-	BasicModelManager::LoadModel(m_creationdevice, "models/Sponza.gltf", m_loadedcompoundmodel, VERTEXVERSION3, L"textures/modeltextures/sponza/",true);
+	BasicModelManager::LoadModel(m_creationdevice, "models/Sponza.gltf", m_loadedcompoundmodel, VERTEXVERSION3, L"textures/modeltextures/sponza/", true);
 #endif//defined(USESPHONZAMODEL)
 #ifdef USECUBEMODEL
 	BasicModelManager::LoadModel(m_creationdevice, "models/cubes2.dae", m_loadedcompoundmodel, VERTEXVERSION2);
@@ -168,18 +168,18 @@ void ModelTestApplication::InitExtras()
 #endif//defined(USEREVOLVERMODEL)
 
 
-	
 
 
-	
+
+
 	BasicModelManager::InitTriangleModel(m_creationdevice, m_trianglemodel);
 	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
-	BasicModelManager::InitCubeModel(m_creationdevice, m_cubemodel,VertexVersion::VERTEXVERSION3);
+	BasicModelManager::InitCubeModel(m_creationdevice, m_cubemodel, VertexVersion::VERTEXVERSION3);
 	Model::MaterialConstants cubeMaterialConstants = m_cubemodel.GetMaterialConstants();
 	cubeMaterialConstants.texsrvidx = 0;//arbatary unused for test cube model.
 	m_cubemodel.SetMaterialConstants(cubeMaterialConstants);
 	InitPSO();
-	
+
 	m_planemodel.UploadModelDatatoBuffers();
 	m_cubemodel.UploadModelDatatoBuffers();
 	m_loadedmodel.UploadModelDatatoBuffers();
@@ -196,7 +196,7 @@ void ModelTestApplication::InitExtras()
 	DXASSERT(m_uploadcommandlist->Close());
 }
 
-void ModelTestApplication::InitPSO()
+void LightingTestApplication::InitPSO()
 {
 	vector<D3D12_INPUT_ELEMENT_DESC> inputelements;
 	DXVertexManager::BuildDefaultInputelementdesc(inputelements, VERTEXVERSION3);
@@ -218,100 +218,101 @@ void ModelTestApplication::InitPSO()
 	vector < D3D12_DESCRIPTOR_RANGE> descrangestouserootparam1;
 	vector<D3D12_ROOT_PARAMETER> rootparams;
 	{
-		 
+
 
 		//input assembler setup
-		 
+
 		psoinitdata.psodesc.graphicspsodesc.InputLayout.NumElements = (UINT)inputelements.size();
 		psoinitdata.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = inputelements.data();
-		
-		//psoinitdata.psodesc.graphicspsodesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
-		{D3D12_ROOT_PARAMETER rootparam0 = {};
-		rootparam0.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-		rootparam0.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-		rootparam0.Constants.Num32BitValues = sizeof(ShaderTransformConstants_General) / 4;
-		rootparam0.Constants.RegisterSpace = 0;
-		rootparam0.Constants.ShaderRegister = 0;
-		rootparams.push_back(rootparam0);
-		D3D12_ROOT_PARAMETER rootparam1 = {};
-		//making mat table srv range
-		D3D12_DESCRIPTOR_RANGE materialtablerange = {};
-		materialtablerange.OffsetInDescriptorsFromTableStart = 0;
-		materialtablerange.NumDescriptors = 1;
-		materialtablerange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		materialtablerange.RegisterSpace = 1;
-		materialtablerange.BaseShaderRegister = 0;
-		//making unbound range so make sure it is last range
-		D3D12_DESCRIPTOR_RANGE texturesrvrange = {};
-		texturesrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		texturesrvrange.BaseShaderRegister = 1;
-		texturesrvrange.RegisterSpace = 0;
-		texturesrvrange.NumDescriptors = 307;
-		texturesrvrange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-		//do not know why order of range is important here else issue in unbound range(all texture).
-		descrangestouserootparam1.push_back(texturesrvrange);
-		descrangestouserootparam1.push_back(materialtablerange);
-		
-		
-		
-		
-		
-		
-		
-		rootparam1.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		rootparam1.DescriptorTable.NumDescriptorRanges = descrangestouserootparam1.size();
-		rootparam1.DescriptorTable.pDescriptorRanges = descrangestouserootparam1.data();
-		rootparam1.ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_PIXEL;
-		rootparams.push_back(rootparam1);
-		D3D12_ROOT_PARAMETER rootparam2 = {};
-		rootparam2.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-		rootparam2.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-		rootparam2.Constants.Num32BitValues = sizeof(MaterialDataGPU) / 4;
-		rootparam2.Constants.RegisterSpace = 0;
-		rootparam2.Constants.ShaderRegister = 1;
-		rootparams.push_back(rootparam2);
-		D3D12_ROOT_PARAMETER rootparam3 = {};
-		rootparam3.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-		rootparam3.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-		rootparam3.Constants.Num32BitValues = sizeof(Model::MaterialConstants) / 4;
-		rootparam3.Constants.RegisterSpace = 1;
-		rootparam3.Constants.ShaderRegister = 1;
-		rootparams.push_back(rootparam3);
-		D3D12_ROOT_PARAMETER rootparam4 = {};
-		rootparam4.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-		rootparam4.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-		rootparam4.Constants.Num32BitValues = sizeof(CustomMaterial) / 4;
-		rootparam4.Constants.RegisterSpace = 0;
-		rootparam4.Constants.ShaderRegister = 2;
-		rootparams.push_back(rootparam4);
-		D3D12_ROOT_PARAMETER rootparam5 = {};
-		rootparam5.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-		rootparam5.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-		rootparam5.Constants.Num32BitValues = sizeof(TestLight) / 4;
-		rootparam5.Constants.RegisterSpace = 0;
-		rootparam5.Constants.ShaderRegister = 3;
-		rootparams.push_back(rootparam5);
 
-		
-		vector<D3D12_STATIC_SAMPLER_DESC> staticsamplers;
+		//psoinitdata.psodesc.graphicspsodesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
 		{
-			D3D12_STATIC_SAMPLER_DESC simplesampler = {};
-			simplesampler.Filter = D3D12_FILTER::D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-			simplesampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE::D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-			simplesampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE::D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-			simplesampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE::D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-			simplesampler.MipLODBias = 0;
-			simplesampler.MaxAnisotropy = 0;
-			simplesampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-			simplesampler.BorderColor = D3D12_STATIC_BORDER_COLOR::D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
-			simplesampler.MinLOD = 0.0f;
-			simplesampler.MaxLOD = D3D12_FLOAT32_MAX;
-			simplesampler.ShaderRegister = 0;
-			simplesampler.RegisterSpace = 0;
-			simplesampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-			staticsamplers.push_back(simplesampler);
-		}
-		psoinitdata.rootsignature.BuidDesc(rootparams, staticsamplers);
+			D3D12_ROOT_PARAMETER rootparam0 = {};
+			rootparam0.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+			rootparam0.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+			rootparam0.Constants.Num32BitValues = sizeof(ShaderTransformConstants_General) / 4;
+			rootparam0.Constants.RegisterSpace = 0;
+			rootparam0.Constants.ShaderRegister = 0;
+			rootparams.push_back(rootparam0);
+			D3D12_ROOT_PARAMETER rootparam1 = {};
+			//making mat table srv range
+			D3D12_DESCRIPTOR_RANGE materialtablerange = {};
+			materialtablerange.OffsetInDescriptorsFromTableStart = 0;
+			materialtablerange.NumDescriptors = 1;
+			materialtablerange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+			materialtablerange.RegisterSpace = 1;
+			materialtablerange.BaseShaderRegister = 0;
+			//making unbound range so make sure it is last range
+			D3D12_DESCRIPTOR_RANGE texturesrvrange = {};
+			texturesrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+			texturesrvrange.BaseShaderRegister = 1;
+			texturesrvrange.RegisterSpace = 0;
+			texturesrvrange.NumDescriptors = 307;
+			texturesrvrange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+			//do not know why order of range is important here else issue in unbound range(all texture).
+			descrangestouserootparam1.push_back(texturesrvrange);
+			descrangestouserootparam1.push_back(materialtablerange);
+
+
+
+
+
+
+
+			rootparam1.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			rootparam1.DescriptorTable.NumDescriptorRanges = descrangestouserootparam1.size();
+			rootparam1.DescriptorTable.pDescriptorRanges = descrangestouserootparam1.data();
+			rootparam1.ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_PIXEL;
+			rootparams.push_back(rootparam1);
+			D3D12_ROOT_PARAMETER rootparam2 = {};
+			rootparam2.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+			rootparam2.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+			rootparam2.Constants.Num32BitValues = sizeof(MaterialDataGPU) / 4;
+			rootparam2.Constants.RegisterSpace = 0;
+			rootparam2.Constants.ShaderRegister = 1;
+			rootparams.push_back(rootparam2);
+			D3D12_ROOT_PARAMETER rootparam3 = {};
+			rootparam3.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+			rootparam3.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+			rootparam3.Constants.Num32BitValues = sizeof(Model::MaterialConstants) / 4;
+			rootparam3.Constants.RegisterSpace = 1;
+			rootparam3.Constants.ShaderRegister = 1;
+			rootparams.push_back(rootparam3);
+			D3D12_ROOT_PARAMETER rootparam4 = {};
+			rootparam4.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+			rootparam4.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+			rootparam4.Constants.Num32BitValues = sizeof(CustomMaterial) / 4;
+			rootparam4.Constants.RegisterSpace = 0;
+			rootparam4.Constants.ShaderRegister = 2;
+			rootparams.push_back(rootparam4);
+			D3D12_ROOT_PARAMETER rootparam5 = {};
+			rootparam5.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+			rootparam5.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+			rootparam5.Constants.Num32BitValues = sizeof(TestLight) / 4;
+			rootparam5.Constants.RegisterSpace = 0;
+			rootparam5.Constants.ShaderRegister = 3;
+			rootparams.push_back(rootparam5);
+
+
+			vector<D3D12_STATIC_SAMPLER_DESC> staticsamplers;
+			{
+				D3D12_STATIC_SAMPLER_DESC simplesampler = {};
+				simplesampler.Filter = D3D12_FILTER::D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+				simplesampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE::D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+				simplesampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE::D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+				simplesampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE::D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+				simplesampler.MipLODBias = 0;
+				simplesampler.MaxAnisotropy = 0;
+				simplesampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+				simplesampler.BorderColor = D3D12_STATIC_BORDER_COLOR::D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+				simplesampler.MinLOD = 0.0f;
+				simplesampler.MaxLOD = D3D12_FLOAT32_MAX;
+				simplesampler.ShaderRegister = 0;
+				simplesampler.RegisterSpace = 0;
+				simplesampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+				staticsamplers.push_back(simplesampler);
+			}
+			psoinitdata.rootsignature.BuidDesc(rootparams, staticsamplers);
 		}
 	}
 	m_pso.Init(m_creationdevice, psoinitdata);
@@ -341,9 +342,9 @@ void ModelTestApplication::InitPSO()
 	}
 }
 
-void ModelTestApplication::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+void LightingTestApplication::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 
 	m_maincameracontroller.ProcessWindowProcEvent(hwnd, uMsg, wParam, lParam);
-	
+
 }

@@ -11,7 +11,7 @@
 #include"RayTracingTestApplication2.h"
 #include"RayTracingTestApplication_Advanced.h"
 #include"RayTracingTestApplication_AdvancedAOTest.h"
-#include"DX12ShadowTestApplication.h"
+#include"LightingTestApplication.h"
 #include<iostream>
 #include"StreamableTextureFileCreator.h"
 #include"StreamableTextureFileReader.h"
@@ -50,7 +50,7 @@ int main()
 #ifdef TESTBLENDINGAPP
 	std::cout << "9.blendingtestApplication.\n";
 #else
-	std::cout << "9.shadowtestApplication.\n";
+	std::cout << "9.lightingtestApplication.\n";
 #endif // TESTBLENDINGAPP
 	std::cout << "Enter application number  to run:\n";
 	int appnumber;
@@ -96,7 +96,7 @@ int main()
 #ifdef TESTBLENDINGAPP
 		appmanager = new BlendingTestApplication(); break;
 #else
-		appmanager = new ShadowTestApplication(); break;
+		appmanager = new LightingTestApplication(); break;
 #endif // TESTBLENDINGAPP
 	default:
 		std::cout << "Invalid App number choosen";

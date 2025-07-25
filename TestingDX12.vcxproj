@@ -199,6 +199,7 @@
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
     <ClCompile Include="LightEntity.cpp" />
+    <ClCompile Include="LightingTestApplication.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MipTestApplication.cpp" />
     <ClCompile Include="ModelTestApplication.cpp" />
@@ -266,6 +267,7 @@
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="LightEntity.h" />
+    <ClInclude Include="LightingTestApplication.h" />
     <ClInclude Include="MipTestApplication.h" />
     <ClInclude Include="ModelTestApplication.h" />
     <ClInclude Include="RayTracingTestApplication.h" />
