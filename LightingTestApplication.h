@@ -14,6 +14,7 @@ public:
 	~LightingTestApplication();
 	void PreRenderUpdate()override;
 	void Render()override;
+	void IMGUIRenderAdditional() override;
 	void ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)override;
 
 protected:
@@ -36,8 +37,8 @@ private:
 	struct TestLight
 	{
 		XMFLOAT3 lightCol;
-		XMFLOAT3 lightPos;
 		float data1;
+		XMFLOAT3 lightPos;
 		float data2;
 	};
 	DX12PSO m_pso, m_pso_alphablending;
@@ -46,5 +47,7 @@ private:
 	Model m_loadedmodel;
 	CompoundModel m_loadedcompoundmodel;
 	DXFPSCameraController m_maincameracontroller;
+	bool m_Imgui_mousecontrol_camera;
+	TestLight m_TestLightProperties;
 	void InitPSO();
 };

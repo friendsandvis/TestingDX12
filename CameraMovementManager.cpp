@@ -11,7 +11,8 @@ DXFPSCameraController::DXFPSCameraController()
 	m_lastmouseYpos(0),
 	m_campitch(0.0f),
 
-	m_camyaw(0.0f)
+	m_camyaw(0.0f),
+	m_allowMouseMevementProcessing(true)
 {
 #ifndef UPDATECAMERAVECTORTECHNIQUE_UPDATETARGETPOSITION
 	m_camyaw = -90.0f;
@@ -91,29 +92,31 @@ void DXFPSCameraController::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM 
 		break;
 	case WM_MOUSEMOVE:
 	{
-		int xpos = GET_X_LPARAM(lParam);
-		int ypos = GET_Y_LPARAM(lParam);
-		if (m_mousefirstmove)
+		if (m_allowMouseMevementProcessing)
 		{
+			int xpos = GET_X_LPARAM(lParam);
+			int ypos = GET_Y_LPARAM(lParam);
+			if (m_mousefirstmove)
+			{
+				m_lastmouseXpos = xpos;
+				m_lastmouseYpos = ypos;
+				m_mousefirstmove = false;
+			}
+			float sensitivity = 0.1f;
+			int xoffset = xpos - m_lastmouseXpos;
+			int yoffset = m_lastmouseYpos - ypos;
 			m_lastmouseXpos = xpos;
 			m_lastmouseYpos = ypos;
-			m_mousefirstmove = false;
-		}
-		float sensitivity = 0.1f;
-		int xoffset = xpos - m_lastmouseXpos;
-		int yoffset = m_lastmouseYpos - ypos;
-		m_lastmouseXpos = xpos;
-		m_lastmouseYpos = ypos;
-		float yawoffset = sensitivity*xoffset;
-		float pitchoffset = sensitivity*yoffset;
+			float yawoffset = sensitivity * xoffset;
+			float pitchoffset = sensitivity * yoffset;
 #ifdef UPDATECAMERAVECTORTECHNIQUE_UPDATETARGETPOSITION
-		m_cameratocontrol->UpdateCameraVectors(pitchoffset, yawoffset);
+			m_cameratocontrol->UpdateCameraVectors(pitchoffset, yawoffset);
 #else
-		m_camyaw -= sensitivity * xoffset;
-		m_campitch += sensitivity * yoffset;
-		m_cameratocontrol->UpdateCameraVectors(m_campitch, m_camyaw);
+			m_camyaw -= sensitivity * xoffset;
+			m_campitch += sensitivity * yoffset;
+			m_cameratocontrol->UpdateCameraVectors(m_campitch, m_camyaw);
 #endif // UPDATECAMERAVECTORTECHNIQUE_UPDATETARGETPOSITION
-
+		}
 		
 		
 		break;

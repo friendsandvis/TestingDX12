@@ -36,8 +36,8 @@ private:
 	struct TestLight
 	{
 		XMFLOAT3 lightCol;
-		XMFLOAT3 lightPos;
 		float data1;
+		XMFLOAT3 lightPos;
 		float data2;
 	};
 	DX12PSO m_pso,m_pso_alphablending;

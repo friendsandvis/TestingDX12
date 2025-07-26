@@ -19,8 +19,8 @@ struct CustomMaterial
 struct TestLight
 {
 	float3 lightCol;
-	float3 lightPos;
 	float data1;
+	float3 lightPos;
 	float data2;
 };
 StructuredBuffer<MaterialDataGPU> mattable:register(t0,space1);

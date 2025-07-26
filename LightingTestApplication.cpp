@@ -15,6 +15,13 @@ LightingTestApplication::LightingTestApplication()
 	m_loadedcompoundmodel(ModelDataUploadMode::COPY)
 {
 	m_maincameracontroller.SetCameratoControl(&m_maincamera);
+	m_imguiAllowed = true;
+	//since we are using imgui in this app so initially mouse movement is turned off
+	m_Imgui_mousecontrol_camera = false;
+	m_TestLightProperties.lightPos = XMFLOAT3(1.2f, 1.0f, 2.0f);
+	m_TestLightProperties.lightCol = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	m_TestLightProperties.data1 = 4.0f;
+	m_TestLightProperties.data2 = 5.0f;
 }
 LightingTestApplication::~LightingTestApplication()
 {
@@ -22,6 +29,7 @@ LightingTestApplication::~LightingTestApplication()
 }
 void LightingTestApplication::PreRenderUpdate()
 {
+	m_maincameracontroller.AllowMouseMovementProcessing(m_Imgui_mousecontrol_camera);
 	m_maincameracontroller.Update();
 	DX12ApplicationManagerBase::PreRenderUpdate();
 }
@@ -108,10 +116,7 @@ void LightingTestApplication::Render()
 	customMaterial.specularValue = 256.0f;
 	DirectX::XMStoreFloat4(&customMaterial.viewPos, m_maincamera.GetCamPos());
 	m_primarycmdlist->SetGraphicsRoot32BitConstants(4, sizeof(customMaterial) / 4, &customMaterial, 0);
-	TestLight testLightProperties = {};
-	testLightProperties.lightPos = XMFLOAT3(1.2f, 1.0f, 2.0f);
-	testLightProperties.lightCol = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	m_primarycmdlist->SetGraphicsRoot32BitConstants(5, sizeof(testLightProperties) / 4, &testLightProperties, 0);
+	m_primarycmdlist->SetGraphicsRoot32BitConstants(5, sizeof(m_TestLightProperties) / 4, &m_TestLightProperties, 0);
 #ifdef USETESTBASICMODELCUBE
 	{
 		m_cubemodel.Draw(m_primarycmdlist, vpmat, 0, 3, true, true, true);
@@ -341,10 +346,34 @@ void LightingTestApplication::InitPSO()
 		m_pso_alphablending.Init(m_creationdevice, psoinitdata);
 	}
 }
-
+void LightingTestApplication::IMGUIRenderAdditional()
+{
+	//imgui mouse lock related
+	{
+		ImGui::Text("press 'x' key to toggle mouse camera move lock");
+		char currentMouseMoveState[30];
+		snprintf(currentMouseMoveState, 30, "mouse move camera allowed:%d", m_Imgui_mousecontrol_camera);
+		ImGui::Text(currentMouseMoveState);
+	}
+	ImGui::Text("test light properties:-");
+	//directional light related
+	{
+		ImGui::InputFloat3("light_position", (float*)(&m_TestLightProperties.lightPos));
+	}
+	//IMGUISimpleTestRender();
+}
 void LightingTestApplication::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 
 	m_maincameracontroller.ProcessWindowProcEvent(hwnd, uMsg, wParam, lParam);
+	if (uMsg == WM_CHAR)
+	{
+		char charpressed = (char)wParam;
+		if (charpressed == 'x')
+		{
+			m_Imgui_mousecontrol_camera = !m_Imgui_mousecontrol_camera;
+			m_maincameracontroller.AllowMouseMovementProcessing(m_Imgui_mousecontrol_camera);
+		}
+	}
 
 }

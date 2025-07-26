@@ -12,6 +12,8 @@ public:
 	void ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void Update();
 	void ResetMouseFirstMove() { m_mousefirstmove = true; }
+	bool MouseMoveProcessingAllowed() { return m_allowMouseMevementProcessing; }
+	void AllowMouseMovementProcessing(bool allowMouseMovements) { m_allowMouseMevementProcessing = allowMouseMovements; }
 private:
 	DXCamera* m_cameratocontrol;
 	float m_movefrontbackmodifier,m_moveleftrightmodifier;
@@ -19,4 +21,5 @@ private:
 	float m_camyaw, m_campitch;
 	int m_lastmouseXpos, m_lastmouseYpos;
 	bool m_mousefirstmove;
+	bool m_allowMouseMevementProcessing;
 };

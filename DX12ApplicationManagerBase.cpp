@@ -142,7 +142,8 @@ void DX12ApplicationManagerBase::BasicRender()
 		
 		{
 			ImGui::Begin("test imguiwindow", nullptr);
-			IMGUISimpleTestRender();
+			//IMGUISimpleTestRender();
+			
 			IMGUIRenderAdditional();
 			ImGui::End();
 		}
