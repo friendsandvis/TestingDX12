@@ -136,7 +136,7 @@ void LightingTestApplication::Render()
 
 	customMaterial.albedo = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
 	customMaterial.ambientfactor = 0.1f;
-	customMaterial.specularValue = 256.0f;
+	customMaterial.specularValue = 32.0f;
 	DirectX::XMStoreFloat4(&customMaterial.viewPos, m_maincamera.GetCamPos());
 	m_primarycmdlist->SetGraphicsRoot32BitConstants(4, sizeof(customMaterial) / 4, &customMaterial, 0);
 	m_primarycmdlist->SetGraphicsRoot32BitConstants(5, sizeof(m_TestLightProperties) / 4, &m_TestLightProperties, 0);

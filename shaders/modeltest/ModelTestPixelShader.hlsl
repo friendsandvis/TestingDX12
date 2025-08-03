@@ -61,9 +61,11 @@ float4 main(VSOut psin) : SV_TARGET0
 		//lighting calc
 		float3 viewPos = customMatconsts.viewPos.xyz;
 		float3 ambientlit = customMatconsts.albedo.xyz * customMatconsts.ambientfactor;
+		//for lighting lightdirection is in point of view of pixel aka direction towards the light
 		float3 lightDir = normalize(testLightconsts.lightPos -psin.pixelpos.xyz);
 		float3 viewDir = normalize(viewPos -psin.pixelpos.xyz);
-		float3 lightreflectDir = normalize(reflect(lightDir,psin.normal));
+		//reflight lights actual direction for reflected direction vector calc
+		float3 lightreflectDir = normalize(reflect(-lightDir,psin.normal));
 		const float specFactintensity =1.0f;
 		float specfact = specFactintensity * pow(max(dot(viewDir,lightreflectDir),0.0f),customMatconsts.specularValue);
 		float3 speclit = specfact * testLightconsts.lightCol;
