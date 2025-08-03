@@ -104,6 +104,13 @@ struct MaterialDataGPU
 	unsigned roughnesstexidx;
 
 };
+//Various lightingmodes generally utilized within project make sure shader implements the mode before using.
+enum class LIGHTINGMODE :unsigned int
+{
+	COMPLETELIGHTING_BASIC = 0,
+	ALBEDOONLY = 1,
+
+};
 class Model
 {
 public:
@@ -111,6 +118,7 @@ public:
 	{
 		unsigned int texsrvidx;
 	};
+	void SetTransformation(DirectX::XMFLOAT4 scale, DirectX::XMFLOAT4 rotationaxis, float rotationangle, DirectX::XMFLOAT4 translate);
 	XMMATRIX GetTransform() { return m_transform; }
 	void Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix,UINT mvpmatrixrootparamindex,UINT materialconstsrootparamindex,bool usemodelmatrix=true,bool setmvpmatrix=true,bool supportmaterial=false);
 	void Extratransform(XMMATRIX extratransformmat);

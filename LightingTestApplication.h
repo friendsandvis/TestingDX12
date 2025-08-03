@@ -30,7 +30,7 @@ private:
 		float usecustomMaterial = 0.0f;
 		float ambientfactor = 0.25f;
 		float specularValue = 32.0f;
-		float padding0 = 1.0f;
+		unsigned int lightingMode = static_cast<unsigned int>(LIGHTINGMODE::COMPLETELIGHTING_BASIC);
 		XMFLOAT4 viewPos;
 		XMFLOAT4 albedo;
 	};
@@ -43,7 +43,8 @@ private:
 	};
 	DX12PSO m_pso, m_pso_alphablending;
 	Model m_planemodel, m_trianglemodel;
-	Model m_cubemodel;
+	Model m_cubemodel_simpleTesting;
+	Model m_cubemodel_simpleLight;
 	Model m_loadedmodel;
 	CompoundModel m_loadedcompoundmodel;
 	DXFPSCameraController m_maincameracontroller;

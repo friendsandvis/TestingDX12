@@ -12,7 +12,7 @@ struct CustomMaterial
 	float useCustomMaterial; 
 	float ambientfactor;
 	float specularValue;
-	float padding0;
+	uint  lightingMode;
 	float4 viewPos;
 	float4 albedo;
 };
@@ -54,8 +54,10 @@ struct VSOut
 float4 main(VSOut psin) : SV_TARGET0
 {
 	bool useCustomMaterial = (customMatconsts.useCustomMaterial == 1.0f);
+	float3 finallit = float3(0.0f,0.0f,0.0f);
 	if(useCustomMaterial)
 	{
+		
 		//lighting calc
 		float3 viewPos = customMatconsts.viewPos.xyz;
 		float3 ambientlit = customMatconsts.albedo.xyz * customMatconsts.ambientfactor;
@@ -68,7 +70,15 @@ float4 main(VSOut psin) : SV_TARGET0
 		float diffusefact = dot(lightDir,psin.normal);
 		diffusefact = max(diffusefact,0.0f);
 		float3 diffuselit = testLightconsts.lightCol * diffusefact;
-		float3 finallit = ambientlit + (diffuselit * customMatconsts.albedo.xyz) + (speclit* customMatconsts.albedo.xyz);
+		
+		if(customMatconsts.lightingMode == 0)
+		{
+			finallit = ambientlit + (diffuselit * customMatconsts.albedo.xyz) + (speclit* customMatconsts.albedo.xyz);
+		}
+		else if(customMatconsts.lightingMode == 1)
+		{
+			finallit = customMatconsts.albedo.xyz;
+		}
 		float4 finalOut = float4(finallit,1.0f);
 		return finalOut;
 	}

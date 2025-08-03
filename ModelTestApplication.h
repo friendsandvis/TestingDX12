@@ -29,7 +29,7 @@ private:
 		float usecustomMaterial = 0.0f;
 		float ambientfactor = 0.25f;
 		float specularValue = 32.0f;
-		float padding0 = 1.0f;
+		unsigned int lightingMode = static_cast<unsigned int>(LIGHTINGMODE::COMPLETELIGHTING_BASIC);
 		XMFLOAT4 viewPos;
 		XMFLOAT4 albedo;
 	};

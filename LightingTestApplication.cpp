@@ -9,10 +9,11 @@
 
 LightingTestApplication::LightingTestApplication()
 	:m_planemodel(ModelDataUploadMode::COPY),
-	m_cubemodel(ModelDataUploadMode::COPY),
+	m_cubemodel_simpleTesting(ModelDataUploadMode::COPY),
 	m_loadedmodel(ModelDataUploadMode::COPY),
 	m_trianglemodel(ModelDataUploadMode::COPY),
-	m_loadedcompoundmodel(ModelDataUploadMode::COPY)
+	m_loadedcompoundmodel(ModelDataUploadMode::COPY),
+	m_cubemodel_simpleLight(ModelDataUploadMode::COPY)
 {
 	m_maincameracontroller.SetCameratoControl(&m_maincamera);
 	m_imguiAllowed = true;
@@ -74,7 +75,7 @@ void LightingTestApplication::Render()
 	XMMATRIX mvp = XMMatrixMultiply(model, orthoproj);
 	m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvp, 0);
 	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, &dsvhandle);
-	float clearvalue[4] = { 1.0f,1.0f,1.0f,1.0f };
+	float clearvalue[4] = { 0.0f,0.1f,0.25f,1.0f };
 	ClearBackBuffer(currentbackbufferidx, m_primarycmdlist, clearvalue);
 	m_primarycmdlist->ClearDepthStencilView(dsvhandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	{
@@ -101,13 +102,35 @@ void LightingTestApplication::Render()
 		m_primarycmdlist->SetDescriptorHeaps(1, heapstoset);
 		m_primarycmdlist->SetGraphicsRootDescriptorTable(1, loadedcompoundmodelmatsrvheap.GetGPUHandleOffseted(0));
 	}
+	
 	//set general constants(not used  currently is it even needed in this app at this point
 	GeneralConstants generalconstants = {};
 	generalconstants.usematerialtextures = static_cast<unsigned int>(m_loadedcompoundmodel.SupportMaterial());
+	//------------------------------- draw test light representing cube use same PSO for now
+	{
+		//setup position and scale first then render with right shader properties.
+		XMFLOAT4 simplelightCube_scale = { 0.25f,0.25,0.25f,1.0f };
+		XMFLOAT4 simplelightCube_rotationAxis = { 1.0f,0.0,0.0f,1.0f };
+		XMFLOAT4 simplelightCube_translate = { m_TestLightProperties.lightPos.x,m_TestLightProperties.lightPos.y,m_TestLightProperties.lightPos.z,1.0f };
+		m_cubemodel_simpleLight.SetTransformation(simplelightCube_scale, simplelightCube_rotationAxis, 0.0f, simplelightCube_translate);
+		{
+			CustomMaterial customMaterialsimplelight_cube = {};
+			customMaterialsimplelight_cube.albedo = { 1.0f,1.0f,1.0f,1.0f };//light colour here
+			customMaterialsimplelight_cube.usecustomMaterial = 1.0f;
+			customMaterialsimplelight_cube.lightingMode = static_cast<unsigned int>(LIGHTINGMODE::ALBEDOONLY);
+			DirectX::XMStoreFloat4(&customMaterialsimplelight_cube.viewPos, m_maincamera.GetCamPos());
+			m_primarycmdlist->SetGraphicsRoot32BitConstants(4, sizeof(customMaterialsimplelight_cube) / 4, &customMaterialsimplelight_cube, 0);
+			//light properties buffer not needed but set for completenesss sake change as we are avoiding new set of shader for light represent rendering in this app.
+			m_primarycmdlist->SetGraphicsRoot32BitConstants(5, sizeof(m_TestLightProperties) / 4, &m_TestLightProperties, 0);
+			//light properties directly passed to material & used representation cube transform
+		}
+		m_cubemodel_simpleLight.Draw(m_primarycmdlist, vpmat, 0, 3, true, true, true);
+	}
 	CustomMaterial customMaterial = {};
 	customMaterial.usecustomMaterial = 0.0f;
 #ifdef USETESTBASICMODELCUBE
 	customMaterial.usecustomMaterial = 1.0f;
+	customMaterial.lightingMode = static_cast<unsigned int>(LIGHTINGMODE::COMPLETELIGHTING_BASIC);
 #endif // USETESTBASICMODELCUBE
 
 
@@ -118,8 +141,9 @@ void LightingTestApplication::Render()
 	m_primarycmdlist->SetGraphicsRoot32BitConstants(4, sizeof(customMaterial) / 4, &customMaterial, 0);
 	m_primarycmdlist->SetGraphicsRoot32BitConstants(5, sizeof(m_TestLightProperties) / 4, &m_TestLightProperties, 0);
 #ifdef USETESTBASICMODELCUBE
+	
 	{
-		m_cubemodel.Draw(m_primarycmdlist, vpmat, 0, 3, true, true, true);
+		m_cubemodel_simpleTesting.Draw(m_primarycmdlist, vpmat, 0, 3, true, true, true);
 	}
 	DXASSERT(m_primarycmdlist->Close())
 		BasicRender();
@@ -138,7 +162,6 @@ void LightingTestApplication::Render()
 	{
 		m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 3, true, true);
 	}
-
 	DXASSERT(m_primarycmdlist->Close())
 		BasicRender();
 }
@@ -179,16 +202,22 @@ void LightingTestApplication::InitExtras()
 
 	BasicModelManager::InitTriangleModel(m_creationdevice, m_trianglemodel);
 	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
-	BasicModelManager::InitCubeModel(m_creationdevice, m_cubemodel, VertexVersion::VERTEXVERSION3);
-	Model::MaterialConstants cubeMaterialConstants = m_cubemodel.GetMaterialConstants();
+	BasicModelManager::InitCubeModel(m_creationdevice, m_cubemodel_simpleTesting, VertexVersion::VERTEXVERSION3);
+	Model::MaterialConstants cubeMaterialConstants = m_cubemodel_simpleTesting.GetMaterialConstants();
 	cubeMaterialConstants.texsrvidx = 0;//arbatary unused for test cube model.
-	m_cubemodel.SetMaterialConstants(cubeMaterialConstants);
+	m_cubemodel_simpleTesting.SetMaterialConstants(cubeMaterialConstants);
+	//simple light representation cube
+	BasicModelManager::InitCubeModel(m_creationdevice, m_cubemodel_simpleLight, VertexVersion::VERTEXVERSION3);
+	Model::MaterialConstants SimplelightcubeMaterialConstants = m_cubemodel_simpleLight.GetMaterialConstants();
+	SimplelightcubeMaterialConstants.texsrvidx = 0;//arbatary unused for simplelight cube model.
+	m_cubemodel_simpleLight.SetMaterialConstants(SimplelightcubeMaterialConstants);
 	InitPSO();
 
 	m_planemodel.UploadModelDatatoBuffers();
-	m_cubemodel.UploadModelDatatoBuffers();
+	m_cubemodel_simpleTesting.UploadModelDatatoBuffers();
 	m_loadedmodel.UploadModelDatatoBuffers();
 	m_loadedcompoundmodel.UploadModelDatatoBuffers();
+	m_cubemodel_simpleLight.UploadModelDatatoBuffers();
 
 	m_uploadcommandlist.Reset();
 	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
@@ -196,7 +225,8 @@ void LightingTestApplication::InitExtras()
 	//m_loadedcompoundmodel.UploadModelDataDefaultTexture(m_uploadcommandlist);
 	m_loadedcompoundmodel.UploadData(m_uploadcommandlist);
 	//m_loadedcompoundmodel.UploadModelTextureData(m_uploadcommandlist);
-	m_cubemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
+	m_cubemodel_simpleTesting.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
+	m_cubemodel_simpleLight.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_trianglemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	DXASSERT(m_uploadcommandlist->Close());
 }

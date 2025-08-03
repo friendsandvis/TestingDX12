@@ -526,6 +526,10 @@ bool Model::HasTransparentMaterial(wstring texfilepath)
 	//during assimp model loading itself it can be has been determined if material supports transparency.
 	return m_material.IsTransparent();
 }
+void Model::SetTransformation(DirectX::XMFLOAT4 scale, DirectX::XMFLOAT4 rotationaxis, float rotationangle, DirectX::XMFLOAT4 translate)
+{
+	m_transform = DXUtils::GetTransformationMatrix(DXUtils::Float4tovector(scale), DXUtils::Float4tovector(rotationaxis), rotationangle, DXUtils::Float4tovector(translate));
+}
 CompoundModel::CompoundModel(ModelDataUploadMode uploadmode)
 	:m_datauploadmode(uploadmode),
 	m_supportmaterial(false)
