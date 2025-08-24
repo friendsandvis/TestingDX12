@@ -103,18 +103,17 @@ void ModelTestApplication::Render()
 #endif // USETESTBASICMODELCUBE
 
 	
-	customMaterial.albedo = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
-	customMaterial.ambientfactor = 0.1f;
+	customMaterial.ambient = XMFLOAT4(0.0f, 0.1f, 0.0f, 1.0f);
 	customMaterial.specularValue = 256.0f;
 	DirectX::XMStoreFloat4(&customMaterial.viewPos, m_maincamera.GetCamPos());
-	m_primarycmdlist->SetGraphicsRoot32BitConstants(4, sizeof(customMaterial) / 4, &customMaterial, 0);
+	m_primarycmdlist->SetGraphicsRoot32BitConstants(3, sizeof(customMaterial) / 4, &customMaterial, 0);
 	TestLight testLightProperties = {};
 	testLightProperties.lightPos = XMFLOAT3(1.2f, 1.0f, 2.0f);
 	testLightProperties.lightCol = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	m_primarycmdlist->SetGraphicsRoot32BitConstants(5, sizeof(testLightProperties) / 4, &testLightProperties, 0);
+	m_primarycmdlist->SetGraphicsRoot32BitConstants(4, sizeof(testLightProperties) / 4, &testLightProperties, 0);
 #ifdef USETESTBASICMODELCUBE
 	{
-		m_cubemodel.Draw(m_primarycmdlist, vpmat, 0, 3, true, true, true);
+		m_cubemodel.Draw(m_primarycmdlist, vpmat, 0, 2, true, true, true);
 	}
 	DXASSERT(m_primarycmdlist->Close())
 		BasicRender();
@@ -124,14 +123,14 @@ void ModelTestApplication::Render()
 	if (m_loadedcompoundmodel.SupportNonOpaqueMaterial())
 	{
 		//draw opaque models only with opaque pso and switch to alpha blending pso to render non opaque data
-		m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 3, true, false);
+		m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 2, true, false);
 		m_primarycmdlist->SetPipelineState(m_pso_alphablending.GetPSO());
 		m_primarycmdlist->SetGraphicsRootSignature(m_pso_alphablending.GetRootSignature());
-		m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 3, false, true);
+		m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 2, false, true);
 	}
 	else
 	{
-		m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 3, true, true);
+		m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 2, true, true);
 	}
 	
 	DXASSERT(m_primarycmdlist->Close())
@@ -266,31 +265,24 @@ void ModelTestApplication::InitPSO()
 		D3D12_ROOT_PARAMETER rootparam2 = {};
 		rootparam2.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
 		rootparam2.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-		rootparam2.Constants.Num32BitValues = sizeof(MaterialDataGPU) / 4;
-		rootparam2.Constants.RegisterSpace = 0;
+		rootparam2.Constants.Num32BitValues = sizeof(Model::MaterialConstants) / 4;
+		rootparam2.Constants.RegisterSpace = 1;
 		rootparam2.Constants.ShaderRegister = 1;
 		rootparams.push_back(rootparam2);
 		D3D12_ROOT_PARAMETER rootparam3 = {};
 		rootparam3.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
 		rootparam3.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-		rootparam3.Constants.Num32BitValues = sizeof(Model::MaterialConstants) / 4;
-		rootparam3.Constants.RegisterSpace = 1;
-		rootparam3.Constants.ShaderRegister = 1;
+		rootparam3.Constants.Num32BitValues = sizeof(CustomMaterial) / 4;
+		rootparam3.Constants.RegisterSpace = 0;
+		rootparam3.Constants.ShaderRegister = 2;
 		rootparams.push_back(rootparam3);
 		D3D12_ROOT_PARAMETER rootparam4 = {};
 		rootparam4.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
 		rootparam4.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-		rootparam4.Constants.Num32BitValues = sizeof(CustomMaterial) / 4;
+		rootparam4.Constants.Num32BitValues = sizeof(TestLight) / 4;
 		rootparam4.Constants.RegisterSpace = 0;
-		rootparam4.Constants.ShaderRegister = 2;
+		rootparam4.Constants.ShaderRegister = 3;
 		rootparams.push_back(rootparam4);
-		D3D12_ROOT_PARAMETER rootparam5 = {};
-		rootparam5.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-		rootparam5.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-		rootparam5.Constants.Num32BitValues = sizeof(TestLight) / 4;
-		rootparam5.Constants.RegisterSpace = 0;
-		rootparam5.Constants.ShaderRegister = 3;
-		rootparams.push_back(rootparam5);
 
 		
 		vector<D3D12_STATIC_SAMPLER_DESC> staticsamplers;

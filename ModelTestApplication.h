@@ -27,11 +27,13 @@ private:
 	struct CustomMaterial
 	{
 		float usecustomMaterial = 0.0f;
-		float ambientfactor = 0.25f;
+		float paddingValue = 0.0f;
 		float specularValue = 32.0f;
 		unsigned int lightingMode = static_cast<unsigned int>(LIGHTINGMODE::COMPLETELIGHTING_BASIC);
 		XMFLOAT4 viewPos;
-		XMFLOAT4 albedo;
+		XMFLOAT4 ambient;
+		XMFLOAT4 diffuse;
+		XMFLOAT4 specular;
 	};
 	struct TestLight
 	{
