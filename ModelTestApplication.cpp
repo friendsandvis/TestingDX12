@@ -93,24 +93,6 @@ void ModelTestApplication::Render()
 		m_primarycmdlist->SetDescriptorHeaps(1, heapstoset);
 		m_primarycmdlist->SetGraphicsRootDescriptorTable(1, loadedcompoundmodelmatsrvheap.GetGPUHandleOffseted(0));
 	}
-	//set general constants(not used  currently is it even needed in this app at this point
-	GeneralConstants generalconstants = {};
-	generalconstants.usematerialtextures = static_cast<unsigned int>(m_loadedcompoundmodel.SupportMaterial());
-	CustomMaterial customMaterial = {};
-	customMaterial.usecustomMaterial = 0.0f;
-#ifdef USETESTBASICMODELCUBE
-	customMaterial.usecustomMaterial = 1.0f;
-#endif // USETESTBASICMODELCUBE
-
-	
-	customMaterial.ambient = XMFLOAT4(0.0f, 0.1f, 0.0f, 1.0f);
-	customMaterial.specularValue = 256.0f;
-	DirectX::XMStoreFloat4(&customMaterial.viewPos, m_maincamera.GetCamPos());
-	m_primarycmdlist->SetGraphicsRoot32BitConstants(3, sizeof(customMaterial) / 4, &customMaterial, 0);
-	TestLight testLightProperties = {};
-	testLightProperties.lightPos = XMFLOAT3(1.2f, 1.0f, 2.0f);
-	testLightProperties.lightCol = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	m_primarycmdlist->SetGraphicsRoot32BitConstants(4, sizeof(testLightProperties) / 4, &testLightProperties, 0);
 #ifdef USETESTBASICMODELCUBE
 	{
 		m_cubemodel.Draw(m_primarycmdlist, vpmat, 0, 2, true, true, true);
@@ -270,19 +252,6 @@ void ModelTestApplication::InitPSO()
 		rootparam2.Constants.ShaderRegister = 1;
 		rootparams.push_back(rootparam2);
 		D3D12_ROOT_PARAMETER rootparam3 = {};
-		rootparam3.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-		rootparam3.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-		rootparam3.Constants.Num32BitValues = sizeof(CustomMaterial) / 4;
-		rootparam3.Constants.RegisterSpace = 0;
-		rootparam3.Constants.ShaderRegister = 2;
-		rootparams.push_back(rootparam3);
-		D3D12_ROOT_PARAMETER rootparam4 = {};
-		rootparam4.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-		rootparam4.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-		rootparam4.Constants.Num32BitValues = sizeof(TestLight) / 4;
-		rootparam4.Constants.RegisterSpace = 0;
-		rootparam4.Constants.ShaderRegister = 3;
-		rootparams.push_back(rootparam4);
 
 		
 		vector<D3D12_STATIC_SAMPLER_DESC> staticsamplers;

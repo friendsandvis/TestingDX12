@@ -24,24 +24,6 @@ private:
 	{
 		unsigned int usematerialtextures;
 	};
-	struct CustomMaterial
-	{
-		float usecustomMaterial = 0.0f;
-		float paddingValue = 0.0f;
-		float specularValue = 32.0f;
-		unsigned int lightingMode = static_cast<unsigned int>(LIGHTINGMODE::COMPLETELIGHTING_BASIC);
-		XMFLOAT4 viewPos;
-		XMFLOAT4 ambient;
-		XMFLOAT4 diffuse;
-		XMFLOAT4 specular;
-	};
-	struct TestLight
-	{
-		XMFLOAT3 lightCol;
-		float data1;
-		XMFLOAT3 lightPos;
-		float data2;
-	};
 	DX12PSO m_pso,m_pso_alphablending;
 	Model m_planemodel,m_trianglemodel;
 	Model m_cubemodel;
