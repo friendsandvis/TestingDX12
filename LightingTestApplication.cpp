@@ -103,9 +103,6 @@ void LightingTestApplication::Render()
 		m_primarycmdlist->SetGraphicsRootDescriptorTable(1, loadedcompoundmodelmatsrvheap.GetGPUHandleOffseted(0));
 	}
 	
-	//set general constants(not used  currently is it even needed in this app at this point
-	GeneralConstants generalconstants = {};
-	generalconstants.usematerialtextures = static_cast<unsigned int>(m_loadedcompoundmodel.SupportMaterial());
 	//------------------------------- draw test light representing cube use same PSO for now
 	{
 		//setup position and scale first then render with right shader properties.
