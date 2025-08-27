@@ -280,7 +280,7 @@ void LightingTestApplication::InitPSO()
 			texturesrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 			texturesrvrange.BaseShaderRegister = 1;
 			texturesrvrange.RegisterSpace = 0;
-			texturesrvrange.NumDescriptors = 307;
+			texturesrvrange.NumDescriptors = -1;
 			texturesrvrange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 			//do not know why order of range is important here else issue in unbound range(all texture).
 			descrangestouserootparam1.push_back(texturesrvrange);
