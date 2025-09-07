@@ -108,7 +108,7 @@ struct MaterialDataGPU
 enum class LIGHTINGMODE :unsigned int
 {
 	COMPLETELIGHTING_BASIC = 0,
-	ALBEDOONLY = 1,
+	ALBEDOONLY = 1
 
 };
 class Model

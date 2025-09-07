@@ -10,7 +10,7 @@ uint roughnesstexidx;
 struct CustomMaterial
 {
 	float useCustomMaterial; 
-	float paddingValue;
+	float useMaterialTextures;
 	float specularValue;
 	uint  lightingMode;
 	float4 viewPos;
@@ -56,12 +56,22 @@ struct VSOut
 float4 main(VSOut psin) : SV_TARGET0
 {
 	bool useCustomMaterial = (customMatconsts.useCustomMaterial == 1.0f);
+	bool useMaterialTextures = (customMatconsts.useMaterialTextures == 1.0f);
+		float2 uvnew=float2(psin.uv.x,1.0f-psin.uv.y);
+	MaterialDataGPU mattmp=mattable[matgeneralconsts.matidx];
 	float3 finallit = float3(0.0f,0.0f,0.0f);
 	if(useCustomMaterial)
 	{
+		float4 diffusecol = float4(1.0f,1.0f,1.0f,1.0f);
+		float4 roughnesscol = float4(1.0f,1.0f,1.0f,1.0f);
+		if(useMaterialTextures)
+		{
+			diffusecol = textures[mattmp.diffusetexidx].Sample(simplesampler,uvnew);
+			roughnesscol = textures[mattmp.roughnesstexidx].Sample(simplesampler,uvnew);
+		}
 		//lighting calc
 		float3 viewPos = customMatconsts.viewPos.xyz;
-		float3 ambientlit = customMatconsts.ambient.xyz;
+		float3 ambientlit = customMatconsts.ambient.xyz * diffusecol.xyz;
 		//for lighting lightdirection is in point of view of pixel aka direction towards the light
 		float3 lightDir = normalize(testLightconsts.lightPos -psin.pixelpos.xyz);
 		float3 viewDir = normalize(viewPos -psin.pixelpos.xyz);
@@ -69,10 +79,11 @@ float4 main(VSOut psin) : SV_TARGET0
 		float3 lightreflectDir = normalize(reflect(-lightDir,psin.normal));
 		const float specFactintensity =1.0f;
 		float specfact = specFactintensity * pow(max(dot(viewDir,lightreflectDir),0.0f),customMatconsts.specularValue);
-		float3 speclit = specfact * testLightconsts.lightCol * customMatconsts.specular.xyz;
-		float diffusefact = dot(lightDir,psin.normal);
+		float3 speclit = specfact * testLightconsts.lightCol * customMatconsts.specular.xyz * roughnesscol.xyz;
+		float diffusefact = dot(psin.normal,lightDir);
 		diffusefact = max(diffusefact,0.0f);
-		float3 diffuselit = testLightconsts.lightCol * diffusefact * customMatconsts.diffuse.xyz;
+		
+		float3 diffuselit = testLightconsts.lightCol * diffusefact *customMatconsts.diffuse.xyz* diffusecol.xyz;
 		
 		if(customMatconsts.lightingMode == 0)
 		{
@@ -85,8 +96,7 @@ float4 main(VSOut psin) : SV_TARGET0
 		float4 finalOut = float4(finallit,1.0f);
 		return finalOut;
 	}
-	float2 uvnew=float2(psin.uv.x,1.0f-psin.uv.y);
-	MaterialDataGPU mattmp=mattable[matgeneralconsts.matidx];
+
 	//float4 diffusecol=textures[mattmp.diffusetexidx].Sample(simplesampler,uvnew);
 	//float4 normalcol=textures[mattmp.normaltexidx].Sample(simplesampler,uvnew);
 	//float4 roughnesscol=textures[mattmp.roughnesstexidx].Sample(simplesampler,uvnew);

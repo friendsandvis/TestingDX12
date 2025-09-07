@@ -5,6 +5,7 @@
 //#define USESPHONZAMODEL
 //#define USEREVOLVERMODEL
 //#define USECUBEMODEL
+#define USECUSTOMMATERIALTEXTURE
 
 
 LightingTestApplication::LightingTestApplication()
@@ -13,8 +14,13 @@ LightingTestApplication::LightingTestApplication()
 	m_loadedmodel(ModelDataUploadMode::COPY),
 	m_trianglemodel(ModelDataUploadMode::COPY),
 	m_loadedcompoundmodel(ModelDataUploadMode::COPY),
-	m_cubemodel_simpleLight(ModelDataUploadMode::COPY)
+	m_cubemodel_simpleLight(ModelDataUploadMode::COPY),
+	m_boxtextureDiffuse(nullptr),
+	m_boxtextureSpec(nullptr)
 {
+	m_boxMaterialGPUData.diffusetexidx = 0;
+	m_boxMaterialGPUData.normaltexidx = 0;
+	m_boxMaterialGPUData.roughnesstexidx = 0;
 	m_maincameracontroller.SetCameratoControl(&m_maincamera);
 	m_imguiAllowed = true;
 	//since we are using imgui in this app so initially mouse movement is turned off
@@ -26,7 +32,14 @@ LightingTestApplication::LightingTestApplication()
 }
 LightingTestApplication::~LightingTestApplication()
 {
-
+	if (m_boxtextureDiffuse != nullptr)
+	{
+		delete m_boxtextureDiffuse;
+	}
+	if (m_boxtextureSpec != nullptr)
+	{
+		delete m_boxtextureSpec;
+	}
 }
 void LightingTestApplication::PreRenderUpdate()
 {
@@ -58,6 +71,11 @@ void LightingTestApplication::Render()
 			m_loadedcompoundmodel.UploadAllModelTextureData(m_creationdevice, m_primarycmdlist);
 		}
 	}
+	//upload textures custom
+#ifdef USECUSTOMMATERIALTEXTURE
+	m_boxtextureDiffuse->UploadTexture(m_primarycmdlist);
+	m_boxtextureSpec->UploadTexture(m_primarycmdlist);
+#endif
 	//set rtv
 	UINT currentbackbufferidx = m_swapchain.GetCurrentbackbufferIndex();
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(currentbackbufferidx);
@@ -130,17 +148,39 @@ void LightingTestApplication::Render()
 	customMaterial.lightingMode = static_cast<unsigned int>(LIGHTINGMODE::COMPLETELIGHTING_BASIC);
 #endif // USETESTBASICMODELCUBE
 
+#ifdef USECUSTOMMATERIALTEXTURE
+	customMaterial.ambient = XMFLOAT4(0.8f, 0.8f, 0.8f, 1.0f);//XMFLOAT4(1.0f, 0.5f, 0.31f, 1.0f);
+	customMaterial.diffuse = XMFLOAT4(0.8f, 0.8f, 0.8f, 1.0f);
+	customMaterial.specular = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	customMaterial.specularValue = 64.0f;
+	customMaterial.useMaterialTextures = 1.0f;
 
+#else
 	customMaterial.ambient = XMFLOAT4(1.0f, 0.5f, 0.31f, 1.0f);
 	customMaterial.diffuse = XMFLOAT4(1.0f, 0.5f, 0.31f, 1.0f);
 	customMaterial.specular = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
-	customMaterial.specularValue = 32.0f;
+	customMaterial.specularValue = 64.0f;
+	customMaterial.useMaterialTextures = 0.0f;
+#endif // USECUSTOMMATERIALTEXTURE
+
+	
 	DirectX::XMStoreFloat4(&customMaterial.viewPos, m_maincamera.GetCamPos());
 	m_primarycmdlist->SetGraphicsRoot32BitConstants(3, sizeof(customMaterial) / 4, &customMaterial, 0);
 	m_primarycmdlist->SetGraphicsRoot32BitConstants(4, sizeof(m_TestLightProperties) / 4, &m_TestLightProperties, 0);
 #ifdef USETESTBASICMODELCUBE
-	
 	{
+		//set custom texture material table and heaps for same
+		DX12DESCHEAP& custommatsrvheap = m_texdataResourceviewheap;
+		ID3D12DescriptorHeap* heapstoset[1] = { custommatsrvheap.GetDescHeap() };
+		m_primarycmdlist->SetDescriptorHeaps(1, heapstoset);
+		m_primarycmdlist->SetGraphicsRootDescriptorTable(1, custommatsrvheap.GetGPUHandleOffseted(0));
+		//customMaterial constants for texture based material use
+		Model::MaterialConstants modelcustomMaterialConstants = {};
+		modelcustomMaterialConstants.texsrvidx = 0;
+		m_primarycmdlist->SetGraphicsRoot32BitConstants(2, sizeof(modelcustomMaterialConstants) / 4, &modelcustomMaterialConstants, 0);
+	}
+	{
+
 		m_cubemodel_simpleTesting.Draw(m_primarycmdlist, vpmat, 0, 2, true, true, true);
 	}
 	DXASSERT(m_primarycmdlist->Close())
@@ -166,6 +206,83 @@ void LightingTestApplication::Render()
 
 void LightingTestApplication::InitExtras()
 {
+	//texture map material custom
+	{
+		//the resource heap
+		UINT actualSRVtoallocate = 3;//2 tex and 1 texmat data
+		D3D12_DESCRIPTOR_HEAP_DESC texsrvheapdesc = {};
+		texsrvheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		texsrvheapdesc.NumDescriptors = actualSRVtoallocate;
+		texsrvheapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		m_texdataResourceviewheap.Init(texsrvheapdesc, m_creationdevice);
+#ifdef USECUSTOMMATERIALTEXTURE
+		{
+			//custom texture init
+			m_boxtextureDiffuse = new DXTexture(L"boxdiffuse.png");
+			{
+				wstring texpath = L"textures/lightingtest/";
+				wstring texfullpath = texpath + m_boxtextureDiffuse->GetExternalTextureFileName();
+				DXTexManager::LoadTexture(texfullpath.c_str(), m_boxtextureDiffuse->GetDXImageData());
+			}
+			{
+				//init and create srv for tex
+				m_boxtextureDiffuse->Init(m_creationdevice);
+				D3D12_SHADER_RESOURCE_VIEW_DESC srvdesc = {};
+				srvdesc.Texture2D.MipLevels = m_boxtextureDiffuse->GetTotalMipCount();
+				srvdesc.Format = m_boxtextureDiffuse->GetDXImageData().m_imagemetadata.format;
+				srvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+				srvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+				m_boxtextureDiffuse->CreateSRV(m_creationdevice, srvdesc, m_texdataResourceviewheap.GetCPUHandleOffseted(1));
+				m_boxMaterialGPUData.diffusetexidx = 1;
+			}
+			m_boxtextureSpec = new DXTexture(L"boxspec.png");
+			{
+				wstring texpath = L"textures/lightingtest/";
+				wstring texfullpath = texpath + m_boxtextureSpec->GetExternalTextureFileName();
+				DXTexManager::LoadTexture(texfullpath.c_str(), m_boxtextureSpec->GetDXImageData());
+			}
+			{
+				//init and create srv for tex
+				m_boxtextureSpec->Init(m_creationdevice);
+				D3D12_SHADER_RESOURCE_VIEW_DESC srvdesc = {};
+				srvdesc.Texture2D.MipLevels = m_boxtextureSpec->GetTotalMipCount();
+				srvdesc.Format = m_boxtextureSpec->GetDXImageData().m_imagemetadata.format;
+				srvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+				srvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+				m_boxtextureSpec->CreateSRV(m_creationdevice, srvdesc, m_texdataResourceviewheap.GetCPUHandleOffseted(2));
+				m_boxMaterialGPUData.roughnesstexidx = 2;
+			}
+		}
+#endif
+		//the tex data buffer
+		DX12ResourceCreationProperties materialtexdataBufferprops;
+		DX12Buffer::InitResourceCreationProperties(materialtexdataBufferprops);
+		materialtexdataBufferprops.resdesc.Width = sizeof(MaterialDataGPU) * 1;
+		materialtexdataBufferprops.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
+		m_materialTexDatabuffer.Init(m_creationdevice, materialtexdataBufferprops, ResourceCreationMode::COMMITED);
+		m_materialTexDatabuffer.SetName(L"custommaterialtablebuffer");
+		//create srv at top of the heap created
+		{
+			D3D12_SHADER_RESOURCE_VIEW_DESC materialtablebuffersrvdesc = {};
+			materialtablebuffersrvdesc.ViewDimension = D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_BUFFER;
+			materialtablebuffersrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+			materialtablebuffersrvdesc.Format = DXGI_FORMAT::DXGI_FORMAT_UNKNOWN;
+			materialtablebuffersrvdesc.Buffer.FirstElement = 0;
+			materialtablebuffersrvdesc.Buffer.NumElements = static_cast<UINT>(1);
+			materialtablebuffersrvdesc.Buffer.StructureByteStride = sizeof(MaterialDataGPU);
+			m_materialTexDatabuffer.CreateSRV(m_creationdevice, materialtablebuffersrvdesc, m_texdataResourceviewheap.GetCPUHandleOffseted(0));
+			
+		}
+		{
+			//upload box custom gpu data
+			BufferMapParams mattablewriteparams = {};
+			mattablewriteparams.range.Begin = 0;
+			mattablewriteparams.range.End = m_materialTexDatabuffer.GetSize();
+			void* mattablebuffmapped = m_materialTexDatabuffer.Map(mattablewriteparams);
+			memcpy(mattablebuffmapped, &m_boxMaterialGPUData, m_materialTexDatabuffer.GetSize());
+			m_materialTexDatabuffer.UnMap(mattablewriteparams);
+		}
+	}
 	BasicModelManager::LoadModel(m_creationdevice, "models/cube.dae", m_loadedmodel, VERTEXVERSION2);
 #ifdef USECONFERENCEROOMCOMPOUNDMODEL
 	float scalefactor = 0.01f;

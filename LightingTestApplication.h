@@ -25,10 +25,14 @@ private:
 	{
 		unsigned int usematerialtextures;
 	};
+	/*
+	* when using materialtextures then ambient,diffuse & specular represent the factor to multiply in correcponding part's calculation;
+	* normally it represents the resopective material peroperty.
+	*/
 	struct CustomMaterial
 	{
 		float usecustomMaterial = 0.0f;
-		float paddingValue = 0.0f;
+		float useMaterialTextures = 0.0f;
 		float specularValue = 32.0f;
 		unsigned int lightingMode = static_cast<unsigned int>(LIGHTINGMODE::COMPLETELIGHTING_BASIC);
 		XMFLOAT4 viewPos;
@@ -52,5 +56,10 @@ private:
 	DXFPSCameraController m_maincameracontroller;
 	bool m_Imgui_mousecontrol_camera;
 	TestLight m_TestLightProperties;
+	DX12Buffer m_materialTexDatabuffer;
+	DX12DESCHEAP m_texdataResourceviewheap;
+	DXTexture* m_boxtextureDiffuse;
+	DXTexture* m_boxtextureSpec;
+	MaterialDataGPU m_boxMaterialGPUData;
 	void InitPSO();
 };
