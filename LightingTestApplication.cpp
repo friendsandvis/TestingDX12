@@ -222,7 +222,7 @@ void LightingTestApplication::InitExtras()
 			{
 				wstring texpath = L"textures/lightingtest/";
 				wstring texfullpath = texpath + m_boxtextureDiffuse->GetExternalTextureFileName();
-				DXTexManager::LoadTexture(texfullpath.c_str(), m_boxtextureDiffuse->GetDXImageData());
+				DXTexManager::LoadTexture(texfullpath.c_str(), m_boxtextureDiffuse->GetDXImageData(),true);
 			}
 			{
 				//init and create srv for tex
@@ -239,7 +239,7 @@ void LightingTestApplication::InitExtras()
 			{
 				wstring texpath = L"textures/lightingtest/";
 				wstring texfullpath = texpath + m_boxtextureSpec->GetExternalTextureFileName();
-				DXTexManager::LoadTexture(texfullpath.c_str(), m_boxtextureSpec->GetDXImageData());
+				DXTexManager::LoadTexture(texfullpath.c_str(), m_boxtextureSpec->GetDXImageData(),true);
 			}
 			{
 				//init and create srv for tex

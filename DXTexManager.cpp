@@ -18,7 +18,7 @@ DXTexManager::~DXTexManager()
 {
 }
 
-bool DXTexManager::LoadTexture(const wchar_t* imagefile, DXImageData& outloadedImagedata)
+bool DXTexManager::LoadTexture(const wchar_t* imagefile, DXImageData& outloadedImagedata,bool ignoreSRGB)
 {
 	HRESULT res = S_OK;
 	wstring extension=PathFindExtension(imagefile);
@@ -29,7 +29,12 @@ bool DXTexManager::LoadTexture(const wchar_t* imagefile, DXImageData& outloadedI
 	}
 	else
 	{
-		res = LoadFromWICFile(imagefile, WIC_FLAGS::WIC_FLAGS_NONE, &outloadedImagedata.m_imagemetadata, outloadedImagedata.m_image);
+		WIC_FLAGS wicFlags = WIC_FLAGS::WIC_FLAGS_NONE;
+		if (ignoreSRGB)
+		{
+			wicFlags |= WIC_FLAGS::WIC_FLAGS_IGNORE_SRGB;
+		}
+		res = LoadFromWICFile(imagefile, wicFlags, &outloadedImagedata.m_imagemetadata, outloadedImagedata.m_image);
 	} 
 	
 
