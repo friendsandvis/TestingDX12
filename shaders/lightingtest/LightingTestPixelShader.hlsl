@@ -1,4 +1,5 @@
-
+//#define TESTLIGHTTYPE_POINT
+#define TESTLIGHTTYPE_DIRECTION
 Texture2D<float4> textures[]: register(t1);
 struct MaterialDataGPU
 {
@@ -18,6 +19,7 @@ struct CustomMaterial
 	float4 diffuse;
 	float4 specular;
 };
+#ifdef TESTLIGHTTYPE_POINT
 struct TestLight
 {
 	float3 lightCol;
@@ -25,6 +27,15 @@ struct TestLight
 	float3 lightPos;
 	float data2;
 };
+#elif defined(TESTLIGHTTYPE_DIRECTION)
+	struct TestLight
+{
+	float3 lightCol;
+	float data1;
+	float3 lightDir;
+	float data2;
+};
+#endif //TESTLIGHTTYPE_POINT
 StructuredBuffer<MaterialDataGPU> mattable:register(t0,space1);
 struct MatConstants
 {
@@ -73,10 +84,14 @@ float4 main(VSOut psin) : SV_TARGET0
 		float3 viewPos = customMatconsts.viewPos.xyz;
 		float3 ambientlit = customMatconsts.ambient.xyz * diffusecol.xyz;
 		//for lighting lightdirection is in point of view of pixel aka direction towards the light
+#ifdef TESTLIGHTTYPE_POINT
 		float3 lightDir = normalize(testLightconsts.lightPos -psin.pixelpos.xyz);
+#elif defined(TESTLIGHTTYPE_DIRECTION)
+		float3 lightDir = normalize(-testLightconsts.lightDir.xyz);
+#endif //TESTLIGHTTYPE_POINT
 		float3 viewDir = normalize(viewPos -psin.pixelpos.xyz);
 		//reflight lights actual direction for reflected direction vector calc
-		float3 lightreflectDir = normalize(reflect(-lightDir,psin.normal));
+		float3 lightreflectDir = normalize(reflect(lightDir,psin.normal));
 		const float specFactintensity =1.0f;
 		float specfact = specFactintensity * pow(max(dot(viewDir,lightreflectDir),0.0f),customMatconsts.specularValue);
 		float3 speclit = specfact * testLightconsts.lightCol * customMatconsts.specular.xyz * roughnesscol.xyz;

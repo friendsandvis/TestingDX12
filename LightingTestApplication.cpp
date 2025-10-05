@@ -25,10 +25,19 @@ LightingTestApplication::LightingTestApplication()
 	m_imguiAllowed = true;
 	//since we are using imgui in this app so initially mouse movement is turned off
 	m_Imgui_mousecontrol_camera = false;
+#ifdef TESTLIGHTTYPE_POINT
 	m_TestLightProperties.lightPos = XMFLOAT3(1.2f, 1.0f, 2.0f);
 	m_TestLightProperties.lightCol = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	m_TestLightProperties.data1 = 4.0f;
-	m_TestLightProperties.data2 = 5.0f;
+	m_TestLightProperties.data1 = 1.0f;
+	m_TestLightProperties.data2 = 2.0f;
+#elif defined(TESTLIGHTTYPE_DIRECTION)
+	m_TestLightProperties.lightDir = XMFLOAT3(-0.2f, -1.0f,- 0.3f);
+	m_TestLightProperties.lightCol = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	m_TestLightProperties.data1 = 1.0f;
+	m_TestLightProperties.data2 = 2.0f;
+#endif // TESTLIGHTTYPE_POINT
+
+	
 }
 LightingTestApplication::~LightingTestApplication()
 {
@@ -122,6 +131,7 @@ void LightingTestApplication::Render()
 	}
 	
 	//------------------------------- draw test light representing cube use same PSO for now
+#ifdef TESTLIGHTTYPE_POINT
 	{
 		//setup position and scale first then render with right shader properties.
 		XMFLOAT4 simplelightCube_scale = { 0.25f,0.25,0.25f,1.0f };
@@ -141,6 +151,7 @@ void LightingTestApplication::Render()
 		}
 		m_cubemodel_simpleLight.Draw(m_primarycmdlist, vpmat, 0, 2, true, true, true);
 	}
+#endif // TESTLIGHTTYPE_POINT
 	CustomMaterial customMaterial = {};
 	customMaterial.usecustomMaterial = 0.0f;
 #ifdef USETESTBASICMODELCUBE
@@ -495,9 +506,15 @@ void LightingTestApplication::IMGUIRenderAdditional()
 	}
 	ImGui::Text("test light properties:-");
 	//directional light related
+#ifdef TESTLIGHTTYPE_POINT
 	{
 		ImGui::InputFloat3("light_position", (float*)(&m_TestLightProperties.lightPos));
 	}
+#elif defined(TESTLIGHTTYPE_DIRECTION)
+	{
+		ImGui::InputFloat3("light_direction", (float*)(&m_TestLightProperties.lightDir));
+	}
+#endif // TESTLIGHTTYPE_POINT
 	//IMGUISimpleTestRender();
 }
 void LightingTestApplication::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)

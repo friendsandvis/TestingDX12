@@ -7,6 +7,8 @@
 #include"DXCamera.h"
 #include"CameraMovementManager.h"
 using namespace DirectX;
+//#define TESTLIGHTTYPE_POINT
+#define TESTLIGHTTYPE_DIRECTION
 class LightingTestApplication :public DX12ApplicationManagerBase
 {
 public:
@@ -40,6 +42,7 @@ private:
 		XMFLOAT4 diffuse;
 		XMFLOAT4 specular;
 	};
+#ifdef TESTLIGHTTYPE_POINT
 	struct TestLight
 	{
 		XMFLOAT3 lightCol;
@@ -47,6 +50,15 @@ private:
 		XMFLOAT3 lightPos;
 		float data2;
 	};
+#elif defined(TESTLIGHTTYPE_DIRECTION)
+	struct TestLight
+	{
+		XMFLOAT3 lightCol;
+		float data1;
+		XMFLOAT3 lightDir;
+		float data2;
+	};
+#endif // TESTLIGHTTYPE_POINT
 	DX12PSO m_pso, m_pso_alphablending;
 	Model m_planemodel, m_trianglemodel;
 	Model m_cubemodel_simpleTesting;
