@@ -87,7 +87,7 @@ float4 main(VSOut psin) : SV_TARGET0
 #ifdef TESTLIGHTTYPE_POINT
 		float3 lightDir = normalize(testLightconsts.lightPos -psin.pixelpos.xyz);
 #elif defined(TESTLIGHTTYPE_DIRECTION)
-		float3 lightDir = normalize(-testLightconsts.lightDir.xyz);
+		float3 lightDir = normalize(testLightconsts.lightDir.xyz);
 #endif //TESTLIGHTTYPE_POINT
 		float3 viewDir = normalize(viewPos -psin.pixelpos.xyz);
 		//reflight lights actual direction for reflected direction vector calc

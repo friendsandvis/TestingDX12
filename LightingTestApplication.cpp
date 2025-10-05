@@ -31,7 +31,7 @@ LightingTestApplication::LightingTestApplication()
 	m_TestLightProperties.data1 = 1.0f;
 	m_TestLightProperties.data2 = 2.0f;
 #elif defined(TESTLIGHTTYPE_DIRECTION)
-	m_TestLightProperties.lightDir = XMFLOAT3(-0.2f, -1.0f,- 0.3f);
+	m_TestLightProperties.lightDir = XMFLOAT3(0.2f, 1.0f,0.3f);
 	m_TestLightProperties.lightCol = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	m_TestLightProperties.data1 = 1.0f;
 	m_TestLightProperties.data2 = 2.0f;
@@ -160,10 +160,10 @@ void LightingTestApplication::Render()
 #endif // USETESTBASICMODELCUBE
 
 #ifdef USECUSTOMMATERIALTEXTURE
-	customMaterial.ambient = XMFLOAT4(0.8f, 0.8f, 0.8f, 1.0f);//XMFLOAT4(1.0f, 0.5f, 0.31f, 1.0f);
-	customMaterial.diffuse = XMFLOAT4(0.8f, 0.8f, 0.8f, 1.0f);
+	customMaterial.ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);//XMFLOAT4(1.0f, 0.5f, 0.31f, 1.0f);
+	customMaterial.diffuse = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
 	customMaterial.specular = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-	customMaterial.specularValue = 64.0f;
+	customMaterial.specularValue = 32.0f;
 	customMaterial.useMaterialTextures = 1.0f;
 
 #else
