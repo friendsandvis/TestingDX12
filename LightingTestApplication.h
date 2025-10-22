@@ -7,7 +7,7 @@
 #include"DXCamera.h"
 #include"CameraMovementManager.h"
 using namespace DirectX;
-//#define TESTLIGHTTYPE_POINT
+//#define TESTLIGHTTYPE_POINT 
 #define TESTLIGHTTYPE_DIRECTION
 class LightingTestApplication :public DX12ApplicationManagerBase
 {
@@ -31,6 +31,13 @@ private:
 	* when using materialtextures then ambient,diffuse & specular represent the factor to multiply in correcponding part's calculation;
 	* normally it represents the resopective material peroperty.
 	*/
+	struct PointLight
+	{
+		XMFLOAT3 lightCol;
+		float data1;
+		XMFLOAT3 lightPos;
+		float data2;
+	};
 	struct CustomMaterial
 	{
 		float usecustomMaterial = 0.0f;
@@ -54,9 +61,9 @@ private:
 	struct TestLight
 	{
 		XMFLOAT3 lightCol;
-		float data1;
+		float numLocallight;
 		XMFLOAT3 lightDir;
-		float data2;
+		float usedirectionallight;
 	};
 #endif // TESTLIGHTTYPE_POINT
 	DX12PSO m_pso, m_pso_alphablending;
@@ -69,9 +76,12 @@ private:
 	bool m_Imgui_mousecontrol_camera;
 	TestLight m_TestLightProperties;
 	DX12Buffer m_materialTexDatabuffer;
-	DX12DESCHEAP m_texdataResourceviewheap;
+	DX12DESCHEAP m_SRVHeap;
 	DXTexture* m_boxtextureDiffuse;
 	DXTexture* m_boxtextureSpec;
 	MaterialDataGPU m_boxMaterialGPUData;
+	DX12Buffer m_localLightsBuffer;
+	std::vector<PointLight> m_localLights;
+	PointLight pointLightprimary;
 	void InitPSO();
 };

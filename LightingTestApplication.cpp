@@ -33,11 +33,17 @@ LightingTestApplication::LightingTestApplication()
 #elif defined(TESTLIGHTTYPE_DIRECTION)
 	m_TestLightProperties.lightDir = XMFLOAT3(0.2f, 1.0f,0.3f);
 	m_TestLightProperties.lightCol = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	m_TestLightProperties.data1 = 1.0f;
-	m_TestLightProperties.data2 = 2.0f;
+	m_TestLightProperties.numLocallight = static_cast<float>(m_localLights.size());
+	m_TestLightProperties.usedirectionallight = 0.0f;
 #endif // TESTLIGHTTYPE_POINT
 
-	
+	//default init local light primary
+	{
+		pointLightprimary.data1 = 1.0f;
+		pointLightprimary.data2 = 2.0f;
+		pointLightprimary.lightCol = XMFLOAT3(1.0f, 1.0f, 1.0f);
+		pointLightprimary.lightPos = XMFLOAT3(1.2f, 1.0f, 2.0f);
+	}
 }
 LightingTestApplication::~LightingTestApplication()
 {
@@ -131,16 +137,15 @@ void LightingTestApplication::Render()
 	}
 	
 	//------------------------------- draw test light representing cube use same PSO for now
-#ifdef TESTLIGHTTYPE_POINT
 	{
 		//setup position and scale first then render with right shader properties.
 		XMFLOAT4 simplelightCube_scale = { 0.25f,0.25,0.25f,1.0f };
 		XMFLOAT4 simplelightCube_rotationAxis = { 1.0f,0.0,0.0f,1.0f };
-		XMFLOAT4 simplelightCube_translate = { m_TestLightProperties.lightPos.x,m_TestLightProperties.lightPos.y,m_TestLightProperties.lightPos.z,1.0f };
+		XMFLOAT4 simplelightCube_translate = { pointLightprimary.lightPos.x,pointLightprimary.lightPos.y,pointLightprimary.lightPos.z,1.0f };
 		m_cubemodel_simpleLight.SetTransformation(simplelightCube_scale, simplelightCube_rotationAxis, 0.0f, simplelightCube_translate);
 		{
 			CustomMaterial customMaterialsimplelight_cube = {};
-			customMaterialsimplelight_cube.ambient = { 1.0f,1.0f,1.0f,1.0f };//light colour here
+			customMaterialsimplelight_cube.ambient = { pointLightprimary.lightCol.x,pointLightprimary.lightCol.y,pointLightprimary.lightCol.z,1.0f };//light colour here
 			customMaterialsimplelight_cube.usecustomMaterial = 1.0f;
 			customMaterialsimplelight_cube.lightingMode = static_cast<unsigned int>(LIGHTINGMODE::ALBEDOONLY);
 			DirectX::XMStoreFloat4(&customMaterialsimplelight_cube.viewPos, m_maincamera.GetCamPos());
@@ -151,7 +156,6 @@ void LightingTestApplication::Render()
 		}
 		m_cubemodel_simpleLight.Draw(m_primarycmdlist, vpmat, 0, 2, true, true, true);
 	}
-#endif // TESTLIGHTTYPE_POINT
 	CustomMaterial customMaterial = {};
 	customMaterial.usecustomMaterial = 0.0f;
 #ifdef USETESTBASICMODELCUBE
@@ -181,7 +185,7 @@ void LightingTestApplication::Render()
 #ifdef USETESTBASICMODELCUBE
 	{
 		//set custom texture material table and heaps for same
-		DX12DESCHEAP& custommatsrvheap = m_texdataResourceviewheap;
+		DX12DESCHEAP& custommatsrvheap = m_SRVHeap;
 		ID3D12DescriptorHeap* heapstoset[1] = { custommatsrvheap.GetDescHeap() };
 		m_primarycmdlist->SetDescriptorHeaps(1, heapstoset);
 		m_primarycmdlist->SetGraphicsRootDescriptorTable(1, custommatsrvheap.GetGPUHandleOffseted(0));
@@ -217,15 +221,19 @@ void LightingTestApplication::Render()
 
 void LightingTestApplication::InitExtras()
 {
+	// local light init
+	{
+		m_localLights.push_back(pointLightprimary);
+	}
 	//texture map material custom
 	{
 		//the resource heap
-		UINT actualSRVtoallocate = 3;//2 tex and 1 texmat data
+		UINT actualSRVtoallocate = 4;// 1 texmat data 1 for locallight data buffer and 2 tex(forming unbound tex views
 		D3D12_DESCRIPTOR_HEAP_DESC texsrvheapdesc = {};
 		texsrvheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		texsrvheapdesc.NumDescriptors = actualSRVtoallocate;
 		texsrvheapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-		m_texdataResourceviewheap.Init(texsrvheapdesc, m_creationdevice);
+		m_SRVHeap.Init(texsrvheapdesc, m_creationdevice);
 #ifdef USECUSTOMMATERIALTEXTURE
 		{
 			//custom texture init
@@ -243,8 +251,8 @@ void LightingTestApplication::InitExtras()
 				srvdesc.Format = m_boxtextureDiffuse->GetDXImageData().m_imagemetadata.format;
 				srvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 				srvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-				m_boxtextureDiffuse->CreateSRV(m_creationdevice, srvdesc, m_texdataResourceviewheap.GetCPUHandleOffseted(1));
-				m_boxMaterialGPUData.diffusetexidx = 1;
+				m_boxtextureDiffuse->CreateSRV(m_creationdevice, srvdesc, m_SRVHeap.GetCPUHandleOffseted(2));
+				m_boxMaterialGPUData.diffusetexidx = 0;
 			}
 			m_boxtextureSpec = new DXTexture(L"boxspec.png");
 			{
@@ -260,8 +268,8 @@ void LightingTestApplication::InitExtras()
 				srvdesc.Format = m_boxtextureSpec->GetDXImageData().m_imagemetadata.format;
 				srvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 				srvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-				m_boxtextureSpec->CreateSRV(m_creationdevice, srvdesc, m_texdataResourceviewheap.GetCPUHandleOffseted(2));
-				m_boxMaterialGPUData.roughnesstexidx = 2;
+				m_boxtextureSpec->CreateSRV(m_creationdevice, srvdesc, m_SRVHeap.GetCPUHandleOffseted(3));
+				m_boxMaterialGPUData.roughnesstexidx = 1;
 			}
 		}
 #endif
@@ -272,7 +280,7 @@ void LightingTestApplication::InitExtras()
 		materialtexdataBufferprops.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
 		m_materialTexDatabuffer.Init(m_creationdevice, materialtexdataBufferprops, ResourceCreationMode::COMMITED);
 		m_materialTexDatabuffer.SetName(L"custommaterialtablebuffer");
-		//create srv at top of the heap created
+		//create material table srv in the heap created
 		{
 			D3D12_SHADER_RESOURCE_VIEW_DESC materialtablebuffersrvdesc = {};
 			materialtablebuffersrvdesc.ViewDimension = D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_BUFFER;
@@ -281,7 +289,7 @@ void LightingTestApplication::InitExtras()
 			materialtablebuffersrvdesc.Buffer.FirstElement = 0;
 			materialtablebuffersrvdesc.Buffer.NumElements = static_cast<UINT>(1);
 			materialtablebuffersrvdesc.Buffer.StructureByteStride = sizeof(MaterialDataGPU);
-			m_materialTexDatabuffer.CreateSRV(m_creationdevice, materialtablebuffersrvdesc, m_texdataResourceviewheap.GetCPUHandleOffseted(0));
+			m_materialTexDatabuffer.CreateSRV(m_creationdevice, materialtablebuffersrvdesc, m_SRVHeap.GetCPUHandleOffseted(0));
 			
 		}
 		{
@@ -293,6 +301,38 @@ void LightingTestApplication::InitExtras()
 			memcpy(mattablebuffmapped, &m_boxMaterialGPUData, m_materialTexDatabuffer.GetSize());
 			m_materialTexDatabuffer.UnMap(mattablewriteparams);
 		}
+		//locallight data buffer
+		DX12ResourceCreationProperties locallightdataBufferprops;
+		DX12Buffer::InitResourceCreationProperties(locallightdataBufferprops);
+		locallightdataBufferprops.resdesc.Width = sizeof(PointLight) * static_cast<UINT64>(m_localLights.size());
+		locallightdataBufferprops.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
+		m_localLightsBuffer.Init(m_creationdevice, materialtexdataBufferprops, ResourceCreationMode::COMMITED);
+		m_localLightsBuffer.SetName(L"locallightdatabuffer");
+		{
+
+		}
+		//create local light data  buffer srv in the heap created
+		{
+			D3D12_SHADER_RESOURCE_VIEW_DESC materialtablebuffersrvdesc = {};
+			materialtablebuffersrvdesc.ViewDimension = D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_BUFFER;
+			materialtablebuffersrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+			materialtablebuffersrvdesc.Format = DXGI_FORMAT::DXGI_FORMAT_UNKNOWN;
+			materialtablebuffersrvdesc.Buffer.FirstElement = 0;
+			materialtablebuffersrvdesc.Buffer.NumElements = static_cast<UINT>(1);
+			materialtablebuffersrvdesc.Buffer.StructureByteStride = sizeof(MaterialDataGPU);
+			m_localLightsBuffer.CreateSRV(m_creationdevice, materialtablebuffersrvdesc, m_SRVHeap.GetCPUHandleOffseted(1));
+
+		}
+		{
+			//upload local light data to buffer data
+			BufferMapParams mattablewriteparams = {};
+			mattablewriteparams.range.Begin = 0;
+			mattablewriteparams.range.End = m_localLightsBuffer.GetSize();
+			void* mattablebuffmapped = m_localLightsBuffer.Map(mattablewriteparams);
+			memcpy(mattablebuffmapped, m_localLights.data(), m_localLightsBuffer.GetSize());
+			m_materialTexDatabuffer.UnMap(mattablewriteparams);
+		}
+
 	}
 	BasicModelManager::LoadModel(m_creationdevice, "models/cube.dae", m_loadedmodel, VERTEXVERSION2);
 #ifdef USECONFERENCEROOMCOMPOUNDMODEL
@@ -403,6 +443,13 @@ void LightingTestApplication::InitPSO()
 			materialtablerange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 			materialtablerange.RegisterSpace = 1;
 			materialtablerange.BaseShaderRegister = 0;
+			D3D12_DESCRIPTOR_RANGE locallightdatarange = {};
+			locallightdatarange.OffsetInDescriptorsFromTableStart = 0;
+			locallightdatarange.NumDescriptors = 1;
+			locallightdatarange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+			locallightdatarange.RegisterSpace = 0;
+			locallightdatarange.BaseShaderRegister = 0;
+			locallightdatarange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 			//making unbound range so make sure it is last range
 			D3D12_DESCRIPTOR_RANGE texturesrvrange = {};
 			texturesrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
@@ -411,8 +458,10 @@ void LightingTestApplication::InitPSO()
 			texturesrvrange.NumDescriptors = -1;
 			texturesrvrange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 			//do not know why order of range is important here else issue in unbound range(all texture).
-			descrangestouserootparam1.push_back(texturesrvrange);
 			descrangestouserootparam1.push_back(materialtablerange);
+			descrangestouserootparam1.push_back(locallightdatarange);
+			descrangestouserootparam1.push_back(texturesrvrange);
+			
 
 
 
@@ -504,17 +553,12 @@ void LightingTestApplication::IMGUIRenderAdditional()
 		snprintf(currentMouseMoveState, 30, "mouse move camera allowed:%d", m_Imgui_mousecontrol_camera);
 		ImGui::Text(currentMouseMoveState);
 	}
-	ImGui::Text("test light properties:-");
+	ImGui::Text("light properties:-");
 	//directional light related
-#ifdef TESTLIGHTTYPE_POINT
+	ImGui::InputFloat3("point light_position", (float*)(&pointLightprimary.lightPos));
 	{
-		ImGui::InputFloat3("light_position", (float*)(&m_TestLightProperties.lightPos));
+		ImGui::InputFloat3("directionallight_direction", (float*)(&m_TestLightProperties.lightDir));
 	}
-#elif defined(TESTLIGHTTYPE_DIRECTION)
-	{
-		ImGui::InputFloat3("light_direction", (float*)(&m_TestLightProperties.lightDir));
-	}
-#endif // TESTLIGHTTYPE_POINT
 	//IMGUISimpleTestRender();
 }
 void LightingTestApplication::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
