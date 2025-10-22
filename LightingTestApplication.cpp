@@ -34,7 +34,7 @@ LightingTestApplication::LightingTestApplication()
 	m_TestLightProperties.lightDir = XMFLOAT3(0.2f, 1.0f,0.3f);
 	m_TestLightProperties.lightCol = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	m_TestLightProperties.numLocallight = static_cast<float>(m_localLights.size());
-	m_TestLightProperties.usedirectionallight = 0.0f;
+	m_TestLightProperties.usedirectionallight = 1.0f;
 #endif // TESTLIGHTTYPE_POINT
 
 	//default init local light primary
