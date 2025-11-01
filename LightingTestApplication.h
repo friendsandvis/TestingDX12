@@ -33,10 +33,8 @@ private:
 	*/
 	struct PointLight
 	{
-		XMFLOAT3 lightCol;
-		float data1;
-		XMFLOAT3 lightPos;
-		float data2;
+		XMFLOAT4 lightCol;
+		XMFLOAT4 lightPos;
 	};
 	struct CustomMaterial
 	{
@@ -83,5 +81,8 @@ private:
 	DX12Buffer m_localLightsBuffer;
 	std::vector<PointLight> m_localLights;
 	PointLight pointLightprimary;
+	bool m_useDirectionalLighting = true;
+	bool m_localLightdatabufferNeedUpdate = true;
 	void InitPSO();
+	void UpdateLocalLightBufferData();
 };

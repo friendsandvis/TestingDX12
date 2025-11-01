@@ -34,15 +34,13 @@ LightingTestApplication::LightingTestApplication()
 	m_TestLightProperties.lightDir = XMFLOAT3(0.2f, 1.0f,0.3f);
 	m_TestLightProperties.lightCol = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	m_TestLightProperties.numLocallight = static_cast<float>(m_localLights.size());
-	m_TestLightProperties.usedirectionallight = 1.0f;
+	m_TestLightProperties.usedirectionallight = (float)m_useDirectionalLighting;
 #endif // TESTLIGHTTYPE_POINT
 
 	//default init local light primary
 	{
-		pointLightprimary.data1 = 1.0f;
-		pointLightprimary.data2 = 2.0f;
-		pointLightprimary.lightCol = XMFLOAT3(1.0f, 1.0f, 1.0f);
-		pointLightprimary.lightPos = XMFLOAT3(1.2f, 1.0f, 2.0f);
+		pointLightprimary.lightCol = XMFLOAT4(1.0f, 1.0f, 1.0f,3.0f);
+		pointLightprimary.lightPos = XMFLOAT4(1.2f, 1.0f, 2.0f,4.0f);
 	}
 }
 LightingTestApplication::~LightingTestApplication()
@@ -91,6 +89,13 @@ void LightingTestApplication::Render()
 	m_boxtextureDiffuse->UploadTexture(m_primarycmdlist);
 	m_boxtextureSpec->UploadTexture(m_primarycmdlist);
 #endif
+	//update locallightbuffer forced per frame for quick test refresh content of local light buffer too
+	{
+		m_localLights.clear();
+		m_localLights.push_back(pointLightprimary);
+		m_localLightdatabufferNeedUpdate = true;
+		UpdateLocalLightBufferData();
+	}
 	//set rtv
 	UINT currentbackbufferidx = m_swapchain.GetCurrentbackbufferIndex();
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvhandle = m_rtvdescheap.GetCPUHandleOffseted(currentbackbufferidx);
@@ -151,6 +156,7 @@ void LightingTestApplication::Render()
 			DirectX::XMStoreFloat4(&customMaterialsimplelight_cube.viewPos, m_maincamera.GetCamPos());
 			m_primarycmdlist->SetGraphicsRoot32BitConstants(3, sizeof(customMaterialsimplelight_cube) / 4, &customMaterialsimplelight_cube, 0);
 			//light properties buffer not needed but set for completenesss sake change as we are avoiding new set of shader for light represent rendering in this app.
+			m_TestLightProperties.usedirectionallight = m_useDirectionalLighting;
 			m_primarycmdlist->SetGraphicsRoot32BitConstants(4, sizeof(m_TestLightProperties) / 4, &m_TestLightProperties, 0);
 			//light properties directly passed to material & used representation cube transform
 		}
@@ -306,24 +312,24 @@ void LightingTestApplication::InitExtras()
 		DX12Buffer::InitResourceCreationProperties(locallightdataBufferprops);
 		locallightdataBufferprops.resdesc.Width = sizeof(PointLight) * static_cast<UINT64>(m_localLights.size());
 		locallightdataBufferprops.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
-		m_localLightsBuffer.Init(m_creationdevice, materialtexdataBufferprops, ResourceCreationMode::COMMITED);
+		m_localLightsBuffer.Init(m_creationdevice, locallightdataBufferprops, ResourceCreationMode::COMMITED);
 		m_localLightsBuffer.SetName(L"locallightdatabuffer");
 		{
 
 		}
 		//create local light data  buffer srv in the heap created
 		{
-			D3D12_SHADER_RESOURCE_VIEW_DESC materialtablebuffersrvdesc = {};
-			materialtablebuffersrvdesc.ViewDimension = D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_BUFFER;
-			materialtablebuffersrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-			materialtablebuffersrvdesc.Format = DXGI_FORMAT::DXGI_FORMAT_UNKNOWN;
-			materialtablebuffersrvdesc.Buffer.FirstElement = 0;
-			materialtablebuffersrvdesc.Buffer.NumElements = static_cast<UINT>(1);
-			materialtablebuffersrvdesc.Buffer.StructureByteStride = sizeof(MaterialDataGPU);
-			m_localLightsBuffer.CreateSRV(m_creationdevice, materialtablebuffersrvdesc, m_SRVHeap.GetCPUHandleOffseted(1));
+			D3D12_SHADER_RESOURCE_VIEW_DESC locallightbuffersrvdesc = {};
+			locallightbuffersrvdesc.ViewDimension = D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_BUFFER;
+			locallightbuffersrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+			locallightbuffersrvdesc.Format = DXGI_FORMAT::DXGI_FORMAT_UNKNOWN;
+			locallightbuffersrvdesc.Buffer.FirstElement = 0;
+			locallightbuffersrvdesc.Buffer.NumElements = static_cast<UINT>(m_localLights.size());
+			locallightbuffersrvdesc.Buffer.StructureByteStride = sizeof(PointLight);
+			m_localLightsBuffer.CreateSRV(m_creationdevice, locallightbuffersrvdesc, m_SRVHeap.GetCPUHandleOffseted(1));
 
 		}
-		{
+		/* {
 			//upload local light data to buffer data
 			BufferMapParams mattablewriteparams = {};
 			mattablewriteparams.range.Begin = 0;
@@ -331,7 +337,9 @@ void LightingTestApplication::InitExtras()
 			void* mattablebuffmapped = m_localLightsBuffer.Map(mattablewriteparams);
 			memcpy(mattablebuffmapped, m_localLights.data(), m_localLightsBuffer.GetSize());
 			m_materialTexDatabuffer.UnMap(mattablewriteparams);
-		}
+		}*/
+		m_localLightdatabufferNeedUpdate = true;
+		UpdateLocalLightBufferData();
 
 	}
 	BasicModelManager::LoadModel(m_creationdevice, "models/cube.dae", m_loadedmodel, VERTEXVERSION2);
@@ -554,8 +562,17 @@ void LightingTestApplication::IMGUIRenderAdditional()
 		ImGui::Text(currentMouseMoveState);
 	}
 	ImGui::Text("light properties:-");
+	//test lighting source
+	{
+		ImGui::Checkbox("usedirectionallight only", &m_useDirectionalLighting);
+	}
+	//locallight related
+	XMFLOAT3 tmppLightPos{ pointLightprimary.lightPos.x,pointLightprimary.lightPos.y,pointLightprimary.lightPos.z};
+	ImGui::InputFloat3("point light_position", (float*)(&tmppLightPos));
+	pointLightprimary.lightPos.x = tmppLightPos.x;
+	pointLightprimary.lightPos.y = tmppLightPos.y;
+	pointLightprimary.lightPos.z = tmppLightPos.z;
 	//directional light related
-	ImGui::InputFloat3("point light_position", (float*)(&pointLightprimary.lightPos));
 	{
 		ImGui::InputFloat3("directionallight_direction", (float*)(&m_TestLightProperties.lightDir));
 	}
@@ -575,4 +592,17 @@ void LightingTestApplication::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARA
 		}
 	}
 
+}
+void LightingTestApplication::UpdateLocalLightBufferData()
+{
+	if (m_localLightdatabufferNeedUpdate)
+	{
+		BufferMapParams lightBufferwriteparams = {};
+		lightBufferwriteparams.range.Begin = 0;
+		lightBufferwriteparams.range.End = m_localLightsBuffer.GetSize();
+		void* lightbuffmapped = m_localLightsBuffer.Map(lightBufferwriteparams);
+		memcpy(lightbuffmapped, m_localLights.data(), m_localLightsBuffer.GetSize());
+		m_materialTexDatabuffer.UnMap(lightBufferwriteparams);
+		m_localLightdatabufferNeedUpdate = false;
+	}
 }
