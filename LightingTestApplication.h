@@ -9,6 +9,7 @@
 using namespace DirectX;
 //#define TESTLIGHTTYPE_POINT 
 #define TESTLIGHTTYPE_DIRECTION
+#define NUMCUBESTORENDER 50
 class LightingTestApplication :public DX12ApplicationManagerBase
 {
 public:
