@@ -120,7 +120,7 @@ public:
 	};
 	void SetTransformation(DirectX::XMFLOAT4 scale, DirectX::XMFLOAT4 rotationaxis, float rotationangle, DirectX::XMFLOAT4 translate);
 	XMMATRIX GetTransform() { return m_transform; }
-	void Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix,UINT mvpmatrixrootparamindex,UINT materialconstsrootparamindex,bool usemodelmatrix=true,bool setmvpmatrix=true,bool supportmaterial=false);
+	void Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix,UINT mvpmatrixrootparamindex,UINT materialconstsrootparamindex,bool usemodelmatrix=true,bool setmvpmatrix=true,bool supportmaterial=false,unsigned int instanceCount = 1);
 	void Extratransform(XMMATRIX extratransformmat);
 	Model(ModelDataUploadMode uploadmode=NOCOPY);
 	~Model();

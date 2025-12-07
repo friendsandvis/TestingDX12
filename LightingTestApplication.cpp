@@ -201,10 +201,8 @@ void LightingTestApplication::Render()
 		m_primarycmdlist->SetGraphicsRoot32BitConstants(2, sizeof(modelcustomMaterialConstants) / 4, &modelcustomMaterialConstants, 0);
 	}
 	{
-		for (int i = 0; i < NUMCUBESTORENDER; i++)
-		{
-			m_cubemodel_simpleTesting.Draw(m_primarycmdlist, vpmat, 0, 2, true, true, true);
-		}
+		//rendering multiple cubes instanced render
+			m_cubemodel_simpleTesting.Draw(m_primarycmdlist, vpmat, 0, 2, true, true, true,NUMCUBESTORENDER);
 	}
 	DXASSERT(m_primarycmdlist->Close())
 		BasicRender();

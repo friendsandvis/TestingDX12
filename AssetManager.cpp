@@ -167,7 +167,7 @@ Model::~Model()
 		}
 	}
 }
-void Model::Draw(DX12Commandlist& renderingcmdlist,XMMATRIX vpmatrix, UINT mvpmatrixrootparamindex, UINT materialconstsrootparamindex, bool usemodelmatrix, bool setmvpmatrix, bool supportmaterial)
+void Model::Draw(DX12Commandlist& renderingcmdlist,XMMATRIX vpmatrix, UINT mvpmatrixrootparamindex, UINT materialconstsrootparamindex, bool usemodelmatrix, bool setmvpmatrix, bool supportmaterial, unsigned int instanceCount)
 {
 	if (!m_Allowrender)
 	{
@@ -194,11 +194,11 @@ void Model::Draw(DX12Commandlist& renderingcmdlist,XMMATRIX vpmatrix, UINT mvpma
 	if (HasIndexBuffer())
 	{
 		renderingcmdlist->IASetIndexBuffer(&m_indexbufferview);
-		renderingcmdlist->DrawIndexedInstanced(GetIndiciesCount(), 1, 0, 0, 0);
+		renderingcmdlist->DrawIndexedInstanced(GetIndiciesCount(), instanceCount, 0, 0, 0);
 	}
 	else
 	{
-		renderingcmdlist->DrawInstanced(m_verticies.size(), 1, 0, 0);
+		renderingcmdlist->DrawInstanced(m_verticies.size(), instanceCount, 0, 0);
 	}
 }
 void Model::Extratransform(XMMATRIX extratransformmat)
