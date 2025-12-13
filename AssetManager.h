@@ -30,6 +30,13 @@ struct ShaderTransformConstants_General
 	XMMATRIX mvp;
 	XMMATRIX model;
 };
+struct ShaderTransformConstants_GeneralComplete
+{
+	XMMATRIX mvp;
+	XMMATRIX model;
+	XMMATRIX view;
+	XMMATRIX projection;
+};
 
 //forwarddeclare
 class DX12Commandlist;

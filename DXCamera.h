@@ -7,6 +7,18 @@
 */
 #include<DirectXMath.h>
 using namespace DirectX;
+struct CameraMatriciesData
+{
+	XMMATRIX projectionMat;
+	XMMATRIX viewMat;
+	XMMATRIX vpMat;
+
+};
+struct CameraConstants
+{
+	XMMATRIX mvp;
+	XMVECTOR campos;
+};
 // perspectice projection camera
 class DXCamera
 {
@@ -15,6 +27,8 @@ public:
 	~DXCamera();
 	XMMATRIX GetMVP(bool ortho=false,bool skipview=false);
 	XMMATRIX GetVP(bool ortho = false);
+	//returns a struct with view projection matricies
+	CameraMatriciesData GetVPSeperate(bool ortho = false);
 	void SetProjection(XMMATRIX& aprojectionmat) { m_projection=aprojectionmat; }
 	void SetModel(XMMATRIX& amodelmat) { m_model = amodelmat; }
 	inline const XMMATRIX& GetModel() { return m_model; }
@@ -46,11 +60,5 @@ private:
 	XMMATRIX m_projection;
 	float m_fovdegree,m_aspectratio,m_near,m_far;
 	unsigned int m_viewwidth, m_viewheight;
-};
-
-struct CameraConstants
-{
-	XMMATRIX mvp;
-	XMVECTOR campos;
 };
 

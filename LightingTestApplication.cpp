@@ -231,10 +231,21 @@ void LightingTestApplication::InitExtras()
 	{
 		m_localLights.push_back(pointLightprimary);
 	}
+	//init instance data
+	{
+		for (int i = 0; i < NUMCUBESTORENDER; i++)
+		{
+			CubeInstanceData instanceData{};
+			XMVECTOR rotAxis{ 0.0f,1.0f,0.0f };
+			XMVECTOR position = XMVectorSet(0.0f, i * 50.0f, 0.0f, 1.0f);
+			instanceData.modelMat = DXUtils::GetTransformationMatrix(1.0f, rotAxis, 0.0f, position);
+			m_instanceData.push_back(instanceData);
+		}
+	}
 	//texture map material custom
 	{
 		//the resource heap
-		UINT actualSRVtoallocate = 4;// 1 texmat data 1 for locallight data buffer and 2 tex(forming unbound tex views
+		UINT actualSRVtoallocate = 5;// 1 texmat data 1 for locallight data buffer, 1 for testcube instance data and 2 tex(forming unbound tex views
 		D3D12_DESCRIPTOR_HEAP_DESC texsrvheapdesc = {};
 		texsrvheapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		texsrvheapdesc.NumDescriptors = actualSRVtoallocate;
@@ -257,7 +268,7 @@ void LightingTestApplication::InitExtras()
 				srvdesc.Format = m_boxtextureDiffuse->GetDXImageData().m_imagemetadata.format;
 				srvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 				srvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-				m_boxtextureDiffuse->CreateSRV(m_creationdevice, srvdesc, m_SRVHeap.GetCPUHandleOffseted(2));
+				m_boxtextureDiffuse->CreateSRV(m_creationdevice, srvdesc, m_SRVHeap.GetCPUHandleOffseted(3));
 				m_boxMaterialGPUData.diffusetexidx = 0;
 			}
 			m_boxtextureSpec = new DXTexture(L"boxspec.png");
@@ -274,7 +285,7 @@ void LightingTestApplication::InitExtras()
 				srvdesc.Format = m_boxtextureSpec->GetDXImageData().m_imagemetadata.format;
 				srvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 				srvdesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-				m_boxtextureSpec->CreateSRV(m_creationdevice, srvdesc, m_SRVHeap.GetCPUHandleOffseted(3));
+				m_boxtextureSpec->CreateSRV(m_creationdevice, srvdesc, m_SRVHeap.GetCPUHandleOffseted(4));
 				m_boxMaterialGPUData.roughnesstexidx = 1;
 			}
 		}
@@ -308,15 +319,19 @@ void LightingTestApplication::InitExtras()
 			m_materialTexDatabuffer.UnMap(mattablewriteparams);
 		}
 		//locallight data buffer
-		DX12ResourceCreationProperties locallightdataBufferprops;
-		DX12Buffer::InitResourceCreationProperties(locallightdataBufferprops);
-		locallightdataBufferprops.resdesc.Width = sizeof(PointLight) * static_cast<UINT64>(m_localLights.size());
-		locallightdataBufferprops.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
-		m_localLightsBuffer.Init(m_creationdevice, locallightdataBufferprops, ResourceCreationMode::COMMITED);
+		DX12ResourceCreationProperties locallightDataBufferProps;
+		DX12Buffer::InitResourceCreationProperties(locallightDataBufferProps);
+		locallightDataBufferProps.resdesc.Width = sizeof(PointLight) * static_cast<UINT64>(m_localLights.size());
+		locallightDataBufferProps.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
+		m_localLightsBuffer.Init(m_creationdevice, locallightDataBufferProps, ResourceCreationMode::COMMITED);
 		m_localLightsBuffer.SetName(L"locallightdatabuffer");
-		{
-
-		}
+		//instance data buffer
+		DX12ResourceCreationProperties instanceDataBufferProps;
+		DX12Buffer::InitResourceCreationProperties(instanceDataBufferProps);
+		instanceDataBufferProps.resdesc.Width = sizeof(CubeInstanceData) * static_cast<UINT64>(m_instanceData.size());
+		instanceDataBufferProps.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
+		m_testCubeInstanceDataBuffer.Init(m_creationdevice, instanceDataBufferProps, ResourceCreationMode::COMMITED);
+		m_testCubeInstanceDataBuffer.SetName(L"testCubeInstanceDataBufffer");
 		//create local light data  buffer srv in the heap created
 		{
 			D3D12_SHADER_RESOURCE_VIEW_DESC locallightbuffersrvdesc = {};
@@ -329,17 +344,20 @@ void LightingTestApplication::InitExtras()
 			m_localLightsBuffer.CreateSRV(m_creationdevice, locallightbuffersrvdesc, m_SRVHeap.GetCPUHandleOffseted(1));
 
 		}
-		/* {
-			//upload local light data to buffer data
-			BufferMapParams mattablewriteparams = {};
-			mattablewriteparams.range.Begin = 0;
-			mattablewriteparams.range.End = m_localLightsBuffer.GetSize();
-			void* mattablebuffmapped = m_localLightsBuffer.Map(mattablewriteparams);
-			memcpy(mattablebuffmapped, m_localLights.data(), m_localLightsBuffer.GetSize());
-			m_materialTexDatabuffer.UnMap(mattablewriteparams);
-		}*/
 		m_localLightdatabufferNeedUpdate = true;
 		UpdateLocalLightBufferData();
+		//create instance data  buffer srv in the heap created
+		{
+			D3D12_SHADER_RESOURCE_VIEW_DESC instancebufferSRVdesc = {};
+			instancebufferSRVdesc.ViewDimension = D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_BUFFER;
+			instancebufferSRVdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+			instancebufferSRVdesc.Format = DXGI_FORMAT::DXGI_FORMAT_UNKNOWN;
+			instancebufferSRVdesc.Buffer.FirstElement = 0;
+			instancebufferSRVdesc.Buffer.NumElements = NUMCUBESTORENDER;
+			instancebufferSRVdesc.Buffer.StructureByteStride = sizeof(CubeInstanceData);
+			m_testCubeInstanceDataBuffer.CreateSRV(m_creationdevice, instancebufferSRVdesc, m_SRVHeap.GetCPUHandleOffseted(2));
+
+		}
 
 	}
 	BasicModelManager::LoadModel(m_creationdevice, "models/cube.dae", m_loadedmodel, VERTEXVERSION2);
@@ -403,6 +421,8 @@ void LightingTestApplication::InitExtras()
 	m_cubemodel_simpleLight.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_trianglemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	DXASSERT(m_uploadcommandlist->Close());
+	//upload instance data
+	UpdateInstanceDataBuffer();
 }
 
 void LightingTestApplication::InitPSO()
@@ -451,6 +471,7 @@ void LightingTestApplication::InitPSO()
 			materialtablerange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 			materialtablerange.RegisterSpace = 1;
 			materialtablerange.BaseShaderRegister = 0;
+			//local light srv data range
 			D3D12_DESCRIPTOR_RANGE locallightdatarange = {};
 			locallightdatarange.OffsetInDescriptorsFromTableStart = 0;
 			locallightdatarange.NumDescriptors = 1;
@@ -458,6 +479,14 @@ void LightingTestApplication::InitPSO()
 			locallightdatarange.RegisterSpace = 0;
 			locallightdatarange.BaseShaderRegister = 0;
 			locallightdatarange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+			//instance data srv data range
+			D3D12_DESCRIPTOR_RANGE instancedatarange = {};
+			instancedatarange.OffsetInDescriptorsFromTableStart = 0;
+			instancedatarange.NumDescriptors = 1;
+			instancedatarange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+			instancedatarange.RegisterSpace = 1;
+			instancedatarange.BaseShaderRegister = 1;
+			instancedatarange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 			//making unbound range so make sure it is last range
 			D3D12_DESCRIPTOR_RANGE texturesrvrange = {};
 			texturesrvrange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
@@ -468,6 +497,7 @@ void LightingTestApplication::InitPSO()
 			//do not know why order of range is important here else issue in unbound range(all texture).
 			descrangestouserootparam1.push_back(materialtablerange);
 			descrangestouserootparam1.push_back(locallightdatarange);
+			descrangestouserootparam1.push_back(instancedatarange);
 			descrangestouserootparam1.push_back(texturesrvrange);
 			
 
@@ -480,7 +510,7 @@ void LightingTestApplication::InitPSO()
 			rootparam1.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 			rootparam1.DescriptorTable.NumDescriptorRanges = descrangestouserootparam1.size();
 			rootparam1.DescriptorTable.pDescriptorRanges = descrangestouserootparam1.data();
-			rootparam1.ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_PIXEL;
+			rootparam1.ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_ALL;
 			rootparams.push_back(rootparam1);
 			D3D12_ROOT_PARAMETER rootparam2 = {};
 			rootparam2.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
@@ -605,4 +635,13 @@ void LightingTestApplication::UpdateLocalLightBufferData()
 		m_materialTexDatabuffer.UnMap(lightBufferwriteparams);
 		m_localLightdatabufferNeedUpdate = false;
 	}
+}
+void LightingTestApplication::UpdateInstanceDataBuffer()
+{
+	BufferMapParams instanceBufferwriteparams = {};
+	instanceBufferwriteparams.range.Begin = 0;
+	instanceBufferwriteparams.range.End = m_testCubeInstanceDataBuffer.GetSize();
+	void* instanceDatabuffmapped = m_testCubeInstanceDataBuffer.Map(instanceBufferwriteparams);
+	memcpy(instanceDatabuffmapped, m_instanceData.data(), m_testCubeInstanceDataBuffer.GetSize());
+	m_testCubeInstanceDataBuffer.UnMap(instanceBufferwriteparams);
 }

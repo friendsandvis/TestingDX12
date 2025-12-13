@@ -3,6 +3,7 @@ struct VSIn
     float3 vpos:POS;
 	float3 normal:NORMAL;
 	float2 vuv:VUV;
+	uint instanceID : SV_InstanceID;
 };
 
 struct VSConstants
@@ -11,7 +12,13 @@ struct VSConstants
 	matrix mvp;
 	matrix model;
 };
+struct InstanceData
+{
+	//matrix is alias for float4x4
+	matrix model;
+};
 ConstantBuffer<VSConstants> vertexconsts:register(b0);
+StructuredBuffer<InstanceData> instanceData:register(t1,space1);
 
 struct VSOut
 {

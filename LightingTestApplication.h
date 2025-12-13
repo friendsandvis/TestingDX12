@@ -37,6 +37,10 @@ private:
 		XMFLOAT4 lightCol;
 		XMFLOAT4 lightPos;
 	};
+	struct CubeInstanceData
+	{
+		XMMATRIX modelMat;
+	};
 	struct CustomMaterial
 	{
 		float usecustomMaterial = 0.0f;
@@ -80,10 +84,13 @@ private:
 	DXTexture* m_boxtextureSpec;
 	MaterialDataGPU m_boxMaterialGPUData;
 	DX12Buffer m_localLightsBuffer;
+	DX12Buffer m_testCubeInstanceDataBuffer;
 	std::vector<PointLight> m_localLights;
+	std::vector<CubeInstanceData> m_instanceData;
 	PointLight pointLightprimary;
 	bool m_useDirectionalLighting = true;
 	bool m_localLightdatabufferNeedUpdate = true;
 	void InitPSO();
 	void UpdateLocalLightBufferData();
+	void UpdateInstanceDataBuffer();
 };

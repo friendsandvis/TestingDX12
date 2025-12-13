@@ -47,6 +47,15 @@ XMMATRIX DXCamera::GetVP(bool ortho)
 	mvp = XMMatrixMultiply(mvp, m_projection);
 	return mvp;
 }
+CameraMatriciesData DXCamera::GetVPSeperate(bool ortho)
+{
+	CameraMatriciesData camMatData;
+	//Important::reuseing other vp function to get vp mat and recalculate viewmat and projection mat
+	camMatData.vpMat = GetVP(ortho);
+	camMatData.viewMat = m_view;
+	camMatData.projectionMat = m_projection;
+	return camMatData;
+}
 
 XMMATRIX DXCamera::GetView(bool update)
 {

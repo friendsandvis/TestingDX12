@@ -1,6 +1,6 @@
 //#define TESTLIGHTTYPE_POINT
 #define TESTLIGHTTYPE_DIRECTION
-Texture2D<float4> textures[]: register(t1);
+Texture2D<float4> textures[]: register(t1,space0);
 struct MaterialDataGPU
 {
 uint diffusetexidx;
@@ -24,6 +24,7 @@ struct LocalLight
 	float4 lightCol;
 	float4 lightPos;
 };
+
 #ifdef TESTLIGHTTYPE_POINT
 struct TestLight
 {
