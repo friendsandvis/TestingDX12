@@ -129,6 +129,7 @@ void LightingTestApplication::Render()
 		m_primarycmdlist->RSSetViewports(1, &aviewport);
 		m_primarycmdlist->RSSetScissorRects(1, &ascissorrect);
 	}
+	CameraMatriciesData camMatData = m_maincamera.GetVPSeperate();
 	XMMATRIX vpmat = m_maincamera.GetVP();
 	//m_trianglemodel.Draw(m_primarycmdlist,vpmat);
 	m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &vpmat, 0);
@@ -202,7 +203,7 @@ void LightingTestApplication::Render()
 	}
 	{
 		//rendering multiple cubes instanced render
-			m_cubemodel_simpleTesting.Draw(m_primarycmdlist, vpmat, 0, 2, true, true, true,NUMCUBESTORENDER);
+			m_cubemodel_simpleTesting.Draw(m_primarycmdlist, camMatData, 0, 2, true, true, true,NUMCUBESTORENDER);
 	}
 	DXASSERT(m_primarycmdlist->Close())
 		BasicRender();
@@ -293,10 +294,29 @@ void LightingTestApplication::InitExtras()
 		//the tex data buffer
 		DX12ResourceCreationProperties materialtexdataBufferprops;
 		DX12Buffer::InitResourceCreationProperties(materialtexdataBufferprops);
+		//just 1 matdata block here
 		materialtexdataBufferprops.resdesc.Width = sizeof(MaterialDataGPU) * 1;
 		materialtexdataBufferprops.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
 		m_materialTexDatabuffer.Init(m_creationdevice, materialtexdataBufferprops, ResourceCreationMode::COMMITED);
 		m_materialTexDatabuffer.SetName(L"custommaterialtablebuffer");
+		//cam const data buffer
+		DX12ResourceCreationProperties camConstDataBufferProps;
+		DX12Buffer::InitResourceCreationProperties(camConstDataBufferProps);
+		//just 1 cam const block here
+		camConstDataBufferProps.resdesc.Width = sizeof(ShaderTransformConstants_GeneralComplete) * 1;
+		camConstDataBufferProps.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
+		m_CamConstBuffer.Init(m_creationdevice, camConstDataBufferProps, ResourceCreationMode::COMMITED);
+		m_CamConstBuffer.SetName(L"camConstdatabuffer");
+		{
+			D3D12_SHADER_RESOURCE_VIEW_DESC canConstbuffersrvdesc = {};
+			canConstbuffersrvdesc.ViewDimension = D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_BUFFER;
+			canConstbuffersrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+			canConstbuffersrvdesc.Format = DXGI_FORMAT::DXGI_FORMAT_UNKNOWN;
+			canConstbuffersrvdesc.Buffer.FirstElement = 0;
+			canConstbuffersrvdesc.Buffer.NumElements = static_cast<UINT>(1);
+			canConstbuffersrvdesc.Buffer.StructureByteStride = sizeof(ShaderTransformConstants_GeneralComplete);
+			m_materialTexDatabuffer.CreateSRV(m_creationdevice, canConstbuffersrvdesc, m_SRVHeap.GetCPUHandleOffseted(1));
+		}
 		//create material table srv in the heap created
 		{
 			D3D12_SHADER_RESOURCE_VIEW_DESC materialtablebuffersrvdesc = {};
@@ -456,14 +476,8 @@ void LightingTestApplication::InitPSO()
 
 		//psoinitdata.psodesc.graphicspsodesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
 		{
-			D3D12_ROOT_PARAMETER rootparam0 = {};
-			rootparam0.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-			rootparam0.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-			rootparam0.Constants.Num32BitValues = sizeof(ShaderTransformConstants_General) / 4;
-			rootparam0.Constants.RegisterSpace = 0;
-			rootparam0.Constants.ShaderRegister = 0;
+			D3D12_ROOT_PARAMETER rootparam0 = BuildBasicCameraDataRootConstantParameterCommon();
 			rootparams.push_back(rootparam0);
-			D3D12_ROOT_PARAMETER rootparam1 = {};
 			//making mat table srv range
 			D3D12_DESCRIPTOR_RANGE materialtablerange = {};
 			materialtablerange.OffsetInDescriptorsFromTableStart = 0;
@@ -494,7 +508,7 @@ void LightingTestApplication::InitPSO()
 			texturesrvrange.RegisterSpace = 0;
 			texturesrvrange.NumDescriptors = -1;
 			texturesrvrange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-			//do not know why order of range is important here else issue in unbound range(all texture).
+			//order of range is important here else issue in unbound range(all texture).
 			descrangestouserootparam1.push_back(materialtablerange);
 			descrangestouserootparam1.push_back(locallightdatarange);
 			descrangestouserootparam1.push_back(instancedatarange);
@@ -506,7 +520,7 @@ void LightingTestApplication::InitPSO()
 
 
 
-
+			D3D12_ROOT_PARAMETER rootparam1 = {};
 			rootparam1.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 			rootparam1.DescriptorTable.NumDescriptorRanges = descrangestouserootparam1.size();
 			rootparam1.DescriptorTable.pDescriptorRanges = descrangestouserootparam1.data();
@@ -632,7 +646,7 @@ void LightingTestApplication::UpdateLocalLightBufferData()
 		lightBufferwriteparams.range.End = m_localLightsBuffer.GetSize();
 		void* lightbuffmapped = m_localLightsBuffer.Map(lightBufferwriteparams);
 		memcpy(lightbuffmapped, m_localLights.data(), m_localLightsBuffer.GetSize());
-		m_materialTexDatabuffer.UnMap(lightBufferwriteparams);
+		m_localLightsBuffer.UnMap(lightBufferwriteparams);
 		m_localLightdatabufferNeedUpdate = false;
 	}
 }
@@ -644,4 +658,26 @@ void LightingTestApplication::UpdateInstanceDataBuffer()
 	void* instanceDatabuffmapped = m_testCubeInstanceDataBuffer.Map(instanceBufferwriteparams);
 	memcpy(instanceDatabuffmapped, m_instanceData.data(), m_testCubeInstanceDataBuffer.GetSize());
 	m_testCubeInstanceDataBuffer.UnMap(instanceBufferwriteparams);
+}
+D3D12_ROOT_PARAMETER LightingTestApplication::BuildBasicCameraDataRootConstantParameterCommon()
+{
+	const bool initAsdescriptor = true;
+	D3D12_ROOT_PARAMETER rootParamCamConst = {};
+	//init as 32 bit const
+	if (!initAsdescriptor)
+	{
+		rootParamCamConst.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+		rootParamCamConst.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+		rootParamCamConst.Constants.Num32BitValues = sizeof(ShaderTransformConstants_GeneralComplete) / 4;
+		rootParamCamConst.Constants.RegisterSpace = 0;
+		rootParamCamConst.Constants.ShaderRegister = 0;
+	}
+	//init as cbv
+	else
+	{
+		rootParamCamConst.Descriptor.ShaderRegister = 0;
+		rootParamCamConst.Descriptor.RegisterSpace = 0;
+	}
+
+	return rootParamCamConst;
 }

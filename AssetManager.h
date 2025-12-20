@@ -5,7 +5,7 @@
 #include"DXVertexManager.h"
 #include"DXTexManager.h"
 #include"DX12Texture.h"
-
+#define SHADERTRANSFORMCONSTANTSSTRUCT ShaderTransformConstants_GeneralComplete 
 
 /*struct Vertex
 {
@@ -39,6 +39,7 @@ struct ShaderTransformConstants_GeneralComplete
 };
 
 //forwarddeclare
+struct CameraMatriciesData;
 class DX12Commandlist;
 /*
 * Imp terms
@@ -128,6 +129,7 @@ public:
 	void SetTransformation(DirectX::XMFLOAT4 scale, DirectX::XMFLOAT4 rotationaxis, float rotationangle, DirectX::XMFLOAT4 translate);
 	XMMATRIX GetTransform() { return m_transform; }
 	void Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix,UINT mvpmatrixrootparamindex,UINT materialconstsrootparamindex,bool usemodelmatrix=true,bool setmvpmatrix=true,bool supportmaterial=false,unsigned int instanceCount = 1);
+	void Draw(DX12Commandlist& renderingcmdlist, CameraMatriciesData camData, UINT mvpmatrixrootparamindex, UINT materialconstsrootparamindex, bool usemodelmatrix = true, bool setmvpmatrix = true, bool supportmaterial = false, unsigned int instanceCount = 1);
 	void Extratransform(XMMATRIX extratransformmat);
 	Model(ModelDataUploadMode uploadmode=NOCOPY);
 	~Model();
@@ -170,7 +172,7 @@ public:
 	bool HasOpaqueMaterial() { return m_hasOpaqueMaterial; }
 
 private:
-	ShaderTransformConstants_General m_shadertransformconsts;
+	SHADERTRANSFORMCONSTANTSSTRUCT m_shadertransformconsts;
 	XMMATRIX m_transform;
 	DX12Buffer m_vertexbuffer, m_indexbuffer,m_vertexuploadbuffer,m_indexuploadbuffer;
 	//verticies are all of a single specialized vertex type and they are all dynamically allocated.
@@ -205,6 +207,7 @@ public:
 	//set ib & vb and issue draw command.
 	void Extratransform(XMMATRIX extratransformmat);
 	void Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix,UINT mvpmatrixrootparamindex, UINT materialconstsrootparamindex=2, bool drawOpaque = true,bool drawNonOpaque = true);
+	void Draw(DX12Commandlist& renderingcmdlist, CameraMatriciesData camData, UINT mvpmatrixrootparamindex, UINT materialconstsrootparamindex = 2, bool drawOpaque = true, bool drawNonOpaque = true);
 	void UploadModelDatatoBuffers();
 	void UploadModelDatatoGPUBuffers(DX12Commandlist& copycmdlist);
 	void UploadModelDataDefaultTexture(DX12Commandlist& copycmdlist);

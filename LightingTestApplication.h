@@ -85,6 +85,7 @@ private:
 	MaterialDataGPU m_boxMaterialGPUData;
 	DX12Buffer m_localLightsBuffer;
 	DX12Buffer m_testCubeInstanceDataBuffer;
+	DX12Buffer m_CamConstBuffer;
 	std::vector<PointLight> m_localLights;
 	std::vector<CubeInstanceData> m_instanceData;
 	PointLight pointLightprimary;
@@ -93,4 +94,5 @@ private:
 	void InitPSO();
 	void UpdateLocalLightBufferData();
 	void UpdateInstanceDataBuffer();
+	D3D12_ROOT_PARAMETER BuildBasicCameraDataRootConstantParameterCommon();
 };
