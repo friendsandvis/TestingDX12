@@ -28,7 +28,7 @@ public:
 	XMMATRIX GetMVP(bool ortho=false,bool skipview=false);
 	XMMATRIX GetVP(bool ortho = false);
 	//returns a struct with view projection matricies
-	CameraMatriciesData GetVPSeperate(bool ortho = false);
+	CameraMatriciesData GetMatData(bool ortho = false);
 	void SetProjection(XMMATRIX& aprojectionmat) { m_projection=aprojectionmat; }
 	void SetModel(XMMATRIX& amodelmat) { m_model = amodelmat; }
 	inline const XMMATRIX& GetModel() { return m_model; }

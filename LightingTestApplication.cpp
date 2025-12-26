@@ -9,10 +9,8 @@
 
 
 LightingTestApplication::LightingTestApplication()
-	:m_planemodel(ModelDataUploadMode::COPY),
-	m_cubemodel_simpleTesting(ModelDataUploadMode::COPY),
+	:m_cubemodel_simpleTesting(ModelDataUploadMode::COPY),
 	m_loadedmodel(ModelDataUploadMode::COPY),
-	m_trianglemodel(ModelDataUploadMode::COPY),
 	m_loadedcompoundmodel(ModelDataUploadMode::COPY),
 	m_cubemodel_simpleLight(ModelDataUploadMode::COPY),
 	m_boxtextureDiffuse(nullptr),
@@ -111,7 +109,6 @@ void LightingTestApplication::Render()
 	XMMATRIX orthoproj = XMMatrixOrthographicLH(2.0f, 2.0f, -1.0f, 1.0f);
 	XMMATRIX model = XMMatrixIdentity();
 	XMMATRIX mvp = XMMatrixMultiply(model, orthoproj);
-	m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvp, 0);
 	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, &dsvhandle);
 	float clearvalue[4] = { 0.0f,0.1f,0.25f,1.0f };
 	ClearBackBuffer(currentbackbufferidx, m_primarycmdlist, clearvalue);
@@ -129,10 +126,8 @@ void LightingTestApplication::Render()
 		m_primarycmdlist->RSSetViewports(1, &aviewport);
 		m_primarycmdlist->RSSetScissorRects(1, &ascissorrect);
 	}
-	CameraMatriciesData camMatData = m_maincamera.GetVPSeperate();
+	CameraMatriciesData camMatData = m_maincamera.GetMatData();
 	XMMATRIX vpmat = m_maincamera.GetVP();
-	//m_trianglemodel.Draw(m_primarycmdlist,vpmat);
-	m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &vpmat, 0);
 	//a specialized way to test out model's material(diffuse textures) 
 	if (m_loadedcompoundmodel.SupportMaterial())
 	{
@@ -159,9 +154,12 @@ void LightingTestApplication::Render()
 			//light properties buffer not needed but set for completenesss sake change as we are avoiding new set of shader for light represent rendering in this app.
 			m_TestLightProperties.usedirectionallight = m_useDirectionalLighting;
 			m_primarycmdlist->SetGraphicsRoot32BitConstants(4, sizeof(m_TestLightProperties) / 4, &m_TestLightProperties, 0);
+			
 			//light properties directly passed to material & used representation cube transform
 		}
-		m_cubemodel_simpleLight.Draw(m_primarycmdlist, vpmat, 0, 2, true, true, true);
+		UpdateCamConstBufferForModel(m_cubemodel_simpleLight, camMatData,m_CamConstBuffer_light);
+		m_primarycmdlist->SetGraphicsRootConstantBufferView(0, m_CamConstBuffer_light.GetResource()->GetGPUVirtualAddress());
+		m_cubemodel_simpleLight.Draw(m_primarycmdlist, vpmat, 0, 2, false, false, true);
 	}
 	CustomMaterial customMaterial = {};
 	customMaterial.usecustomMaterial = 0.0f;
@@ -200,10 +198,13 @@ void LightingTestApplication::Render()
 		Model::MaterialConstants modelcustomMaterialConstants = {};
 		modelcustomMaterialConstants.texsrvidx = 0;
 		m_primarycmdlist->SetGraphicsRoot32BitConstants(2, sizeof(modelcustomMaterialConstants) / 4, &modelcustomMaterialConstants, 0);
+		
 	}
 	{
 		//rendering multiple cubes instanced render
-			m_cubemodel_simpleTesting.Draw(m_primarycmdlist, camMatData, 0, 2, true, true, true,NUMCUBESTORENDER);
+		UpdateCamConstBufferForModel(m_cubemodel_simpleTesting, camMatData,m_CamConstBuffer_Object);
+			m_primarycmdlist->SetGraphicsRootConstantBufferView(0, m_CamConstBuffer_Object.GetResource()->GetGPUVirtualAddress());
+			m_cubemodel_simpleTesting.Draw(m_primarycmdlist, camMatData, 0, 2, false, false, true,NUMCUBESTORENDER);
 	}
 	DXASSERT(m_primarycmdlist->Close())
 		BasicRender();
@@ -238,7 +239,7 @@ void LightingTestApplication::InitExtras()
 		{
 			CubeInstanceData instanceData{};
 			XMVECTOR rotAxis{ 0.0f,1.0f,0.0f };
-			XMVECTOR position = XMVectorSet(0.0f, i * 50.0f, 0.0f, 1.0f);
+			XMVECTOR position = XMVectorSet(0.0f, i * 500.0f, 0.0f, 1.0f);
 			instanceData.modelMat = DXUtils::GetTransformationMatrix(1.0f, rotAxis, 0.0f, position);
 			m_instanceData.push_back(instanceData);
 		}
@@ -305,18 +306,10 @@ void LightingTestApplication::InitExtras()
 		//just 1 cam const block here
 		camConstDataBufferProps.resdesc.Width = sizeof(ShaderTransformConstants_GeneralComplete) * 1;
 		camConstDataBufferProps.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
-		m_CamConstBuffer.Init(m_creationdevice, camConstDataBufferProps, ResourceCreationMode::COMMITED);
-		m_CamConstBuffer.SetName(L"camConstdatabuffer");
-		{
-			D3D12_SHADER_RESOURCE_VIEW_DESC canConstbuffersrvdesc = {};
-			canConstbuffersrvdesc.ViewDimension = D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_BUFFER;
-			canConstbuffersrvdesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-			canConstbuffersrvdesc.Format = DXGI_FORMAT::DXGI_FORMAT_UNKNOWN;
-			canConstbuffersrvdesc.Buffer.FirstElement = 0;
-			canConstbuffersrvdesc.Buffer.NumElements = static_cast<UINT>(1);
-			canConstbuffersrvdesc.Buffer.StructureByteStride = sizeof(ShaderTransformConstants_GeneralComplete);
-			m_materialTexDatabuffer.CreateSRV(m_creationdevice, canConstbuffersrvdesc, m_SRVHeap.GetCPUHandleOffseted(1));
-		}
+		m_CamConstBuffer_light.Init(m_creationdevice, camConstDataBufferProps, ResourceCreationMode::COMMITED);
+		m_CamConstBuffer_light.SetName(L"camConstdatabuffer_Light");
+		m_CamConstBuffer_Object.Init(m_creationdevice, camConstDataBufferProps, ResourceCreationMode::COMMITED);
+		m_CamConstBuffer_Object.SetName(L"camConstdatabuffer_Object");
 		//create material table srv in the heap created
 		{
 			D3D12_SHADER_RESOURCE_VIEW_DESC materialtablebuffersrvdesc = {};
@@ -410,10 +403,6 @@ void LightingTestApplication::InitExtras()
 
 
 
-
-
-	BasicModelManager::InitTriangleModel(m_creationdevice, m_trianglemodel);
-	BasicModelManager::InitPlaneModel(m_creationdevice, m_planemodel);
 	BasicModelManager::InitCubeModel(m_creationdevice, m_cubemodel_simpleTesting, VertexVersion::VERTEXVERSION3);
 	Model::MaterialConstants cubeMaterialConstants = m_cubemodel_simpleTesting.GetMaterialConstants();
 	cubeMaterialConstants.texsrvidx = 0;//arbatary unused for test cube model.
@@ -424,22 +413,18 @@ void LightingTestApplication::InitExtras()
 	SimplelightcubeMaterialConstants.texsrvidx = 0;//arbatary unused for simplelight cube model.
 	m_cubemodel_simpleLight.SetMaterialConstants(SimplelightcubeMaterialConstants);
 	InitPSO();
-
-	m_planemodel.UploadModelDatatoBuffers();
 	m_cubemodel_simpleTesting.UploadModelDatatoBuffers();
 	m_loadedmodel.UploadModelDatatoBuffers();
 	m_loadedcompoundmodel.UploadModelDatatoBuffers();
 	m_cubemodel_simpleLight.UploadModelDatatoBuffers();
 
 	m_uploadcommandlist.Reset();
-	m_planemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_loadedmodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	//m_loadedcompoundmodel.UploadModelDataDefaultTexture(m_uploadcommandlist);
 	m_loadedcompoundmodel.UploadData(m_uploadcommandlist);
 	//m_loadedcompoundmodel.UploadModelTextureData(m_uploadcommandlist);
 	m_cubemodel_simpleTesting.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	m_cubemodel_simpleLight.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
-	m_trianglemodel.UploadModelDatatoGPUBuffers(m_uploadcommandlist);
 	DXASSERT(m_uploadcommandlist->Close());
 	//upload instance data
 	UpdateInstanceDataBuffer();
@@ -661,8 +646,9 @@ void LightingTestApplication::UpdateInstanceDataBuffer()
 }
 D3D12_ROOT_PARAMETER LightingTestApplication::BuildBasicCameraDataRootConstantParameterCommon()
 {
-	const bool initAsdescriptor = true;
+	
 	D3D12_ROOT_PARAMETER rootParamCamConst = {};
+	const bool initAsdescriptor = true;
 	//init as 32 bit const
 	if (!initAsdescriptor)
 	{
@@ -675,9 +661,26 @@ D3D12_ROOT_PARAMETER LightingTestApplication::BuildBasicCameraDataRootConstantPa
 	//init as cbv
 	else
 	{
+		rootParamCamConst.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_CBV;
 		rootParamCamConst.Descriptor.ShaderRegister = 0;
 		rootParamCamConst.Descriptor.RegisterSpace = 0;
 	}
 
 	return rootParamCamConst;
+}
+void LightingTestApplication::UpdateCamConstBufferForModel(Model& aModel,const CameraMatriciesData& camMatData, DX12Buffer& camConstBuffer)
+{
+	ShaderTransformConstants_GeneralComplete camConstData = {};
+	 camConstData.model = aModel.GetTransform();
+	 camConstData.view = camMatData.viewMat;
+	 camConstData.projection = camMatData.projectionMat;
+	 camConstData.mvp = XMMatrixMultiply(camConstData.model, camMatData.vpMat);
+	 //update data in buffer
+	 BufferMapParams camConstwriteparams = {};
+	 camConstwriteparams.range.Begin = 0;
+	 camConstwriteparams.range.End = camConstBuffer.GetSize();
+	 void* camConstBuffMapped = camConstBuffer.Map(camConstwriteparams);
+	 memcpy(camConstBuffMapped, &camConstData, camConstBuffer.GetSize());
+	 camConstBuffer.UnMap(camConstwriteparams);
+	 
 }

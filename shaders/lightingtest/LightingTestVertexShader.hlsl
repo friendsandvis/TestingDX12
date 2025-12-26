@@ -35,10 +35,12 @@ VSOut main(VSIn input)
     VSOut output;
 
 		
-		
-		output.pos =mul(vertexconsts.mvp,float4(input.vpos,1.0f));
+		matrix mvpRecal = mul(vertexconsts.projection,vertexconsts.view);
+		const matrix instModelMat = instanceData[input.instanceID].model;
+		mvpRecal = mul(mvpRecal,instModelMat);
+		output.pos =mul(mvpRecal,float4(input.vpos,1.0f));
 		output.normal=normalize(input.normal);
-		output.pixelpos = mul(vertexconsts.model,float4(input.vpos,1.0f));
+		output.pixelpos = mul(instModelMat,float4(input.vpos,1.0f));
 		output.uv=input.vuv;
 
     return output;

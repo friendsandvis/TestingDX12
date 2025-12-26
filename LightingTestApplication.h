@@ -70,7 +70,7 @@ private:
 	};
 #endif // TESTLIGHTTYPE_POINT
 	DX12PSO m_pso, m_pso_alphablending;
-	Model m_planemodel, m_trianglemodel;
+	Model m_planemodel;
 	Model m_cubemodel_simpleTesting;
 	Model m_cubemodel_simpleLight;
 	Model m_loadedmodel;
@@ -85,7 +85,8 @@ private:
 	MaterialDataGPU m_boxMaterialGPUData;
 	DX12Buffer m_localLightsBuffer;
 	DX12Buffer m_testCubeInstanceDataBuffer;
-	DX12Buffer m_CamConstBuffer;
+	DX12Buffer m_CamConstBuffer_light;
+	DX12Buffer m_CamConstBuffer_Object;
 	std::vector<PointLight> m_localLights;
 	std::vector<CubeInstanceData> m_instanceData;
 	PointLight pointLightprimary;
@@ -94,5 +95,6 @@ private:
 	void InitPSO();
 	void UpdateLocalLightBufferData();
 	void UpdateInstanceDataBuffer();
+	void UpdateCamConstBufferForModel(Model& aModel,const CameraMatriciesData& camMatData,DX12Buffer& camConstBuffer);
 	D3D12_ROOT_PARAMETER BuildBasicCameraDataRootConstantParameterCommon();
 };
