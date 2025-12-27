@@ -7,9 +7,8 @@
 #include"DXCamera.h"
 #include"CameraMovementManager.h"
 using namespace DirectX;
-//#define TESTLIGHTTYPE_POINT 
 #define TESTLIGHTTYPE_DIRECTION
-#define NUMCUBESTORENDER 50
+#define NUMCUBESTORENDER 4
 class LightingTestApplication :public DX12ApplicationManagerBase
 {
 public:
@@ -52,23 +51,17 @@ private:
 		XMFLOAT4 diffuse;
 		XMFLOAT4 specular;
 	};
-#ifdef TESTLIGHTTYPE_POINT
-	struct TestLight
-	{
-		XMFLOAT3 lightCol;
-		float data1;
-		XMFLOAT3 lightPos;
-		float data2;
-	};
-#elif defined(TESTLIGHTTYPE_DIRECTION)
-	struct TestLight
+	struct GeneralData
 	{
 		XMFLOAT3 lightCol;
 		float numLocallight;
 		XMFLOAT3 lightDir;
 		float usedirectionallight;
+		float useInstanceData;
+		float padding1;
+		float padding2;
+		
 	};
-#endif // TESTLIGHTTYPE_POINT
 	DX12PSO m_pso, m_pso_alphablending;
 	Model m_planemodel;
 	Model m_cubemodel_simpleTesting;
@@ -77,7 +70,7 @@ private:
 	CompoundModel m_loadedcompoundmodel;
 	DXFPSCameraController m_maincameracontroller;
 	bool m_Imgui_mousecontrol_camera;
-	TestLight m_TestLightProperties;
+	GeneralData m_generalOptions;
 	DX12Buffer m_materialTexDatabuffer;
 	DX12DESCHEAP m_SRVHeap;
 	DXTexture* m_boxtextureDiffuse;

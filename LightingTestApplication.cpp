@@ -23,17 +23,10 @@ LightingTestApplication::LightingTestApplication()
 	m_imguiAllowed = true;
 	//since we are using imgui in this app so initially mouse movement is turned off
 	m_Imgui_mousecontrol_camera = false;
-#ifdef TESTLIGHTTYPE_POINT
-	m_TestLightProperties.lightPos = XMFLOAT3(1.2f, 1.0f, 2.0f);
-	m_TestLightProperties.lightCol = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	m_TestLightProperties.data1 = 1.0f;
-	m_TestLightProperties.data2 = 2.0f;
-#elif defined(TESTLIGHTTYPE_DIRECTION)
-	m_TestLightProperties.lightDir = XMFLOAT3(0.2f, 1.0f,0.3f);
-	m_TestLightProperties.lightCol = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	m_TestLightProperties.numLocallight = static_cast<float>(m_localLights.size());
-	m_TestLightProperties.usedirectionallight = (float)m_useDirectionalLighting;
-#endif // TESTLIGHTTYPE_POINT
+	m_generalOptions.lightDir = XMFLOAT3(0.2f, 1.0f,0.3f);
+	m_generalOptions.lightCol = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	m_generalOptions.numLocallight = static_cast<float>(m_localLights.size());
+	m_generalOptions.usedirectionallight = (float)m_useDirectionalLighting;
 
 	//default init local light primary
 	{
@@ -151,10 +144,12 @@ void LightingTestApplication::Render()
 			customMaterialsimplelight_cube.lightingMode = static_cast<unsigned int>(LIGHTINGMODE::ALBEDOONLY);
 			DirectX::XMStoreFloat4(&customMaterialsimplelight_cube.viewPos, m_maincamera.GetCamPos());
 			m_primarycmdlist->SetGraphicsRoot32BitConstants(3, sizeof(customMaterialsimplelight_cube) / 4, &customMaterialsimplelight_cube, 0);
-			//light properties buffer not needed but set for completenesss sake change as we are avoiding new set of shader for light represent rendering in this app.
-			m_TestLightProperties.usedirectionallight = m_useDirectionalLighting;
-			m_primarycmdlist->SetGraphicsRoot32BitConstants(4, sizeof(m_TestLightProperties) / 4, &m_TestLightProperties, 0);
-			
+			//general app options set and passed
+			{
+				m_generalOptions.usedirectionallight = m_useDirectionalLighting;
+				m_generalOptions.useInstanceData = 0.0f;
+				m_primarycmdlist->SetGraphicsRoot32BitConstants(4, sizeof(m_generalOptions) / 4, &m_generalOptions, 0);
+			}
 			//light properties directly passed to material & used representation cube transform
 		}
 		UpdateCamConstBufferForModel(m_cubemodel_simpleLight, camMatData,m_CamConstBuffer_light);
@@ -186,7 +181,7 @@ void LightingTestApplication::Render()
 	
 	DirectX::XMStoreFloat4(&customMaterial.viewPos, m_maincamera.GetCamPos());
 	m_primarycmdlist->SetGraphicsRoot32BitConstants(3, sizeof(customMaterial) / 4, &customMaterial, 0);
-	m_primarycmdlist->SetGraphicsRoot32BitConstants(4, sizeof(m_TestLightProperties) / 4, &m_TestLightProperties, 0);
+	m_primarycmdlist->SetGraphicsRoot32BitConstants(4, sizeof(m_generalOptions) / 4, &m_generalOptions, 0);
 #ifdef USETESTBASICMODELCUBE
 	{
 		//set custom texture material table and heaps for same
@@ -202,8 +197,13 @@ void LightingTestApplication::Render()
 	}
 	{
 		//rendering multiple cubes instanced render
-		UpdateCamConstBufferForModel(m_cubemodel_simpleTesting, camMatData,m_CamConstBuffer_Object);
-			m_primarycmdlist->SetGraphicsRootConstantBufferView(0, m_CamConstBuffer_Object.GetResource()->GetGPUVirtualAddress());
+		UpdateCamConstBufferForModel(m_cubemodel_simpleTesting, camMatData, m_CamConstBuffer_Object);
+		m_primarycmdlist->SetGraphicsRootConstantBufferView(0, m_CamConstBuffer_Object.GetResource()->GetGPUVirtualAddress());
+		//general app options set and passed
+	{
+		m_generalOptions.useInstanceData = 1.0f;
+		m_primarycmdlist->SetGraphicsRoot32BitConstants(4, sizeof(m_generalOptions) / 4, &m_generalOptions, 0);
+	}
 			m_cubemodel_simpleTesting.Draw(m_primarycmdlist, camMatData, 0, 2, false, false, true,NUMCUBESTORENDER);
 	}
 	DXASSERT(m_primarycmdlist->Close())
@@ -239,7 +239,7 @@ void LightingTestApplication::InitExtras()
 		{
 			CubeInstanceData instanceData{};
 			XMVECTOR rotAxis{ 0.0f,1.0f,0.0f };
-			XMVECTOR position = XMVectorSet(0.0f, i * 500.0f, 0.0f, 1.0f);
+			XMVECTOR position = XMVectorSet(0.0f, i * 5.0f, 0.0f, 1.0f);
 			instanceData.modelMat = DXUtils::GetTransformationMatrix(1.0f, rotAxis, 0.0f, position);
 			m_instanceData.push_back(instanceData);
 		}
@@ -527,8 +527,8 @@ void LightingTestApplication::InitPSO()
 			rootparams.push_back(rootparam3);
 			D3D12_ROOT_PARAMETER rootparam4 = {};
 			rootparam4.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-			rootparam4.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-			rootparam4.Constants.Num32BitValues = sizeof(TestLight) / 4;
+			rootparam4.ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_ALL;
+			rootparam4.Constants.Num32BitValues = sizeof(GeneralData) / 4;
 			rootparam4.Constants.RegisterSpace = 0;
 			rootparam4.Constants.ShaderRegister = 3;
 			rootparams.push_back(rootparam4);
@@ -603,7 +603,7 @@ void LightingTestApplication::IMGUIRenderAdditional()
 	pointLightprimary.lightPos.z = tmppLightPos.z;
 	//directional light related
 	{
-		ImGui::InputFloat3("directionallight_direction", (float*)(&m_TestLightProperties.lightDir));
+		ImGui::InputFloat3("directionallight_direction", (float*)(&m_generalOptions.lightDir));
 	}
 	//IMGUISimpleTestRender();
 }

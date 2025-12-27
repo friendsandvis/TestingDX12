@@ -1,5 +1,4 @@
-//#define TESTLIGHTTYPE_POINT
-#define TESTLIGHTTYPE_DIRECTION
+
 Texture2D<float4> textures[]: register(t1,space0);
 struct MaterialDataGPU
 {
@@ -25,23 +24,18 @@ struct LocalLight
 	float4 lightPos;
 };
 
-#ifdef TESTLIGHTTYPE_POINT
-struct TestLight
-{
-	float3 lightCol;
-	float data1;
-	float3 lightPos;
-	float data2;
-};
-#elif defined(TESTLIGHTTYPE_DIRECTION)
-	struct LightingPeroperties
+
+struct GeneralData
 {
 	float3 lightCol;
 	float numlocallights;
 	float3 lightDir;
 	float usedirectionallight;
+	float useInstanceData;
+	float padding1;
+	float padding2;
+	
 };
-#endif //TESTLIGHTTYPE_POINT
 StructuredBuffer<MaterialDataGPU> mattable:register(t0,space1);
 StructuredBuffer<LocalLight> locallights:register(t0,space0);
 struct MatConstants
@@ -57,7 +51,7 @@ struct MaterialConstants
 
 ConstantBuffer<MaterialDataGPU> matconsts:register(b1,space0);
 ConstantBuffer<CustomMaterial> customMatconsts:register(b2,space0);
-ConstantBuffer<LightingPeroperties> testLightconsts:register(b3,space0);
+ConstantBuffer<GeneralData> testLightconsts:register(b3,space0);
 SamplerState simplesampler:register(s0);
 /*struct GeneralConstants
 {
