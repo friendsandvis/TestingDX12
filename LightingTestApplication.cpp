@@ -1,4 +1,5 @@
 #include"LightingTestApplication.h"
+#include<random>
 //only 1 model define to be active at a time
 //#define USECONFERENCEROOMCOMPOUNDMODEL
 #define USETESTBASICMODELCUBE
@@ -235,12 +236,16 @@ void LightingTestApplication::InitExtras()
 	}
 	//init instance data
 	{
+		std::mt19937 randGenerator;
+		uniform_real_distribution<float> floatDist_rotAngle(0.0f, 90.0f);
+		uniform_real_distribution<float> floatDist_rotAxis(0.0f, 100.0f);
+		uniform_real_distribution<float> floatDist_posY(0.0f, 20.0f);
 		for (int i = 0; i < NUMCUBESTORENDER; i++)
 		{
 			CubeInstanceData instanceData{};
-			XMVECTOR rotAxis{ 0.0f,1.0f,0.0f };
-			XMVECTOR position = XMVectorSet(0.0f, i * 5.0f, 0.0f, 1.0f);
-			instanceData.modelMat = DXUtils::GetTransformationMatrix(1.0f, rotAxis, 0.0f, position);
+			XMVECTOR rotAxis{ floatDist_rotAxis(randGenerator),floatDist_rotAxis(randGenerator),floatDist_rotAxis(randGenerator)};
+			XMVECTOR position = XMVectorSet(0.0f, floatDist_posY(randGenerator), 0.0f, 1.0f);
+			instanceData.modelMat = DXUtils::GetTransformationMatrix(1.0f, rotAxis, floatDist_rotAngle(randGenerator), position);
 			m_instanceData.push_back(instanceData);
 		}
 	}
