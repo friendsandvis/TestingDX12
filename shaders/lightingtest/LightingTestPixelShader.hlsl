@@ -65,6 +65,35 @@ struct VSOut
 	float4 pixelpos : PIXPOS;
 	float2 uv:UV;
 };
+struct LightingResult
+{
+	float3 diffuseRes;
+	float3 specRes;
+}
+LightingResult GetDirectionalLightRes(float3 lightDir,float3 lightCol)
+{
+	//for lighting lightdirection is in point of view of pixel aka direction towards the light
+	LightingResult resOut;
+	float3 viewPos = customMatconsts.viewPos.xyz;
+	float3 viewDir = normalize(viewPos -psin.pixelpos.xyz);
+		viewDir = -viewDir;
+		//reflight lights actual direction for reflected direction vector calc
+		float3 lightreflectDir = normalize(reflect(lightDir,psin.normal));
+		float specfact = specFactintensity * pow(max(dot(viewDir,lightreflectDir),0.0f),customMatconsts.specularValue);
+		float diffusefact = dot(psin.normal,lightDir);
+		resOut.diffuseRes = ;
+		resOut.specRes = ;
+	return resOut;
+}
+LightingResult GetPointLightRes(LocalLight locallight)
+{
+	//for lighting lightdirection is in point of view of pixel aka direction towards the light
+	float3 lightDir = normalize(locallight.lightPos.xyz -psin.pixelpos.xyz);
+		float3 lightCol = locallight.lightCol.xyz;
+	LightingResult resOut;
+	
+	return resOut;
+}
 float4 main(VSOut psin) : SV_TARGET0
 {
 	bool useCustomMaterial = (customMatconsts.useCustomMaterial == 1.0f);
