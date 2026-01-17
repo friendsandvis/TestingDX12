@@ -69,38 +69,62 @@ struct LightingResult
 {
 	float3 diffuseRes;
 	float3 specRes;
-}
-LightingResult GetDirectionalLightRes(float3 lightDir,float3 lightCol)
+};
+struct LightingInputsCommon
+{
+	float3 pixelPos;
+	float3 normal;
+	float specularValue;
+	float3 viewPos;
+	float specFactintensity;
+	
+	
+};
+LightingResult GetDirectionalLightRes(float3 lightDir,float3 lightCol,LightingInputsCommon lightingInputsCommon)
 {
 	//for lighting lightdirection is in point of view of pixel aka direction towards the light
 	LightingResult resOut;
-	float3 viewPos = customMatconsts.viewPos.xyz;
-	float3 viewDir = normalize(viewPos -psin.pixelpos.xyz);
+	float3 viewDir = normalize(lightingInputsCommon.viewPos -lightingInputsCommon.pixelPos);
 		viewDir = -viewDir;
 		//reflight lights actual direction for reflected direction vector calc
-		float3 lightreflectDir = normalize(reflect(lightDir,psin.normal));
-		float specfact = specFactintensity * pow(max(dot(viewDir,lightreflectDir),0.0f),customMatconsts.specularValue);
-		float diffusefact = dot(psin.normal,lightDir);
-		resOut.diffuseRes = ;
-		resOut.specRes = ;
+		float3 lightreflectDir = normalize(reflect(lightDir,lightingInputsCommon.normal));
+		float specfact = lightingInputsCommon.specFactintensity * pow(max(dot(viewDir,lightreflectDir),0.0f),lightingInputsCommon.specularValue);
+		float diffusefact = dot(lightingInputsCommon.normal,lightDir);
+		resOut.diffuseRes = diffusefact * lightCol;
+		resOut.specRes = specfact * lightCol;
 	return resOut;
 }
-LightingResult GetPointLightRes(LocalLight locallight)
+LightingResult GetPointLightRes(LocalLight locallight,LightingInputsCommon lightingInputsCommon)
 {
-	//for lighting lightdirection is in point of view of pixel aka direction towards the light
-	float3 lightDir = normalize(locallight.lightPos.xyz -psin.pixelpos.xyz);
-		float3 lightCol = locallight.lightCol.xyz;
 	LightingResult resOut;
+	float3 lightCol = locallight.lightCol.xyz;
+	//for lighting lightdirection is in point of view of pixel aka direction towards the light
+	float3 lightDir = normalize(locallight.lightPos.xyz -lightingInputsCommon.pixelPos);
+	float3 viewDir = normalize(lightingInputsCommon.viewPos -lightingInputsCommon.pixelPos);
+		viewDir = -viewDir;
+		//reflight lights actual direction for reflected direction vector calc
+		float3 lightreflectDir = normalize(reflect(lightDir,lightingInputsCommon.normal));
+		float specfact = lightingInputsCommon.specFactintensity * pow(max(dot(viewDir,lightreflectDir),0.0f),lightingInputsCommon.specularValue);
+		float diffusefact = dot(lightingInputsCommon.normal,lightDir);
+		resOut.diffuseRes = diffusefact * lightCol;
+		resOut.specRes = specfact * lightCol;
 	
 	return resOut;
 }
 float4 main(VSOut psin) : SV_TARGET0
 {
+
 	bool useCustomMaterial = (customMatconsts.useCustomMaterial == 1.0f);
 	bool useMaterialTextures = (customMatconsts.useMaterialTextures == 1.0f);
 		float2 uvnew=float2(psin.uv.x,1.0f-psin.uv.y);
 	MaterialDataGPU mattmp=mattable[matgeneralconsts.matidx];
 	float3 finallit = float3(0.0f,0.0f,0.0f);
+	LightingInputsCommon lightingInputsCommon;
+		lightingInputsCommon.normal = psin.normal;
+		lightingInputsCommon.pixelPos = psin.pixelpos.xyz;
+		lightingInputsCommon.specularValue = customMatconsts.specularValue;
+		lightingInputsCommon.viewPos = customMatconsts.viewPos.xyz;
+		lightingInputsCommon.specFactintensity =50.0f;
 	if(useCustomMaterial)
 	{
 		float4 diffusecol = float4(1.0f,1.0f,1.0f,1.0f);
@@ -116,31 +140,20 @@ float4 main(VSOut psin) : SV_TARGET0
 		LocalLight locallight = locallights[0];
 		float3 viewPos = customMatconsts.viewPos.xyz;
 		float3 ambientlit = customMatconsts.ambient.xyz * diffusecol.xyz;
-		//for lighting lightdirection is in point of view of pixel aka direction towards the light
-		float3 lightDir = normalize(locallight.lightPos.xyz -psin.pixelpos.xyz);
-		float3 lightCol = locallight.lightCol.xyz;
-		
+		LightingResult directionalLightingRes = GetDirectionalLightRes(normalize(testLightconsts.lightDir.xyz),testLightconsts.lightCol,lightingInputsCommon);
+		directionalLightingRes.diffuseRes *= (customMatconsts.diffuse.xyz* diffusecol.xyz);
+		directionalLightingRes.specRes *= (customMatconsts.specular.xyz * roughnesscol.xyz);
+		LightingResult pointLightingRes = GetPointLightRes(locallight,lightingInputsCommon);
+		pointLightingRes.diffuseRes *= (customMatconsts.diffuse.xyz* diffusecol.xyz);
+		pointLightingRes.specRes *= (customMatconsts.specular.xyz * roughnesscol.xyz);
+		LightingResult finalLightingRes = pointLightingRes;
 		if(usedirectionallight)
 		{
-			lightDir = normalize(testLightconsts.lightDir.xyz);
-			lightCol = testLightconsts.lightCol;
+			finalLightingRes = directionalLightingRes;
 		}
-
-		float3 viewDir = normalize(viewPos -psin.pixelpos.xyz);
-		viewDir = -viewDir;
-		//reflight lights actual direction for reflected direction vector calc
-		float3 lightreflectDir = normalize(reflect(lightDir,psin.normal));
-		const float specFactintensity =50.0f;
-		float specfact = specFactintensity * pow(max(dot(viewDir,lightreflectDir),0.0f),customMatconsts.specularValue);
-		float3 speclit = specfact * lightCol * customMatconsts.specular.xyz * roughnesscol.xyz;
-		float diffusefact = dot(psin.normal,lightDir);
-		diffusefact = max(diffusefact,0.0f);
-		
-		float3 diffuselit = lightCol * diffusefact*customMatconsts.diffuse.xyz* diffusecol.xyz;
-		
 		if(customMatconsts.lightingMode == 0)
 		{
-			finallit = ambientlit + diffuselit  + speclit;
+			finallit = ambientlit + finalLightingRes.diffuseRes  + finalLightingRes.specRes;
 		}
 		else if(customMatconsts.lightingMode == 1)
 		{
