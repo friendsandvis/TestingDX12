@@ -35,6 +35,7 @@ private:
 	{
 		XMFLOAT4 lightCol;
 		XMFLOAT4 lightPos;
+		XMFLOAT4 lightAttenuation; //x=constant,y=linear,z=quadratic w is unused
 	};
 	struct CubeInstanceData
 	{

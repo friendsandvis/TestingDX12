@@ -31,8 +31,9 @@ LightingTestApplication::LightingTestApplication()
 
 	//default init local light primary
 	{
-		pointLightprimary.lightCol = XMFLOAT4(1.0f, 1.0f, 1.0f,3.0f);
+		pointLightprimary.lightCol = XMFLOAT4(10.0f, 10.0f, 10.0f,3.0f);
 		pointLightprimary.lightPos = XMFLOAT4(1.2f, 1.0f, 2.0f,4.0f);
+		pointLightprimary.lightAttenuation = XMFLOAT4(1.0f, 0.7f, 1.8f, 0.0f);
 	}
 }
 LightingTestApplication::~LightingTestApplication()

@@ -18,10 +18,11 @@ struct CustomMaterial
 	float4 diffuse;
 	float4 specular;
 };
-struct LocalLight
+struct PointLight
 {
 	float4 lightCol;
 	float4 lightPos;
+	float4 attenuationConsts;//x=constant,y=linear,z=quadratic w is unused
 };
 
 
@@ -37,7 +38,7 @@ struct GeneralData
 	
 };
 StructuredBuffer<MaterialDataGPU> mattable:register(t0,space1);
-StructuredBuffer<LocalLight> locallights:register(t0,space0);
+StructuredBuffer<PointLight> locallights:register(t0,space0);
 struct MatConstants
 {
 bool useCustomMaterial;
@@ -69,6 +70,7 @@ struct LightingResult
 {
 	float3 diffuseRes;
 	float3 specRes;
+	float attenuationFact;
 };
 struct LightingInputsCommon
 {
@@ -94,7 +96,7 @@ LightingResult GetDirectionalLightRes(float3 lightDir,float3 lightCol,LightingIn
 		resOut.specRes = specfact * lightCol;
 	return resOut;
 }
-LightingResult GetPointLightRes(LocalLight locallight,LightingInputsCommon lightingInputsCommon)
+LightingResult GetPointLightRes(PointLight locallight,LightingInputsCommon lightingInputsCommon)
 {
 	LightingResult resOut;
 	float3 lightCol = locallight.lightCol.xyz;
@@ -105,9 +107,12 @@ LightingResult GetPointLightRes(LocalLight locallight,LightingInputsCommon light
 		//reflight lights actual direction for reflected direction vector calc
 		float3 lightreflectDir = normalize(reflect(lightDir,lightingInputsCommon.normal));
 		float specfact = lightingInputsCommon.specFactintensity * pow(max(dot(viewDir,lightreflectDir),0.0f),lightingInputsCommon.specularValue);
+		//attenuation calc
+		float dL = length(locallight.lightPos.xyz -lightingInputsCommon.pixelPos);
+		resOut.attenuationFact = 1.0f /(locallight.attenuationConsts.x + locallight.attenuationConsts.y * dL + locallight.attenuationConsts.z * dL * dL);
 		float diffusefact = dot(lightingInputsCommon.normal,lightDir);
-		resOut.diffuseRes = diffusefact * lightCol;
-		resOut.specRes = specfact * lightCol;
+		resOut.diffuseRes = diffusefact * lightCol * resOut.attenuationFact;
+		resOut.specRes = specfact * lightCol * resOut.attenuationFact;
 	
 	return resOut;
 }
@@ -137,7 +142,7 @@ float4 main(VSOut psin) : SV_TARGET0
 		//lighting calc
 		bool usedirectionallight = (testLightconsts.usedirectionallight == 1.0f);
 		float numlocallight = testLightconsts.numlocallights;
-		LocalLight locallight = locallights[0];
+		PointLight locallight = locallights[0];
 		float3 viewPos = customMatconsts.viewPos.xyz;
 		float3 ambientlit = customMatconsts.ambient.xyz * diffusecol.xyz;
 		LightingResult directionalLightingRes = GetDirectionalLightRes(normalize(testLightconsts.lightDir.xyz),testLightconsts.lightCol,lightingInputsCommon);
