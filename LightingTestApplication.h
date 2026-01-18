@@ -7,7 +7,6 @@
 #include"DXCamera.h"
 #include"CameraMovementManager.h"
 using namespace DirectX;
-#define TESTLIGHTTYPE_DIRECTION
 #define NUMCUBESTORENDER 2
 class LightingTestApplication :public DX12ApplicationManagerBase
 {
