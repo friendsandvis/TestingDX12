@@ -85,7 +85,7 @@ void LightingTestApplication::Render()
 	//update locallightbuffer forced per frame for quick test refresh content of local light buffer too
 	{
 		m_localLights.clear();
-		m_localLights.push_back(pointLightprimary);
+		m_localLights.push_back(GetLocalLightDataFromPointLight(pointLightprimary));
 		m_localLightdatabufferNeedUpdate = true;
 		UpdateLocalLightBufferData();
 	}
@@ -233,7 +233,7 @@ void LightingTestApplication::InitExtras()
 {
 	// local light init
 	{
-		m_localLights.push_back(pointLightprimary);
+		m_localLights.push_back(GetLocalLightDataFromPointLight(pointLightprimary));
 	}
 	//init instance data
 	const bool RandomizeInstancePos = false;
@@ -346,7 +346,7 @@ void LightingTestApplication::InitExtras()
 		//locallight data buffer
 		DX12ResourceCreationProperties locallightDataBufferProps;
 		DX12Buffer::InitResourceCreationProperties(locallightDataBufferProps);
-		locallightDataBufferProps.resdesc.Width = sizeof(PointLight) * static_cast<UINT64>(m_localLights.size());
+		locallightDataBufferProps.resdesc.Width = sizeof(LocalLightData) * static_cast<UINT64>(m_localLights.size());
 		locallightDataBufferProps.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
 		m_localLightsBuffer.Init(m_creationdevice, locallightDataBufferProps, ResourceCreationMode::COMMITED);
 		m_localLightsBuffer.SetName(L"locallightdatabuffer");
@@ -695,4 +695,22 @@ void LightingTestApplication::UpdateCamConstBufferForModel(Model& aModel,const C
 	 memcpy(camConstBuffMapped, &camConstData, camConstBuffer.GetSize());
 	 camConstBuffer.UnMap(camConstwriteparams);
 	 
+}
+LightingTestApplication::LocalLightData LightingTestApplication::GetLocalLightDataFromPointLight(const PointLight& pointlight)
+{
+	LocalLightData locallightdata = {};
+	locallightdata.lightPos = pointlight.lightPos;
+	locallightdata.lightPos.w = static_cast<float>(LIGHTTYPE::POINTLIGHT);
+	locallightdata.lightCol = pointlight.lightCol;
+	locallightdata.lightExtras = pointlight.lightAttenuation;
+	return locallightdata;
+}
+LightingTestApplication::LocalLightData LightingTestApplication::GetLocalLightDataFromSpotLight(const SpotLight& spotlight)
+{
+	LocalLightData locallightdata = {};
+	locallightdata.lightPos = spotlight.lightPos;
+	locallightdata.lightPos.w = static_cast<float>(LIGHTTYPE::SPOTLIGHT);
+	locallightdata.lightCol = spotlight.lightCol;
+	locallightdata.lightExtras = spotlight.lightDir;
+	return locallightdata;
 }

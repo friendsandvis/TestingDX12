@@ -19,6 +19,7 @@ public:
 	void ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)override;
 
 protected:
+
 	void InitExtras()override;
 
 private:
@@ -30,11 +31,28 @@ private:
 	* when using materialtextures then ambient,diffuse & specular represent the factor to multiply in correcponding part's calculation;
 	* normally it represents the resopective material peroperty.
 	*/
+	enum class LIGHTTYPE
+	{
+		POINTLIGHT = 0,
+		SPOTLIGHT = 1
+	};
 	struct PointLight
 	{
 		XMFLOAT4 lightCol;
 		XMFLOAT4 lightPos;
 		XMFLOAT4 lightAttenuation; //x=constant,y=linear,z=quadratic w is unused
+	};
+	struct SpotLight
+	{
+		XMFLOAT4 lightCol;
+		XMFLOAT4 lightPos;
+		XMFLOAT4 lightDir; //w is cut off
+	};
+	struct LocalLightData
+	{
+		XMFLOAT4 lightCol;
+		XMFLOAT4 lightPos;//w holds type of light(0=pointlight,1=spotlight)
+		XMFLOAT4 lightExtras;//point light attenuation or spotlight direction & cutoff in w
 	};
 	struct CubeInstanceData
 	{
@@ -80,7 +98,7 @@ private:
 	DX12Buffer m_testCubeInstanceDataBuffer;
 	DX12Buffer m_CamConstBuffer_light;
 	DX12Buffer m_CamConstBuffer_Object;
-	std::vector<PointLight> m_localLights;
+	std::vector<LocalLightData> m_localLights;
 	std::vector<CubeInstanceData> m_instanceData;
 	PointLight pointLightprimary;
 	bool m_useDirectionalLighting = true;
@@ -89,5 +107,7 @@ private:
 	void UpdateLocalLightBufferData();
 	void UpdateInstanceDataBuffer();
 	void UpdateCamConstBufferForModel(Model& aModel,const CameraMatriciesData& camMatData,DX12Buffer& camConstBuffer);
+	LocalLightData GetLocalLightDataFromSpotLight(const SpotLight& spotlight);
+	LocalLightData GetLocalLightDataFromPointLight(const PointLight& pointlight);
 	D3D12_ROOT_PARAMETER BuildBasicCameraDataRootConstantParameterCommon();
 };

@@ -24,7 +24,26 @@ struct PointLight
 	float4 lightPos;
 	float4 attenuationConsts;//x=constant,y=linear,z=quadratic w is unused
 };
-
+struct SpotLight
+{
+	float4 lightCol;
+	float4 lightPos;
+	float4 lightDir;//xyz direction and w as cutoff
+};
+struct LocalLight
+{
+	float4 lightCol;
+	float4 lightPos;//w tells type of light
+	float4 lightExtras;//can hold attenuation for pointlight or direction with cutoff for spot
+};
+PointLight GetPointLight(const LocalLight locallight)
+{
+	PointLight pointLight;
+	pointLight.lightCol = locallight.lightCol;
+	pointLight.lightPos = locallight.lightPos;
+	pointLight.attenuationConsts = locallight.lightExtras;
+	return pointLight;
+}
 
 struct GeneralData
 {
@@ -38,7 +57,7 @@ struct GeneralData
 	
 };
 StructuredBuffer<MaterialDataGPU> mattable:register(t0,space1);
-StructuredBuffer<PointLight> locallights:register(t0,space0);
+StructuredBuffer<LocalLight> locallights:register(t0,space0);
 struct MatConstants
 {
 bool useCustomMaterial;
@@ -142,7 +161,7 @@ float4 main(VSOut psin) : SV_TARGET0
 		//lighting calc
 		bool usedirectionallight = (testLightconsts.usedirectionallight == 1.0f);
 		float numlocallight = testLightconsts.numlocallights;
-		PointLight locallight = locallights[0];
+		PointLight locallight = GetPointLight(locallights[0]);
 		float3 viewPos = customMatconsts.viewPos.xyz;
 		float3 ambientlit = customMatconsts.ambient.xyz * diffusecol.xyz;
 		LightingResult directionalLightingRes = GetDirectionalLightRes(normalize(testLightconsts.lightDir.xyz),testLightconsts.lightCol,lightingInputsCommon);
