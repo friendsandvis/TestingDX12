@@ -28,7 +28,7 @@ struct SpotLight
 {
 	float4 lightCol;
 	float4 lightPos;
-	float4 lightDir;//xyz direction and w as cutoff
+	float4 lightDir;//xyz direction and w as cutoff(cos of spotlight coverage angle)
 };
 struct LocalLight
 {
@@ -44,7 +44,14 @@ PointLight GetPointLight(const LocalLight locallight)
 	pointLight.attenuationConsts = locallight.lightExtras;
 	return pointLight;
 }
-
+SpotLight GetSpotLight(const LocalLight locallight)
+{
+	SpotLight spotLight;
+	spotLight.lightCol = locallight.lightCol;
+	spotLight.lightPos = locallight.lightPos;
+	spotLight.lightDir = locallight.lightExtras;
+	return spotLight;
+}
 struct GeneralData
 {
 	float3 lightCol;
@@ -52,7 +59,7 @@ struct GeneralData
 	float3 lightDir;
 	float usedirectionallight;
 	float useInstanceData;
-	float padding1;
+	float testLightType;
 	float padding2;
 	
 };
@@ -135,6 +142,30 @@ LightingResult GetPointLightRes(PointLight locallight,LightingInputsCommon light
 	
 	return resOut;
 }
+LightingResult GetSpotLightRes(SpotLight locallight,LightingInputsCommon lightingInputsCommon)
+{
+	LightingResult resOut;
+	float3 lightCol = locallight.lightCol.xyz;
+	//for lighting lightdirection is in point of view of pixel aka direction towards the light
+	float3 lightDir = normalize(locallight.lightPos.xyz -lightingInputsCommon.pixelPos);
+	float3 viewDir = normalize(lightingInputsCommon.viewPos -lightingInputsCommon.pixelPos);
+	//lightDir  for spot light is away from light position hence using negitive of it here
+	float dotSpotDirToLightDir = dot(normalize(-locallight.lightDir.xyz),lightDir);
+	float cutOffFact =1.0f;
+	if(dotSpotDirToLightDir < locallight.lightDir.w)
+	{
+		cutOffFact = 0.0f;
+	}
+		viewDir = -viewDir;
+		//reflight lights actual direction for reflected direction vector calc
+		float3 lightreflectDir = normalize(reflect(lightDir,lightingInputsCommon.normal));
+		float specfact = lightingInputsCommon.specFactintensity * pow(max(dot(viewDir,lightreflectDir),0.0f),lightingInputsCommon.specularValue);
+		float diffusefact = dot(lightingInputsCommon.normal,lightDir);
+		resOut.diffuseRes = diffusefact * lightCol * cutOffFact;
+		resOut.specRes = specfact * lightCol * cutOffFact;
+	
+	return resOut;
+}
 float4 main(VSOut psin) : SV_TARGET0
 {
 
@@ -160,17 +191,28 @@ float4 main(VSOut psin) : SV_TARGET0
 		}
 		//lighting calc
 		bool usedirectionallight = (testLightconsts.usedirectionallight == 1.0f);
+		bool testPointLight = (testLightconsts.testLightType == 0.0f); // 0 is enum value of point light 
 		float numlocallight = testLightconsts.numlocallights;
-		PointLight locallight = GetPointLight(locallights[0]);
+		PointLight locallight_point = GetPointLight(locallights[0]);
+		PointLight locallight_spot = GetSpotLight(locallights[1]);
 		float3 viewPos = customMatconsts.viewPos.xyz;
 		float3 ambientlit = customMatconsts.ambient.xyz * diffusecol.xyz;
 		LightingResult directionalLightingRes = GetDirectionalLightRes(normalize(testLightconsts.lightDir.xyz),testLightconsts.lightCol,lightingInputsCommon);
 		directionalLightingRes.diffuseRes *= (customMatconsts.diffuse.xyz* diffusecol.xyz);
 		directionalLightingRes.specRes *= (customMatconsts.specular.xyz * roughnesscol.xyz);
-		LightingResult pointLightingRes = GetPointLightRes(locallight,lightingInputsCommon);
+		LightingResult pointLightingRes = GetPointLightRes(locallight_point,lightingInputsCommon);
+		LightingResult spotLightingRes = GetSpotLightRes(locallight_spot,lightingInputsCommon);
 		pointLightingRes.diffuseRes *= (customMatconsts.diffuse.xyz* diffusecol.xyz);
 		pointLightingRes.specRes *= (customMatconsts.specular.xyz * roughnesscol.xyz);
-		LightingResult finalLightingRes = pointLightingRes;
+		LightingResult finalLightingRes;
+		if(testPointLight)
+		{
+			finalLightingRes = pointLightingRes;
+		}
+		else
+		{
+			finalLightingRes = spotLightingRes;
+		}
 		if(usedirectionallight)
 		{
 			finalLightingRes = directionalLightingRes;

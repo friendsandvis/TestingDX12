@@ -34,7 +34,8 @@ private:
 	enum class LIGHTTYPE
 	{
 		POINTLIGHT = 0,
-		SPOTLIGHT = 1
+		SPOTLIGHT = 1,
+		COUNT = 2
 	};
 	struct PointLight
 	{
@@ -44,9 +45,10 @@ private:
 	};
 	struct SpotLight
 	{
+		float coverageAngle; //coverage angle in degree
 		XMFLOAT4 lightCol;
 		XMFLOAT4 lightPos;
-		XMFLOAT4 lightDir; //w is cut off
+		XMFLOAT4 lightDir; //w is cut off cos of spotlight coverage angle
 	};
 	struct LocalLightData
 	{
@@ -76,7 +78,7 @@ private:
 		XMFLOAT3 lightDir;
 		float usedirectionallight;
 		float useInstanceData;
-		float padding1;
+		float testlightType;
 		float padding2;
 		
 	};
@@ -100,14 +102,18 @@ private:
 	DX12Buffer m_CamConstBuffer_Object;
 	std::vector<LocalLightData> m_localLights;
 	std::vector<CubeInstanceData> m_instanceData;
-	PointLight pointLightprimary;
+	PointLight m_pointLightprimary;
+	SpotLight m_spotLightprimary;
 	bool m_useDirectionalLighting = true;
 	bool m_localLightdatabufferNeedUpdate = true;
+	LIGHTTYPE m_testLightType = LIGHTTYPE::POINTLIGHT;// here for now we are testing pointlight or spotlight at idx(0 & 1 respectively do take care of append order in locallight vector though
 	void InitPSO();
 	void UpdateLocalLightBufferData();
 	void UpdateInstanceDataBuffer();
 	void UpdateCamConstBufferForModel(Model& aModel,const CameraMatriciesData& camMatData,DX12Buffer& camConstBuffer);
 	LocalLightData GetLocalLightDataFromSpotLight(const SpotLight& spotlight);
 	LocalLightData GetLocalLightDataFromPointLight(const PointLight& pointlight);
+	//its hardcoded hence can be directly resolved
+	int GetLightIndexLocalLightBuffer(LIGHTTYPE lighttype);
 	D3D12_ROOT_PARAMETER BuildBasicCameraDataRootConstantParameterCommon();
 };

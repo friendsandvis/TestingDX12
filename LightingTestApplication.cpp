@@ -28,12 +28,20 @@ LightingTestApplication::LightingTestApplication()
 	m_generalOptions.lightCol = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	m_generalOptions.numLocallight = static_cast<float>(m_localLights.size());
 	m_generalOptions.usedirectionallight = (float)m_useDirectionalLighting;
+	m_generalOptions.testlightType = static_cast<float>(m_testLightType);
 
-	//default init local light primary
+	//default init primary point light
 	{
-		pointLightprimary.lightCol = XMFLOAT4(10.0f, 10.0f, 10.0f,3.0f);
-		pointLightprimary.lightPos = XMFLOAT4(1.2f, 1.0f, 2.0f,4.0f);
-		pointLightprimary.lightAttenuation = XMFLOAT4(1.0f, 0.7f, 1.8f, 0.0f);
+		m_pointLightprimary.lightCol = XMFLOAT4(10.0f, 10.0f, 10.0f,3.0f);
+		m_pointLightprimary.lightPos = XMFLOAT4(1.2f, 1.0f, 2.0f,4.0f);
+		m_pointLightprimary.lightAttenuation = XMFLOAT4(1.0f, 0.7f, 1.8f, 0.0f);
+	}
+	//default init primary spot light
+	{
+		m_spotLightprimary.lightCol = XMFLOAT4(20.0f, 20.0f, 20.0f, 4.0f);
+		m_spotLightprimary.lightPos = XMFLOAT4(0.0f, 2.0f, 1.0f, 0.0f);
+		m_spotLightprimary.coverageAngle = 90.0f;
+		m_spotLightprimary.lightDir = XMFLOAT4(0.0f, -2.0f, -1.0f, cos(XMConvertToRadians(m_spotLightprimary.coverageAngle)));
 	}
 }
 LightingTestApplication::~LightingTestApplication()
@@ -85,7 +93,8 @@ void LightingTestApplication::Render()
 	//update locallightbuffer forced per frame for quick test refresh content of local light buffer too
 	{
 		m_localLights.clear();
-		m_localLights.push_back(GetLocalLightDataFromPointLight(pointLightprimary));
+		m_localLights.push_back(GetLocalLightDataFromPointLight(m_pointLightprimary));
+		m_localLights.push_back(GetLocalLightDataFromSpotLight(m_spotLightprimary));
 		m_localLightdatabufferNeedUpdate = true;
 		UpdateLocalLightBufferData();
 	}
@@ -137,11 +146,18 @@ void LightingTestApplication::Render()
 		//setup position and scale first then render with right shader properties.
 		XMFLOAT4 simplelightCube_scale = { 0.25f,0.25,0.25f,1.0f };
 		XMFLOAT4 simplelightCube_rotationAxis = { 1.0f,0.0,0.0f,1.0f };
-		XMFLOAT4 simplelightCube_translate = { pointLightprimary.lightPos.x,pointLightprimary.lightPos.y,pointLightprimary.lightPos.z,1.0f };
+
+		XMFLOAT4 simplelightCube_translate;
+		if(m_testLightType== LIGHTTYPE::POINTLIGHT)
+			simplelightCube_translate  = { m_pointLightprimary.lightPos.x,m_pointLightprimary.lightPos.y,m_pointLightprimary.lightPos.z,1.0f };
+		else if (m_testLightType == LIGHTTYPE::SPOTLIGHT)
+		{
+			simplelightCube_translate = { m_spotLightprimary.lightPos.x, m_spotLightprimary.lightPos.y, m_spotLightprimary.lightPos.z, 1.0f };
+		}
 		m_cubemodel_simpleLight.SetTransformation(simplelightCube_scale, simplelightCube_rotationAxis, 0.0f, simplelightCube_translate);
 		{
 			CustomMaterial customMaterialsimplelight_cube = {};
-			customMaterialsimplelight_cube.ambient = { pointLightprimary.lightCol.x,pointLightprimary.lightCol.y,pointLightprimary.lightCol.z,1.0f };//light colour here
+			customMaterialsimplelight_cube.ambient = { m_pointLightprimary.lightCol.x,m_pointLightprimary.lightCol.y,m_pointLightprimary.lightCol.z,1.0f };//light colour here
 			customMaterialsimplelight_cube.usecustomMaterial = 1.0f;
 			customMaterialsimplelight_cube.lightingMode = static_cast<unsigned int>(LIGHTINGMODE::ALBEDOONLY);
 			DirectX::XMStoreFloat4(&customMaterialsimplelight_cube.viewPos, m_maincamera.GetCamPos());
@@ -150,6 +166,7 @@ void LightingTestApplication::Render()
 			{
 				m_generalOptions.usedirectionallight = m_useDirectionalLighting;
 				m_generalOptions.useInstanceData = 0.0f;
+				m_generalOptions.testlightType = static_cast<float>(m_testLightType);
 				m_primarycmdlist->SetGraphicsRoot32BitConstants(4, sizeof(m_generalOptions) / 4, &m_generalOptions, 0);
 			}
 			//light properties directly passed to material & used representation cube transform
@@ -233,7 +250,8 @@ void LightingTestApplication::InitExtras()
 {
 	// local light init
 	{
-		m_localLights.push_back(GetLocalLightDataFromPointLight(pointLightprimary));
+		m_localLights.push_back(GetLocalLightDataFromPointLight(m_pointLightprimary));
+		m_localLights.push_back(GetLocalLightDataFromSpotLight(m_spotLightprimary));
 	}
 	//init instance data
 	const bool RandomizeInstancePos = false;
@@ -346,6 +364,8 @@ void LightingTestApplication::InitExtras()
 		//locallight data buffer
 		DX12ResourceCreationProperties locallightDataBufferProps;
 		DX12Buffer::InitResourceCreationProperties(locallightDataBufferProps);
+		//restriction for this test app to just use each type of light
+		assert(m_localLights.size() == static_cast<size_t>(LIGHTTYPE::COUNT));
 		locallightDataBufferProps.resdesc.Width = sizeof(LocalLightData) * static_cast<UINT64>(m_localLights.size());
 		locallightDataBufferProps.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
 		m_localLightsBuffer.Init(m_creationdevice, locallightDataBufferProps, ResourceCreationMode::COMMITED);
@@ -603,19 +623,50 @@ void LightingTestApplication::IMGUIRenderAdditional()
 		ImGui::Text(currentMouseMoveState);
 	}
 	ImGui::Text("light properties:-");
+	ImGui::Checkbox("usedirectionallight only", &m_useDirectionalLighting);
 	//test lighting source
 	{
-		ImGui::Checkbox("usedirectionallight only", &m_useDirectionalLighting);
+
+		ImGui::Text("test local light type:");
+		{
+			int tmplightType = 0;
+			if (ImGui::RadioButton("point light", &tmplightType, static_cast<int>(LIGHTTYPE::POINTLIGHT)))
+			{
+				m_testLightType = LIGHTTYPE::POINTLIGHT;
+			}
+			if (ImGui::RadioButton("spot light", &tmplightType, static_cast<int>(LIGHTTYPE::POINTLIGHT)))
+			{
+				m_testLightType = LIGHTTYPE::SPOTLIGHT;
+				}
+		}
 	}
-	//locallight related
-	XMFLOAT3 tmppLightPos{ pointLightprimary.lightPos.x,pointLightprimary.lightPos.y,pointLightprimary.lightPos.z};
-	ImGui::InputFloat3("point light_position", (float*)(&tmppLightPos));
-	pointLightprimary.lightPos.x = tmppLightPos.x;
-	pointLightprimary.lightPos.y = tmppLightPos.y;
-	pointLightprimary.lightPos.z = tmppLightPos.z;
+	//pointlight related
+	{
+		XMFLOAT3 tmppLightPos{ m_pointLightprimary.lightPos.x,m_pointLightprimary.lightPos.y,m_pointLightprimary.lightPos.z };
+		ImGui::InputFloat3("point light_position", (float*)(&tmppLightPos));
+		m_pointLightprimary.lightPos.x = tmppLightPos.x;
+		m_pointLightprimary.lightPos.y = tmppLightPos.y;
+		m_pointLightprimary.lightPos.z = tmppLightPos.z;
+	}
 	//directional light related
 	{
 		ImGui::InputFloat3("directionallight_direction", (float*)(&m_generalOptions.lightDir));
+	}
+	//spotlight related
+	{
+		XMFLOAT3 tmppLightPos_spot{ m_spotLightprimary.lightPos.x,m_spotLightprimary.lightPos.y,m_spotLightprimary.lightPos.z };
+		ImGui::InputFloat3("spot light_position", (float*)(&tmppLightPos_spot));
+		m_spotLightprimary.lightPos.x = tmppLightPos_spot.x;
+		m_spotLightprimary.lightPos.y = tmppLightPos_spot.y;
+		m_spotLightprimary.lightPos.z = tmppLightPos_spot.z;
+		//notice here we pass 4th value as coverage angle in degrees to control it which can be used to utilize coverage
+		XMFLOAT4 tmppLightDir_spot{ m_spotLightprimary.lightDir.x,m_spotLightprimary.lightDir.y,m_spotLightprimary.lightDir.z,m_spotLightprimary.coverageAngle };
+		ImGui::InputFloat4("spot light_dir", (float*)(&tmppLightDir_spot));
+		m_spotLightprimary.lightDir.x = tmppLightDir_spot.x;
+		m_spotLightprimary.lightDir.y = tmppLightDir_spot.y;
+		m_spotLightprimary.lightDir.z = tmppLightDir_spot.z;
+		m_spotLightprimary.coverageAngle = tmppLightDir_spot.w;
+		m_spotLightprimary.lightDir.w = cos(XMConvertToRadians(m_spotLightprimary.coverageAngle));
 	}
 	//IMGUISimpleTestRender();
 }
@@ -713,4 +764,17 @@ LightingTestApplication::LocalLightData LightingTestApplication::GetLocalLightDa
 	locallightdata.lightCol = spotlight.lightCol;
 	locallightdata.lightExtras = spotlight.lightDir;
 	return locallightdata;
+}
+int LightingTestApplication::GetLightIndexLocalLightBuffer(LIGHTTYPE lighttype)
+{
+	switch (lighttype)
+	{
+	case LightingTestApplication::LIGHTTYPE::POINTLIGHT:
+		return 0;
+	case LightingTestApplication::LIGHTTYPE::SPOTLIGHT:
+		return 1;
+	default:
+		break;
+	}
+	return -1;
 }
