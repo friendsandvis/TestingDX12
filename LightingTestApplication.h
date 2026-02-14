@@ -82,7 +82,8 @@ private:
 		float padding2;
 		
 	};
-	DX12PSO m_pso, m_pso_alphablending;
+	//alpha blending not used in this app yet.
+	DX12PSO m_pso, m_pso_alphablending,m_pso_LightDebugDraw;
 	Model m_planemodel;
 	Model m_cubemodel_simpleTesting;
 	Model m_cubemodel_simpleLight;

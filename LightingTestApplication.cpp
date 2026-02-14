@@ -7,6 +7,7 @@
 //#define USEREVOLVERMODEL
 //#define USECUBEMODEL
 #define USECUSTOMMATERIALTEXTURE
+#define RENDERLIGHTAREADEBUG
 
 
 LightingTestApplication::LightingTestApplication()
@@ -610,7 +611,34 @@ void LightingTestApplication::InitPSO()
 		psoinitdata.psodesc.graphicspsodesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
 		//we do not need to rehold the shaders here in blending pso so clear held shaders list(already passed and hence managed in non alpha blending version of pso and shaders used for both psos are same hence not required to pass the same list of shaders to be managed to alpha version of pso as well).
 		psoinitdata.m_shaderstouse.clear();
+		//pso for debug draw regarding lights' area
 		m_pso_alphablending.Init(m_creationdevice, psoinitdata);
+		{
+			
+			PSOInitData psoinitdata_lightDebug;
+			psoinitdata.type = PSOType::GRAPHICS;
+			vector<D3D12_INPUT_ELEMENT_DESC> inputelements_debugdraw;
+			//change this as debug draw wil use just positions
+			DXVertexManager::BuildDefaultInputelementdesc(inputelements_debugdraw, VERTEXVERSION3);
+
+			DX12Shader* vs_debugDraw = new DX12Shader();
+			DX12Shader* ps_debugDraw = new DX12Shader();
+			vs_debugDraw->Init(L"shaders/lightingtest/LightingTest_LightDebugVertexShader.hlsl", DX12Shader::ShaderType::VS);
+			ps_debugDraw->Init(L"shaders/lightingtest/LightingTest_LightDebugPixelShader.hlsl", DX12Shader::ShaderType::PS);
+			psoinitdata_lightDebug.m_shaderstouse.push_back(vs_debugDraw); psoinitdata_lightDebug.m_shaderstouse.push_back(ps_debugDraw);
+			DX12PSO::DefaultInitPSOData(psoinitdata_lightDebug);
+			psoinitdata_lightDebug.psodesc.graphicspsodesc.PS.BytecodeLength = ps_debugDraw->GetCompiledCodeSize();
+			psoinitdata_lightDebug.psodesc.graphicspsodesc.PS.pShaderBytecode = ps_debugDraw->GetCompiledCode();
+			psoinitdata_lightDebug.psodesc.graphicspsodesc.VS.BytecodeLength = vs_debugDraw->GetCompiledCodeSize();
+			psoinitdata_lightDebug.psodesc.graphicspsodesc.VS.pShaderBytecode = vs_debugDraw->GetCompiledCode();
+
+			//input assembler setup
+
+			psoinitdata_lightDebug.psodesc.graphicspsodesc.InputLayout.NumElements = (UINT)inputelements_debugdraw.size();
+			psoinitdata_lightDebug.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = inputelements_debugdraw.data();
+			m_pso_LightDebugDraw.Init(m_creationdevice, psoinitdata_lightDebug);
+
+		}
 	}
 }
 void LightingTestApplication::IMGUIRenderAdditional()
