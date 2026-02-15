@@ -96,6 +96,11 @@ void DX12PSO::DefaultInitPSOData(PSOInitData& initdata)
 	initdata.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = nullptr;
 
 }
+void DX12PSO::DefaultInitPSOData_Graphics(PSOInitData& initdata)
+{
+	initdata.type = PSOType::GRAPHICS;
+	DefaultInitPSOData(initdata);
+}
 void DX12PSO::SetPSOData_DefaultAlphaSettings(PSOInitData& psoinitdata, PSOBlendingSetting blendingSetting)
 {
 	//blend state has fixed rt count of 8

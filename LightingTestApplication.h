@@ -82,6 +82,10 @@ private:
 		float padding2;
 		
 	};
+	struct DebugRenderData
+	{
+		XMFLOAT4 debugCol;
+	};
 	//alpha blending not used in this app yet.
 	DX12PSO m_pso, m_pso_alphablending,m_pso_LightDebugDraw;
 	Model m_planemodel;

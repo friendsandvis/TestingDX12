@@ -142,8 +142,10 @@ void LightingTestApplication::Render()
 		m_primarycmdlist->SetGraphicsRootDescriptorTable(1, loadedcompoundmodelmatsrvheap.GetGPUHandleOffseted(0));
 	}
 	
-	//------------------------------- draw test light representing cube use same PSO for now
+	//------------------------------- draw test light representing cube useing same PSO for now
 	{
+		m_primarycmdlist->SetPipelineState(m_pso.GetPSO());
+		m_primarycmdlist->SetGraphicsRootSignature(m_pso.GetRootSignature());
 		//setup position and scale first then render with right shader properties.
 		XMFLOAT4 simplelightCube_scale = { 0.25f,0.25,0.25f,1.0f };
 		XMFLOAT4 simplelightCube_rotationAxis = { 1.0f,0.0,0.0f,1.0f };
@@ -172,10 +174,46 @@ void LightingTestApplication::Render()
 			}
 			//light properties directly passed to material & used representation cube transform
 		}
-		UpdateCamConstBufferForModel(m_cubemodel_simpleLight, camMatData,m_CamConstBuffer_light);
-		m_primarycmdlist->SetGraphicsRootConstantBufferView(0, m_CamConstBuffer_light.GetResource()->GetGPUVirtualAddress());
-		m_cubemodel_simpleLight.Draw(m_primarycmdlist, vpmat, 0, 2, false, false, true);
+		//UpdateCamConstBufferForModel(m_cubemodel_simpleLight, camMatData,m_CamConstBuffer_light);
+		//m_primarycmdlist->SetGraphicsRootConstantBufferView(0, m_CamConstBuffer_light.GetResource()->GetGPUVirtualAddress());
+		//m_cubemodel_simpleLight.Draw(m_primarycmdlist, vpmat, 0, 2, false, false, true);
 	}
+	//-------------------------------draw light area debug
+	 {
+		XMFLOAT4 simplelightCube_scale = { 0.35f,0.35,0.35f,1.0f };
+		XMFLOAT4 simplelightCube_rotationAxis = { 1.0f,0.0f,0.0f,1.0f };
+		XMFLOAT4 simplelightCube_translate = {0.0f,0.0f,0.0f,1.0f};
+		if (m_testLightType == LIGHTTYPE::POINTLIGHT)
+			simplelightCube_translate = { m_pointLightprimary.lightPos.x,m_pointLightprimary.lightPos.y,m_pointLightprimary.lightPos.z,1.0f };
+		else if (m_testLightType == LIGHTTYPE::SPOTLIGHT)
+		{
+			simplelightCube_translate = { m_spotLightprimary.lightPos.x, m_spotLightprimary.lightPos.y, m_spotLightprimary.lightPos.z, 1.0f };
+		}
+		m_cubemodel_simpleLight.SetTransformation(simplelightCube_scale, simplelightCube_rotationAxis, 0.0f, simplelightCube_translate);
+		m_primarycmdlist->SetPipelineState(m_pso_LightDebugDraw.GetPSO());
+		m_primarycmdlist->SetGraphicsRootSignature(m_pso_LightDebugDraw.GetRootSignature());
+		m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, &dsvhandle);
+		{
+			D3D12_VIEWPORT aviewport = GetViewport();
+
+			D3D12_RECT ascissorrect = GetScissorRect();
+			m_primarycmdlist->RSSetViewports(1, &aviewport);
+			m_primarycmdlist->RSSetScissorRects(1, &ascissorrect);
+		}
+		//draw lightcubeas above for quick test
+		{
+			DebugRenderData debugRenderData = {};
+			debugRenderData.debugCol = XMFLOAT4(0.0F,1.0f,0.0f,1.0f);
+			UpdateCamConstBufferForModel(m_cubemodel_simpleLight, camMatData, m_CamConstBuffer_light);
+			m_primarycmdlist->SetGraphicsRootConstantBufferView(0, m_CamConstBuffer_light.GetResource()->GetGPUVirtualAddress());
+			m_primarycmdlist->SetGraphicsRoot32BitConstants(1, sizeof(debugRenderData) / 4, &debugRenderData, 0);
+			
+			m_cubemodel_simpleLight.Draw(m_primarycmdlist, vpmat, 0, 2, false, false, true);
+		}
+	}
+	//-------------------------------draw objects and meshes for test
+	m_primarycmdlist->SetPipelineState(m_pso.GetPSO());
+	m_primarycmdlist->SetGraphicsRootSignature(m_pso.GetRootSignature());
 	CustomMaterial customMaterial = {};
 	customMaterial.usecustomMaterial = 0.0f;
 #ifdef USETESTBASICMODELCUBE
@@ -480,7 +518,6 @@ void LightingTestApplication::InitPSO()
 	psoinitdata.psodesc.graphicspsodesc.PS.pShaderBytecode = ps->GetCompiledCode();
 	psoinitdata.psodesc.graphicspsodesc.VS.BytecodeLength = vs->GetCompiledCodeSize();
 	psoinitdata.psodesc.graphicspsodesc.VS.pShaderBytecode = vs->GetCompiledCode();
-	//psoinitdata.psodesc.graphicspsodesc.RasterizerState.CullMode = D3D12_CULL_MODE::D3D12_CULL_MODE_FRONT;
 	//root signature setup
 	vector < D3D12_DESCRIPTOR_RANGE> descrangestouserootparam1;
 	vector<D3D12_ROOT_PARAMETER> rootparams;
@@ -593,20 +630,6 @@ void LightingTestApplication::InitPSO()
 		//for alpha blending version of pso set alpha blending properties to basic pso settings.
 		//blendstate setup
 		DX12PSO::SetPSOData_DefaultAlphaSettings(psoinitdata, DX12PSO::PSOBlendingSetting::STRAIGHT_ALPHA);
-		/*for (size_t i = 0; i < 8; i++)
-		{
-			//same for all 8 rtvs
-			psoinitdata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].BlendEnable = TRUE;
-			psoinitdata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-			psoinitdata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].BlendOp = D3D12_BLEND_OP::D3D12_BLEND_OP_ADD;
-			psoinitdata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].BlendOpAlpha = D3D12_BLEND_OP::D3D12_BLEND_OP_ADD;
-			psoinitdata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].DestBlend = D3D12_BLEND::D3D12_BLEND_DEST_COLOR;
-			psoinitdata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].DestBlendAlpha = D3D12_BLEND::D3D12_BLEND_DEST_ALPHA;
-			psoinitdata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].SrcBlend = D3D12_BLEND::D3D12_BLEND_SRC_ALPHA;
-			psoinitdata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].SrcBlendAlpha = D3D12_BLEND::D3D12_BLEND_SRC_ALPHA;
-			psoinitdata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].DestBlend = D3D12_BLEND::D3D12_BLEND_INV_SRC_ALPHA;
-			psoinitdata.psodesc.graphicspsodesc.BlendState.RenderTarget[i].DestBlendAlpha = D3D12_BLEND::D3D12_BLEND_INV_SRC_ALPHA;
-		}*/
 		//turn off z write for alphablending
 		psoinitdata.psodesc.graphicspsodesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
 		//we do not need to rehold the shaders here in blending pso so clear held shaders list(already passed and hence managed in non alpha blending version of pso and shaders used for both psos are same hence not required to pass the same list of shaders to be managed to alpha version of pso as well).
@@ -614,9 +637,18 @@ void LightingTestApplication::InitPSO()
 		//pso for debug draw regarding lights' area
 		m_pso_alphablending.Init(m_creationdevice, psoinitdata);
 		{
-			
+			vector<D3D12_ROOT_PARAMETER> rootparams_lightDebug;
+			D3D12_ROOT_PARAMETER rootparam0_lightDebug = BuildBasicCameraDataRootConstantParameterCommon();
+			rootparams_lightDebug.push_back(rootparam0_lightDebug);
+			D3D12_ROOT_PARAMETER rootparam1_lightDebug = {};
+			rootparam1_lightDebug.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+			rootparam1_lightDebug.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+			rootparam1_lightDebug.Constants.Num32BitValues = sizeof(DebugRenderData) / 4;
+			rootparam1_lightDebug.Constants.RegisterSpace = 0;
+			rootparam1_lightDebug.Constants.ShaderRegister = 2;
+			rootparams_lightDebug.push_back(rootparam1_lightDebug);
+
 			PSOInitData psoinitdata_lightDebug;
-			psoinitdata.type = PSOType::GRAPHICS;
 			vector<D3D12_INPUT_ELEMENT_DESC> inputelements_debugdraw;
 			//change this as debug draw wil use just positions
 			DXVertexManager::BuildDefaultInputelementdesc(inputelements_debugdraw, VERTEXVERSION3);
@@ -626,7 +658,7 @@ void LightingTestApplication::InitPSO()
 			vs_debugDraw->Init(L"shaders/lightingtest/LightingTest_LightDebugVertexShader.hlsl", DX12Shader::ShaderType::VS);
 			ps_debugDraw->Init(L"shaders/lightingtest/LightingTest_LightDebugPixelShader.hlsl", DX12Shader::ShaderType::PS);
 			psoinitdata_lightDebug.m_shaderstouse.push_back(vs_debugDraw); psoinitdata_lightDebug.m_shaderstouse.push_back(ps_debugDraw);
-			DX12PSO::DefaultInitPSOData(psoinitdata_lightDebug);
+			DX12PSO::DefaultInitPSOData_Graphics(psoinitdata_lightDebug);
 			psoinitdata_lightDebug.psodesc.graphicspsodesc.PS.BytecodeLength = ps_debugDraw->GetCompiledCodeSize();
 			psoinitdata_lightDebug.psodesc.graphicspsodesc.PS.pShaderBytecode = ps_debugDraw->GetCompiledCode();
 			psoinitdata_lightDebug.psodesc.graphicspsodesc.VS.BytecodeLength = vs_debugDraw->GetCompiledCodeSize();
@@ -636,6 +668,7 @@ void LightingTestApplication::InitPSO()
 
 			psoinitdata_lightDebug.psodesc.graphicspsodesc.InputLayout.NumElements = (UINT)inputelements_debugdraw.size();
 			psoinitdata_lightDebug.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = inputelements_debugdraw.data();
+			psoinitdata_lightDebug.rootsignature.BuidDesc(rootparams_lightDebug, vector<D3D12_STATIC_SAMPLER_DESC>());
 			m_pso_LightDebugDraw.Init(m_creationdevice, psoinitdata_lightDebug);
 
 		}

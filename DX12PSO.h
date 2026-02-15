@@ -43,6 +43,7 @@ public:
 	inline ID3D12PipelineState* GetPSO() { return m_pso.Get(); }
 	ID3D12RootSignature* GetRootSignature() { return m_initdata.rootsignature.GetRootSignature(); }
 	void Init(ComPtr< ID3D12Device> creationdevice,PSOInitData initdata);
+	static void DefaultInitPSOData_Graphics(PSOInitData& initdata);
 	static void DefaultInitPSOData(PSOInitData& initdata);
 	static void SetPSOData_DefaultAlphaSettings(PSOInitData& psoinitdata, PSOBlendingSetting blendingSetting = PSOBlendingSetting::STRAIGHT_ALPHA);
 private:
