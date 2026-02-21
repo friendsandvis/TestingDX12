@@ -142,10 +142,11 @@ void LightingTestApplication::Render()
 		m_primarycmdlist->SetGraphicsRootDescriptorTable(1, loadedcompoundmodelmatsrvheap.GetGPUHandleOffseted(0));
 	}
 	
-	//------------------------------- draw test light representing cube useing same PSO for now
+	//------------------------------- draw test light representing cube using same PSO for now
 	{
-		m_primarycmdlist->SetPipelineState(m_pso.GetPSO());
-		m_primarycmdlist->SetGraphicsRootSignature(m_pso.GetRootSignature());
+		PIXBeginEvent(m_primarycmdlist.GetcmdList(), 0, L"Draw Light Representation");
+		//m_primarycmdlist->SetPipelineState(m_pso.GetPSO());
+		//m_primarycmdlist->SetGraphicsRootSignature(m_pso.GetRootSignature());
 		//setup position and scale first then render with right shader properties.
 		XMFLOAT4 simplelightCube_scale = { 0.25f,0.25,0.25f,1.0f };
 		XMFLOAT4 simplelightCube_rotationAxis = { 1.0f,0.0,0.0f,1.0f };
@@ -174,12 +175,13 @@ void LightingTestApplication::Render()
 			}
 			//light properties directly passed to material & used representation cube transform
 		}
-		//UpdateCamConstBufferForModel(m_cubemodel_simpleLight, camMatData,m_CamConstBuffer_light);
-		//m_primarycmdlist->SetGraphicsRootConstantBufferView(0, m_CamConstBuffer_light.GetResource()->GetGPUVirtualAddress());
-		//m_cubemodel_simpleLight.Draw(m_primarycmdlist, vpmat, 0, 2, false, false, true);
+		UpdateCamConstBufferForModel(m_cubemodel_simpleLight, camMatData,m_CamConstBuffer_light);
+		m_primarycmdlist->SetGraphicsRootConstantBufferView(0, m_CamConstBuffer_light.GetResource()->GetGPUVirtualAddress());
+		m_cubemodel_simpleLight.Draw(m_primarycmdlist, vpmat, 0, 2, false, false, true);
+		PIXEndEvent(m_primarycmdlist.GetcmdList());
 	}
 	//-------------------------------draw light area debug
-	 {
+	  {
 		XMFLOAT4 simplelightCube_scale = { 0.35f,0.35,0.35f,1.0f };
 		XMFLOAT4 simplelightCube_rotationAxis = { 1.0f,0.0f,0.0f,1.0f };
 		XMFLOAT4 simplelightCube_translate = {0.0f,0.0f,0.0f,1.0f};
@@ -192,26 +194,26 @@ void LightingTestApplication::Render()
 		m_cubemodel_simpleLight.SetTransformation(simplelightCube_scale, simplelightCube_rotationAxis, 0.0f, simplelightCube_translate);
 		m_primarycmdlist->SetPipelineState(m_pso_LightDebugDraw.GetPSO());
 		m_primarycmdlist->SetGraphicsRootSignature(m_pso_LightDebugDraw.GetRootSignature());
-		m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE, &dsvhandle);
 		{
 			D3D12_VIEWPORT aviewport = GetViewport();
 
 			D3D12_RECT ascissorrect = GetScissorRect();
-			m_primarycmdlist->RSSetViewports(1, &aviewport);
-			m_primarycmdlist->RSSetScissorRects(1, &ascissorrect);
 		}
-		//draw lightcubeas above for quick test
+		//draw lightcubeas above for quick test light debug pso
 		{
+			PIXBeginEvent(m_primarycmdlist.GetcmdList(), 0, L"Draw Light Area Debug");
 			DebugRenderData debugRenderData = {};
-			debugRenderData.debugCol = XMFLOAT4(0.0F,1.0f,0.0f,1.0f);
+			debugRenderData.debugCol = XMFLOAT4(0.0f,1.0f,0.0f,1.0f);
 			UpdateCamConstBufferForModel(m_cubemodel_simpleLight, camMatData, m_CamConstBuffer_light);
 			m_primarycmdlist->SetGraphicsRootConstantBufferView(0, m_CamConstBuffer_light.GetResource()->GetGPUVirtualAddress());
 			m_primarycmdlist->SetGraphicsRoot32BitConstants(1, sizeof(debugRenderData) / 4, &debugRenderData, 0);
 			
-			m_cubemodel_simpleLight.Draw(m_primarycmdlist, vpmat, 0, 2, false, false, true);
+			m_cubemodel_simpleLight.Draw(m_primarycmdlist, vpmat, 0, 2, false, false);
+			PIXEndEvent(m_primarycmdlist.GetcmdList());
 		}
 	}
 	//-------------------------------draw objects and meshes for test
+	PIXBeginEvent(m_primarycmdlist.GetcmdList(), 0, L"Draw Meshes To Light");
 	m_primarycmdlist->SetPipelineState(m_pso.GetPSO());
 	m_primarycmdlist->SetGraphicsRootSignature(m_pso.GetRootSignature());
 	CustomMaterial customMaterial = {};
@@ -264,6 +266,7 @@ void LightingTestApplication::Render()
 	}
 			m_cubemodel_simpleTesting.Draw(m_primarycmdlist, camMatData, 0, 2, false, false, true,NUMCUBESTORENDER);
 	}
+	PIXEndEvent(m_primarycmdlist.GetcmdList());
 	DXASSERT(m_primarycmdlist->Close())
 		BasicRender();
 	return;
@@ -281,6 +284,7 @@ void LightingTestApplication::Render()
 	{
 		m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 2, true, true);
 	}
+	PIXEndEvent(m_primarycmdlist.GetcmdList());
 	DXASSERT(m_primarycmdlist->Close())
 		BasicRender();
 }
@@ -670,7 +674,7 @@ void LightingTestApplication::InitPSO()
 			psoinitdata_lightDebug.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = inputelements_debugdraw.data();
 			psoinitdata_lightDebug.rootsignature.BuidDesc(rootparams_lightDebug, vector<D3D12_STATIC_SAMPLER_DESC>());
 			m_pso_LightDebugDraw.Init(m_creationdevice, psoinitdata_lightDebug);
-
+			
 		}
 	}
 }

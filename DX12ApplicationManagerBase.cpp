@@ -139,7 +139,7 @@ void DX12ApplicationManagerBase::BasicRender()
 	//simple imgui test window
 	if (m_imguiAllowed)
 	{
-		
+		PIXBeginEvent(m_prepresentcommandlist.GetcmdList(), 0, L"IMGUI Render");
 		{
 			ImGui::Begin("test imguiwindow", nullptr);
 			//IMGUISimpleTestRender();
@@ -163,6 +163,7 @@ void DX12ApplicationManagerBase::BasicRender()
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_prepresentcommandlist.GetcmdList());
 
 		}
+		PIXEndEvent(m_prepresentcommandlist.GetcmdList());
 	}
 #endif // USEIMGUI
 	D3D12_RESOURCE_BARRIER barrier=m_swapchain.TransitionBackBuffer(m_swapchain.GetCurrentbackbufferIndex(), D3D12_RESOURCE_STATE_PRESENT);

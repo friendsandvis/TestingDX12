@@ -7,6 +7,8 @@
 #include<vector>
 #include<d3dx12.h>
 #include<DirectXMath.h>
+//winpeventruntime debug marker nuget needed and _debug macro as well
+#include<pix3.h>
 
 #define BACKBUFFERCOUNT 2
 #define MAXACCESSABLERESOURCEVIEWCOUNT 5
