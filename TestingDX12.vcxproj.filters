@@ -240,6 +240,9 @@
     <ClCompile Include="ModelTestApplication.cpp">
       <Filter>Applications</Filter>
     </ClCompile>
+    <ClCompile Include="DXMathUtil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="windmaker.h">
@@ -439,6 +442,9 @@
     </ClInclude>
     <ClInclude Include="ModelTestApplication.h">
       <Filter>Applications</Filter>
+    </ClInclude>
+    <ClInclude Include="DXMathUtil.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

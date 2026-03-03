@@ -120,5 +120,8 @@ private:
 	LocalLightData GetLocalLightDataFromPointLight(const PointLight& pointlight);
 	//its hardcoded hence can be directly resolved
 	int GetLightIndexLocalLightBuffer(LIGHTTYPE lighttype);
+	//build light area debug representation
+	void GetLightAreaRepresentationVerticies(const SpotLight& spotLight, VertexVersion vertVersion, vector<VertexBase*>& outverticies);
+	void BuildLightAreaRepresentationModel(const SpotLight& spotLight,Model& outModel);
 	D3D12_ROOT_PARAMETER BuildBasicCameraDataRootConstantParameterCommon();
 };

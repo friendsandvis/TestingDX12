@@ -843,3 +843,57 @@ int LightingTestApplication::GetLightIndexLocalLightBuffer(LIGHTTYPE lighttype)
 	}
 	return -1;
 }
+void LightingTestApplication::GetLightAreaRepresentationVerticies(const SpotLight& spotLight, VertexVersion vertVersion, vector<VertexBase*>& outverticies)
+{
+	const XMFLOAT3 pointColour = { 0.0f,1.0f,0.0f };
+	//others are not supported right now
+	assert(vertVersion != VertexVersion::VERTEXVERSION3);
+	
+	//light position point
+	VertexBase* lightPosPoint = nullptr;
+	//light direction end point
+	VertexBase* lightDirEndPoint = nullptr;
+
+	switch (vertVersion)
+	{
+	case VERTEXVERSION3:
+		//----------start point----------
+	{
+		VertexV3* lightPosPointV3 = new VertexV3();
+		lightPosPointV3->m_position.x = spotLight.lightPos.x;
+		lightPosPointV3->m_position.y = spotLight.lightPos.y;
+		lightPosPointV3->m_position.z = spotLight.lightPos.z;
+		//passing colour here in normal as no point of normal in a representation point
+		lightPosPointV3->m_normal = pointColour;
+		//pass 0 for uv as not used in representation.
+		lightPosPointV3->m_uv = { 0.0f,0.0f };
+		lightPosPoint = lightPosPointV3;
+	}
+		//----------dir end point----------
+	{
+		VertexV3* lightDirEndPointV3 = new VertexV3();
+
+		lightDirEndPointV3->m_position.x = spotLight.lightPos.x;
+		lightDirEndPointV3->m_position.y = spotLight.lightPos.y;
+		lightDirEndPointV3->m_position.z = spotLight.lightPos.z;
+		XMFLOAT3 spotLightDirF3 = { spotLight.lightDir.x,spotLight.lightDir.y,spotLight.lightDir.z };
+		spotLightDirF3 = DXMathUtil::NormalizeFloat3(spotLightDirF3);
+		lightDirEndPointV3->m_position = DXMathUtil::AddFloat3(lightDirEndPointV3->m_position, spotLightDirF3);
+		//passing colour here in normal as no point of normal in a representation point
+		lightDirEndPointV3->m_normal = pointColour;
+		//pass 0 for uv as not used in representation.
+		lightDirEndPointV3->m_uv = { 0.0f,0.0f };
+		lightDirEndPoint = lightDirEndPointV3;
+	}
+		break;
+	}
+	outverticies.push_back(lightPosPoint);
+	outverticies.push_back(lightDirEndPoint);
+
+}
+void LightingTestApplication::BuildLightAreaRepresentationModel(const SpotLight& spotLight, Model& outModel)
+{
+	vector<VertexBase*> verticies;
+	GetLightAreaRepresentationVerticies(spotLight, VertexVersion::VERTEXVERSION3, verticies);
+	//set vertexx buffer to model and init
+}

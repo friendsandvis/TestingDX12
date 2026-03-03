@@ -183,6 +183,7 @@
     <ClCompile Include="DX12Swapchain.cpp" />
     <ClCompile Include="DX12Texture.cpp" />
     <ClCompile Include="DXCamera.cpp" />
+    <ClCompile Include="DXMathUtil.cpp" />
     <ClCompile Include="DXTexManager.cpp" />
     <ClCompile Include="DXTextureUtils.cpp" />
     <ClCompile Include="DXUtils.cpp" />
@@ -251,6 +252,7 @@
     <ClInclude Include="DX12Swapchain.h" />
     <ClInclude Include="DX12Texture.h" />
     <ClInclude Include="DXCamera.h" />
+    <ClInclude Include="DXMathUtil.h" />
     <ClInclude Include="DXTexManager.h" />
     <ClInclude Include="DXTextureUtils.h" />
     <ClInclude Include="DXUtils.h" />
