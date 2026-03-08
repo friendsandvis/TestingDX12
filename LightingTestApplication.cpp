@@ -175,12 +175,13 @@ void LightingTestApplication::Render()
 			}
 			//light properties directly passed to material & used representation cube transform
 		}
-		UpdateCamConstBufferForModel(m_cubemodel_simpleLight, camMatData,m_CamConstBuffer_light);
-		m_primarycmdlist->SetGraphicsRootConstantBufferView(0, m_CamConstBuffer_light.GetResource()->GetGPUVirtualAddress());
+		UpdateCamConstBufferForModel(m_cubemodel_simpleLight, camMatData, m_CamConstBuffer_light_Place);
+		m_primarycmdlist->SetGraphicsRootConstantBufferView(0, m_CamConstBuffer_light_Place.GetResource()->GetGPUVirtualAddress());
 		m_cubemodel_simpleLight.Draw(m_primarycmdlist, vpmat, 0, 2, false, false, true);
 		PIXEndEvent(m_primarycmdlist.GetcmdList());
 	}
 	//-------------------------------draw light area debug
+	//create light area debug model based on light type being used:-
 	  {
 		XMFLOAT4 simplelightCube_scale = { 0.35f,0.35,0.35f,1.0f };
 		XMFLOAT4 simplelightCube_rotationAxis = { 1.0f,0.0f,0.0f,1.0f };
@@ -189,9 +190,11 @@ void LightingTestApplication::Render()
 			simplelightCube_translate = { m_pointLightprimary.lightPos.x,m_pointLightprimary.lightPos.y,m_pointLightprimary.lightPos.z,1.0f };
 		else if (m_testLightType == LIGHTTYPE::SPOTLIGHT)
 		{
+			//BuildLightAreaRepresentationModel(m_spotLightprimary, lightAreaDebugModel);
 			simplelightCube_translate = { m_spotLightprimary.lightPos.x, m_spotLightprimary.lightPos.y, m_spotLightprimary.lightPos.z, 1.0f };
 		}
 		m_cubemodel_simpleLight.SetTransformation(simplelightCube_scale, simplelightCube_rotationAxis, 0.0f, simplelightCube_translate);
+		//---pso  change to debug
 		m_primarycmdlist->SetPipelineState(m_pso_LightDebugDraw.GetPSO());
 		m_primarycmdlist->SetGraphicsRootSignature(m_pso_LightDebugDraw.GetRootSignature());
 		{
@@ -204,11 +207,18 @@ void LightingTestApplication::Render()
 			PIXBeginEvent(m_primarycmdlist.GetcmdList(), 0, L"Draw Light Area Debug");
 			DebugRenderData debugRenderData = {};
 			debugRenderData.debugCol = XMFLOAT4(0.0f,1.0f,0.0f,1.0f);
-			UpdateCamConstBufferForModel(m_cubemodel_simpleLight, camMatData, m_CamConstBuffer_light);
-			m_primarycmdlist->SetGraphicsRootConstantBufferView(0, m_CamConstBuffer_light.GetResource()->GetGPUVirtualAddress());
 			m_primarycmdlist->SetGraphicsRoot32BitConstants(1, sizeof(debugRenderData) / 4, &debugRenderData, 0);
-			
+			//draw main light place representation
+			UpdateCamConstBufferForModel(m_cubemodel_simpleLight, camMatData, m_CamConstBuffer_light_Place);
+			m_primarycmdlist->SetGraphicsRootConstantBufferView(0, m_CamConstBuffer_light_Place.GetResource()->GetGPUVirtualAddress());
 			m_cubemodel_simpleLight.Draw(m_primarycmdlist, vpmat, 0, 2, false, false);
+			//draw light area of effect representation onluy for spot light to test
+			if(m_testLightType == LIGHTTYPE::SPOTLIGHT)
+			{
+				UpdateCamConstBufferForModel(lightAreaDebugModel, camMatData, m_CamConstBuffer_light_Area);
+				m_primarycmdlist->SetGraphicsRootConstantBufferView(0, m_CamConstBuffer_light_Area.GetResource()->GetGPUVirtualAddress());
+				lightAreaDebugModel.Draw(m_primarycmdlist, vpmat, 0, 2, false, false);
+			}
 			PIXEndEvent(m_primarycmdlist.GetcmdList());
 		}
 	}
@@ -376,11 +386,15 @@ void LightingTestApplication::InitExtras()
 		//cam const data buffer
 		DX12ResourceCreationProperties camConstDataBufferProps;
 		DX12Buffer::InitResourceCreationProperties(camConstDataBufferProps);
-		//just 1 cam const block here
+		//2 cam const block here 1 for light area rendering another for light place represent.
 		camConstDataBufferProps.resdesc.Width = sizeof(ShaderTransformConstants_GeneralComplete) * 1;
 		camConstDataBufferProps.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
-		m_CamConstBuffer_light.Init(m_creationdevice, camConstDataBufferProps, ResourceCreationMode::COMMITED);
-		m_CamConstBuffer_light.SetName(L"camConstdatabuffer_Light");
+		//---light place debug represent
+		m_CamConstBuffer_light_Place.Init(m_creationdevice, camConstDataBufferProps, ResourceCreationMode::COMMITED);
+		m_CamConstBuffer_light_Place.SetName(L"camConstdatabuffer_Light_Place");
+		//---light area debug represent
+		m_CamConstBuffer_light_Area.Init(m_creationdevice, camConstDataBufferProps, ResourceCreationMode::COMMITED);
+		m_CamConstBuffer_light_Area.SetName(L"camConstdatabuffer_Light_Area");
 		m_CamConstBuffer_Object.Init(m_creationdevice, camConstDataBufferProps, ResourceCreationMode::COMMITED);
 		m_CamConstBuffer_Object.SetName(L"camConstdatabuffer_Object");
 		//create material table srv in the heap created
@@ -853,6 +867,8 @@ void LightingTestApplication::GetLightAreaRepresentationVerticies(const SpotLigh
 	VertexBase* lightPosPoint = nullptr;
 	//light direction end point
 	VertexBase* lightDirEndPoint = nullptr;
+	//light direction end point(need to draw triangle because pso has topology triamngle simply repeat the first point)
+	VertexBase* lightDirEndPoint_triEnd = nullptr;
 
 	switch (vertVersion)
 	{
@@ -885,15 +901,22 @@ void LightingTestApplication::GetLightAreaRepresentationVerticies(const SpotLigh
 		lightDirEndPointV3->m_uv = { 0.0f,0.0f };
 		lightDirEndPoint = lightDirEndPointV3;
 	}
+	//----------dir end point tri end----------
+	lightDirEndPoint_triEnd = lightPosPoint;//repeat start point to complete triangle
 		break;
 	}
 	outverticies.push_back(lightPosPoint);
 	outverticies.push_back(lightDirEndPoint);
+	outverticies.push_back(lightDirEndPoint_triEnd);
 
 }
 void LightingTestApplication::BuildLightAreaRepresentationModel(const SpotLight& spotLight, Model& outModel)
 {
 	vector<VertexBase*> verticies;
 	GetLightAreaRepresentationVerticies(spotLight, VertexVersion::VERTEXVERSION3, verticies);
-	//set vertexx buffer to model and init
+	//set vertex buffer to model and init
+	outModel = Model(ModelDataUploadMode::COPY);
+	outModel.SetVertexVersionUsed(VertexVersion::VERTEXVERSION3);
+	outModel.InitVertexBuffer(m_creationdevice, verticies);
+
 }

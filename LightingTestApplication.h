@@ -91,6 +91,7 @@ private:
 	Model m_planemodel;
 	Model m_cubemodel_simpleTesting;
 	Model m_cubemodel_simpleLight;
+	Model lightAreaDebugModel;
 	Model m_loadedmodel;
 	CompoundModel m_loadedcompoundmodel;
 	DXFPSCameraController m_maincameracontroller;
@@ -103,7 +104,8 @@ private:
 	MaterialDataGPU m_boxMaterialGPUData;
 	DX12Buffer m_localLightsBuffer;
 	DX12Buffer m_testCubeInstanceDataBuffer;
-	DX12Buffer m_CamConstBuffer_light;
+	DX12Buffer m_CamConstBuffer_light_Place;
+	DX12Buffer m_CamConstBuffer_light_Area;
 	DX12Buffer m_CamConstBuffer_Object;
 	std::vector<LocalLightData> m_localLights;
 	std::vector<CubeInstanceData> m_instanceData;
