@@ -91,7 +91,7 @@ private:
 	Model m_planemodel;
 	Model m_cubemodel_simpleTesting;
 	Model m_cubemodel_simpleLight;
-	Model lightAreaDebugModel;
+	Model lightAreaDebugModel[BACKBUFFERCOUNT];
 	Model m_loadedmodel;
 	CompoundModel m_loadedcompoundmodel;
 	DXFPSCameraController m_maincameracontroller;

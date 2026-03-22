@@ -190,7 +190,7 @@ void LightingTestApplication::Render()
 			simplelightCube_translate = { m_pointLightprimary.lightPos.x,m_pointLightprimary.lightPos.y,m_pointLightprimary.lightPos.z,1.0f };
 		else if (m_testLightType == LIGHTTYPE::SPOTLIGHT)
 		{
-			//BuildLightAreaRepresentationModel(m_spotLightprimary, lightAreaDebugModel);
+			BuildLightAreaRepresentationModel(m_spotLightprimary, lightAreaDebugModel[m_frameIdx]);
 			simplelightCube_translate = { m_spotLightprimary.lightPos.x, m_spotLightprimary.lightPos.y, m_spotLightprimary.lightPos.z, 1.0f };
 		}
 		m_cubemodel_simpleLight.SetTransformation(simplelightCube_scale, simplelightCube_rotationAxis, 0.0f, simplelightCube_translate);
@@ -211,13 +211,13 @@ void LightingTestApplication::Render()
 			//draw main light place representation
 			UpdateCamConstBufferForModel(m_cubemodel_simpleLight, camMatData, m_CamConstBuffer_light_Place);
 			m_primarycmdlist->SetGraphicsRootConstantBufferView(0, m_CamConstBuffer_light_Place.GetResource()->GetGPUVirtualAddress());
-			m_cubemodel_simpleLight.Draw(m_primarycmdlist, vpmat, 0, 2, false, false);
+			//m_cubemodel_simpleLight.Draw(m_primarycmdlist, vpmat, 0, 2, false, false);
 			//draw light area of effect representation onluy for spot light to test
 			if(m_testLightType == LIGHTTYPE::SPOTLIGHT)
 			{
-				UpdateCamConstBufferForModel(lightAreaDebugModel, camMatData, m_CamConstBuffer_light_Area);
+				UpdateCamConstBufferForModel(lightAreaDebugModel[m_frameIdx], camMatData, m_CamConstBuffer_light_Area);
 				m_primarycmdlist->SetGraphicsRootConstantBufferView(0, m_CamConstBuffer_light_Area.GetResource()->GetGPUVirtualAddress());
-				lightAreaDebugModel.Draw(m_primarycmdlist, vpmat, 0, 2, false, false);
+				lightAreaDebugModel[m_frameIdx].Draw(m_primarycmdlist, vpmat, 0, 2, false, false);
 			}
 			PIXEndEvent(m_primarycmdlist.GetcmdList());
 		}
@@ -861,7 +861,7 @@ void LightingTestApplication::GetLightAreaRepresentationVerticies(const SpotLigh
 {
 	const XMFLOAT3 pointColour = { 0.0f,1.0f,0.0f };
 	//others are not supported right now
-	assert(vertVersion != VertexVersion::VERTEXVERSION3);
+	assert(vertVersion == VertexVersion::VERTEXVERSION3);
 	
 	//light position point
 	VertexBase* lightPosPoint = nullptr;
@@ -915,8 +915,9 @@ void LightingTestApplication::BuildLightAreaRepresentationModel(const SpotLight&
 	vector<VertexBase*> verticies;
 	GetLightAreaRepresentationVerticies(spotLight, VertexVersion::VERTEXVERSION3, verticies);
 	//set vertex buffer to model and init
-	outModel = Model(ModelDataUploadMode::COPY);
+	outModel = Model(ModelDataUploadMode::NOCOPY);
 	outModel.SetVertexVersionUsed(VertexVersion::VERTEXVERSION3);
 	outModel.InitVertexBuffer(m_creationdevice, verticies);
+	outModel.UploadModelDatatoBuffers();
 
 }

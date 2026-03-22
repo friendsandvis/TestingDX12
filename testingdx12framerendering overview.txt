@@ -1,0 +1,19 @@
+BACKBUFFERCONT current = 2
+appfenceValue: starts from 0 can keeps incrementing  over frames
+m_lastSignaledFenceValue in app to holdlast signaled fence value in app
+commandlists used per frame to be executed:
+1. m_uploadcommandlist
+2. m_primarycmdlist
+3. m_prepresentcommandlist
+all 3 have BACKBUFFER count allocators to allow frames in flight(cpu can fill commandlist while gpu executes another frames commandlist)
+
+submit and sync after app finshis render function:
+submit above commandlists in order toqueue to execute
+present call
+//--------------frames in flight sync----------------
+fence signaled with appfenceValue
+move frameindex to next based on the buffer which will be used next frame and if last commandlist execution has not completed then wait on fence.
+this delayed waiting rather than immidiate allows cpu to prepare next frame while gpu continues processing siubmitted work.
+
+//------------------------no frame in flight sync----------------
+

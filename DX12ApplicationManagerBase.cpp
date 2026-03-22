@@ -203,9 +203,10 @@ void DX12ApplicationManagerBase::BasicRender()
 		UINT nextframeIdx = m_swapchain.GetCurrentbackbufferIndex();
 		m_frameIdx = nextframeIdx;
 		UINT64 fencevaluecurrent = fence->GetCompletedValue();
+		//note we compare current fence value with last fence value submited for frame to use(delayed waiting for work completion)
 	if (fencevaluecurrent < m_frameFenceValue[m_frameIdx])
 	{
-		//todo add code to wait for fence value to let the frame complete
+		//note manually using sync primitive members to call wait
 		HANDLE fencewaitevent = m_syncunitprime.GetInternalEvent();
 		DXASSERT(fence->SetEventOnCompletion(m_frameFenceValue[m_frameIdx], fencewaitevent))
 			DWORD waitstatus = WaitForSingleObject(fencewaitevent, INFINITE);
@@ -213,12 +214,13 @@ void DX12ApplicationManagerBase::BasicRender()
 	}
 	UINT64 fencevaluecurrentafterwaitproc = fence->GetCompletedValue();
 	assert(fencevaluecurrentafterwaitproc >= m_frameFenceValue[m_frameIdx]);
+//---------------
 #else
 		m_frameIdx = m_swapchain.GetCurrentbackbufferIndex();
 	/*syncunit simply groups everything needed for basic syncronization of frame it is up to us to utilize it.
 	 hence we retrive the current fence value here and increment it to signal next
 	 upon signaling sync unit internally updatess its current fence value and hence the simple sync flow can continue.
-	 */ 
+	 */
 		UINT64 fencevalue = m_syncunitprime.GetCurrentValue();
 	fencevalue += 1;
 	m_syncunitprime.SignalFence(m_mainqueue.GetQueue(), fencevalue);

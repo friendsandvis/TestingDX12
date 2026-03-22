@@ -29,6 +29,10 @@ enum VertexVersion
 class VertexBase
 {
 public:
+	~VertexBase()
+	{
+
+	}
 	VertexVersion m_vertversion=VertexVersion::UNKNOWN;
 	virtual unsigned GetSize() { return 0; }
 };
