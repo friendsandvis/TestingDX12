@@ -902,7 +902,18 @@ void LightingTestApplication::GetLightAreaRepresentationVerticies(const SpotLigh
 		lightDirEndPoint = lightDirEndPointV3;
 	}
 	//----------dir end point tri end----------
-	lightDirEndPoint_triEnd = lightPosPoint;//repeat start point to complete triangle
+	{
+		//repeat start point to complete triangle
+		VertexV3* lightPosPointV3 = new VertexV3();
+		lightPosPointV3->m_position.x = spotLight.lightPos.x;
+		lightPosPointV3->m_position.y = spotLight.lightPos.y;
+		lightPosPointV3->m_position.z = spotLight.lightPos.z;
+		//passing colour here in normal as no point of normal in a representation point
+		lightPosPointV3->m_normal = pointColour;
+		//pass 0 for uv as not used in representation.
+		lightPosPointV3->m_uv = { 0.0f,0.0f };
+		lightDirEndPoint_triEnd = lightPosPointV3;
+	}
 		break;
 	}
 	outverticies.push_back(lightPosPoint);
@@ -912,12 +923,15 @@ void LightingTestApplication::GetLightAreaRepresentationVerticies(const SpotLigh
 }
 void LightingTestApplication::BuildLightAreaRepresentationModel(const SpotLight& spotLight, Model& outModel)
 {
-	vector<VertexBase*> verticies;
-	GetLightAreaRepresentationVerticies(spotLight, VertexVersion::VERTEXVERSION3, verticies);
-	//set vertex buffer to model and init
-	outModel = Model(ModelDataUploadMode::NOCOPY);
-	outModel.SetVertexVersionUsed(VertexVersion::VERTEXVERSION3);
-	outModel.InitVertexBuffer(m_creationdevice, verticies);
-	outModel.UploadModelDatatoBuffers();
+	{
+		vector<VertexBase*> verticies;
+		GetLightAreaRepresentationVerticies(spotLight, VertexVersion::VERTEXVERSION3, verticies);
+		//set vertex buffer to model and init
+		outModel = Model(ModelDataUploadMode::NOCOPY);
+		outModel.SetVertexVersionUsed(VertexVersion::VERTEXVERSION3);
+		outModel.InitVertexBuffer(m_creationdevice, verticies);
+		outModel.UploadModelDatatoBuffers();
+		
+	}
 
 }
