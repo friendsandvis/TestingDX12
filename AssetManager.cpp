@@ -1,6 +1,7 @@
 #include"AssetManager.h"
 #include"DX12CommandList.h"
 #include"DXCamera.h"
+#include"DX12Buffer.h"
 //during model loading this macro is used to determine if we need to set rendering for non opaque models to allow rendering them or not.
 #define ALLOWRENDERINGNONOPAQUEMODELS true
 
@@ -1259,6 +1260,54 @@ void BasicModelManager::GetTriangleRTVertexData(vector<RTVertexDataV0>& rtvertex
 	}
 }
 
+D3D12_ROOT_PARAMETER BasicModelManager::BuildBasicCameraDataRootConstantParameterCommon(bool initAsdescriptor)
+{
+
+	D3D12_ROOT_PARAMETER rootParamCamConst = {};
+	//init as 32 bit const
+	if (!initAsdescriptor)
+	{
+		rootParamCamConst.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+		rootParamCamConst.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+		rootParamCamConst.Constants.Num32BitValues = sizeof(ShaderTransformConstants_GeneralComplete) / 4;
+		rootParamCamConst.Constants.RegisterSpace = 0;
+		rootParamCamConst.Constants.ShaderRegister = 0;
+	}
+	//init as cbv
+	else
+	{
+		rootParamCamConst.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_CBV;
+		rootParamCamConst.Descriptor.ShaderRegister = 0;
+		rootParamCamConst.Descriptor.RegisterSpace = 0;
+	}
+
+	return rootParamCamConst;
+}
+
+void BasicModelManager::UpdateCamConstBufferForModel(Model& aModel, const CameraMatriciesData& camMatData, DX12Buffer& camConstBuffer)
+{
+	ShaderTransformConstants_GeneralComplete camConstData = {};
+	camConstData.model = aModel.GetTransform();
+	camConstData.view = camMatData.viewMat;
+	camConstData.projection = camMatData.projectionMat;
+	camConstData.mvp = XMMatrixMultiply(camConstData.model, camMatData.vpMat);
+	//update data in buffer
+	BufferMapParams camConstwriteparams = {};
+	camConstwriteparams.range.Begin = 0;
+	camConstwriteparams.range.End = camConstBuffer.GetSize();
+	void* camConstBuffMapped = camConstBuffer.Map(camConstwriteparams);
+	memcpy(camConstBuffMapped, &camConstData, camConstBuffer.GetSize());
+	camConstBuffer.UnMap(camConstwriteparams);
+
+}
+
+void InitCamConstBuffer(ComPtr< ID3D12Device> creationDevice, DX12Buffer& camConstBuffer)
+{
+	DX12ResourceCreationProperties camConstDataBufferProps;
+	DX12Buffer::InitResourceCreationProperties(camConstDataBufferProps);
+	camConstBuffer.Init(creationDevice, camConstDataBufferProps, ResourceCreationMode::COMMITED);
+	camConstBuffer.SetName(L"camConstdatabuffer_Light_Place");
+}
 ModelMaterial::ModelMaterial()
 	:
 	m_diffusetexture(nullptr),

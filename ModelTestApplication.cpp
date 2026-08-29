@@ -30,6 +30,7 @@ void ModelTestApplication::Render()
 {
 	m_primarycmdlist.Reset(false, true, m_frameIdx);
 	bool uploadModelTextureData = false;
+	//BasicModelManager::UpdateCamConstBufferForModel(m_loadedcompoundmodel, m_maincamera.GetMatData(), m_CamConstBuffer);
 #if defined(USESPHONZAMODEL) || defined(USEREVOLVERMODEL)
 	uploadModelTextureData = true;
 #endif //defined(USESPHONZAMODEL) || defined(USEREVOLVERMODEL)
@@ -121,6 +122,7 @@ void ModelTestApplication::Render()
 
 void ModelTestApplication::InitExtras()
 {
+	BasicModelManager::InitCamConstBuffer(m_creationdevice, m_CamConstBuffer);
 	BasicModelManager::LoadModel(m_creationdevice,"models/cube.dae",m_loadedmodel,VERTEXVERSION2);
 #ifdef USECONFERENCEROOMCOMPOUNDMODEL
 	float scalefactor = 0.01f;
@@ -207,12 +209,13 @@ void ModelTestApplication::InitPSO()
 		psoinitdata.psodesc.graphicspsodesc.InputLayout.pInputElementDescs = inputelements.data();
 		
 		//psoinitdata.psodesc.graphicspsodesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
-		{D3D12_ROOT_PARAMETER rootparam0 = {};
-		rootparam0.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+		{
+			D3D12_ROOT_PARAMETER rootparam0 = BasicModelManager::BuildBasicCameraDataRootConstantParameterCommon(false);//{};
+		/*rootparam0.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
 		rootparam0.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 		rootparam0.Constants.Num32BitValues = sizeof(ShaderTransformConstants_General) / 4;
 		rootparam0.Constants.RegisterSpace = 0;
-		rootparam0.Constants.ShaderRegister = 0;
+		rootparam0.Constants.ShaderRegister = 0;*/
 		rootparams.push_back(rootparam0);
 		D3D12_ROOT_PARAMETER rootparam1 = {};
 		//making mat table srv range

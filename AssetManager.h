@@ -262,6 +262,9 @@ public:
 	static void LoadModel(ComPtr< ID3D12Device> creationdevice,std::string modelfilepath, Model& outmodel, VertexVersion requiredvertexversion);
 	static void LoadModel(ComPtr< ID3D12Device> creationdevice, std::string modelfilepath, CompoundModel& outmodel, VertexVersion requiredvertexversion, wstring texfilepath = L"", bool supportmaterial = false);
 	static void GetTriangleRTVertexData(vector<RTVertexDataV0>& rtvertexdata);
+	static D3D12_ROOT_PARAMETER BuildBasicCameraDataRootConstantParameterCommon(bool initAsdescriptor = true);
+	static void UpdateCamConstBufferForModel(Model& aModel, const CameraMatriciesData& camMatData, DX12Buffer& camConstBuffer);
+	static void InitCamConstBuffer(ComPtr< ID3D12Device> creationDevice, DX12Buffer& camConstBuffer);
 private:
 	static void GetPlaneVerticiesV0(vector<VertexBase*>& outverticies);
 	static void GetCubeVerticiesV0(vector<VertexBase*>& outverticies);

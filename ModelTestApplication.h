@@ -30,5 +30,6 @@ private:
 	Model m_loadedmodel;
 	CompoundModel m_loadedcompoundmodel;
 	DXFPSCameraController m_maincameracontroller;
+	DX12Buffer m_CamConstBuffer;
 	void InitPSO();
 };
