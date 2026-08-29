@@ -1301,7 +1301,7 @@ void BasicModelManager::UpdateCamConstBufferForModel(Model& aModel, const Camera
 
 }
 
-void InitCamConstBuffer(ComPtr< ID3D12Device> creationDevice, DX12Buffer& camConstBuffer)
+void BasicModelManager::InitCamConstBuffer(ComPtr< ID3D12Device> creationDevice, DX12Buffer& camConstBuffer)
 {
 	DX12ResourceCreationProperties camConstDataBufferProps;
 	DX12Buffer::InitResourceCreationProperties(camConstDataBufferProps);
