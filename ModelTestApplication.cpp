@@ -30,7 +30,6 @@ void ModelTestApplication::Render()
 {
 	m_primarycmdlist.Reset(false, true, m_frameIdx);
 	bool uploadModelTextureData = false;
-	//BasicModelManager::UpdateCamConstBufferForModel(m_loadedcompoundmodel, m_maincamera.GetMatData(), m_CamConstBuffer);
 #if defined(USESPHONZAMODEL) || defined(USEREVOLVERMODEL)
 	uploadModelTextureData = true;
 #endif //defined(USESPHONZAMODEL) || defined(USEREVOLVERMODEL)
@@ -65,7 +64,6 @@ void ModelTestApplication::Render()
 	XMMATRIX orthoproj = XMMatrixOrthographicLH(2.0f, 2.0f, -1.0f, 1.0f);
 	XMMATRIX model = XMMatrixIdentity();
 	XMMATRIX mvp = XMMatrixMultiply(model,orthoproj);
-	m_primarycmdlist->SetGraphicsRoot32BitConstants(0,sizeof(XMMATRIX)/4, &mvp, 0);
 	m_primarycmdlist->OMSetRenderTargets(1, &rtvhandle, FALSE,&dsvhandle);
 	float clearvalue[4] = {1.0f,1.0f,1.0f,1.0f};
 	ClearBackBuffer(currentbackbufferidx,m_primarycmdlist, clearvalue);
@@ -85,7 +83,6 @@ void ModelTestApplication::Render()
 	}
 	XMMATRIX vpmat = m_maincamera.GetVP();
 	//m_trianglemodel.Draw(m_primarycmdlist,vpmat);
-	m_primarycmdlist->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &vpmat, 0);
 	//a specialized way to test out model's material(diffuse textures) 
 	if(m_loadedcompoundmodel.SupportMaterial())
 	{
@@ -106,10 +103,12 @@ void ModelTestApplication::Render()
 	if (m_loadedcompoundmodel.SupportNonOpaqueMaterial())
 	{
 		//draw opaque models only with opaque pso and switch to alpha blending pso to render non opaque data
-		m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 2, true, false);
+		//constant buffer set as root CBV before drawing and the buffer itself is updated inside draw
+		m_primarycmdlist->SetGraphicsRootConstantBufferView(0, m_CamConstBuffer.GetResource()->GetGPUVirtualAddress());
+		m_loadedcompoundmodel.Draw(m_primarycmdlist, m_maincamera.GetMatData(), m_CamConstBuffer, 2, true, false);
 		m_primarycmdlist->SetPipelineState(m_pso_alphablending.GetPSO());
 		m_primarycmdlist->SetGraphicsRootSignature(m_pso_alphablending.GetRootSignature());
-		m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 2, false, true);
+		m_loadedcompoundmodel.Draw(m_primarycmdlist, m_maincamera.GetMatData(), m_CamConstBuffer, 2,false, true);
 	}
 	else
 	{
@@ -210,7 +209,7 @@ void ModelTestApplication::InitPSO()
 		
 		//psoinitdata.psodesc.graphicspsodesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
 		{
-			D3D12_ROOT_PARAMETER rootparam0 = BasicModelManager::BuildBasicCameraDataRootConstantParameterCommon(false);//{};
+			D3D12_ROOT_PARAMETER rootparam0 = BasicModelManager::BuildBasicCameraDataRootConstantParameterCommon(true);//2
 		/*rootparam0.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
 		rootparam0.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 		rootparam0.Constants.Num32BitValues = sizeof(ShaderTransformConstants_General) / 4;

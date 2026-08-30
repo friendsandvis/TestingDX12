@@ -239,6 +239,79 @@ void Model::Draw(DX12Commandlist& renderingcmdlist, CameraMatriciesData camMatDa
 		renderingcmdlist->DrawInstanced(m_verticies.size(), instanceCount, 0, 0);
 	}
 }
+
+void Model::Draw(DX12Commandlist& renderingcmdlist, CameraMatriciesData camData, DX12Buffer& camConstBuffer, UINT materialconstsrootparamindex, bool usemodelmatrix, bool setmvpmatrix, bool supportmaterial, unsigned int instanceCount)
+{
+	if (!m_Allowrender)
+	{
+		return;
+	}
+	renderingcmdlist->IASetVertexBuffers(0, 1, &m_vertexbufferview);
+	XMMATRIX mvp = camData.vpMat;
+	if (usemodelmatrix)
+	{
+		mvp = XMMatrixMultiply(m_transform, camData.vpMat);
+	}
+	m_shadertransformconsts.mvp = mvp;
+	m_shadertransformconsts.model = m_transform;
+	m_shadertransformconsts.view = camData.viewMat;
+	m_shadertransformconsts.projection = camData.projectionMat;
+	CameraMatriciesData camConstData;
+
+	//update buffer for camconst
+	{
+		BasicModelManager::UpdateCamConstBufferForModel(*this, m_shadertransformconsts, camConstBuffer);
+	}
+	if (supportmaterial)
+	{
+		renderingcmdlist->SetGraphicsRoot32BitConstants(materialconstsrootparamindex, sizeof(m_matconsts) / 4, &m_matconsts, 0);
+	}
+	if (HasIndexBuffer())
+	{
+		renderingcmdlist->IASetIndexBuffer(&m_indexbufferview);
+		renderingcmdlist->DrawIndexedInstanced(GetIndiciesCount(), instanceCount, 0, 0, 0);
+	}
+	else
+	{
+		renderingcmdlist->DrawInstanced(m_verticies.size(), instanceCount, 0, 0);
+	}
+}
+/*void Model::Draw(DX12Commandlist& renderingcmdlist, CameraMatriciesData camMatData, UINT mvpmatrixrootparamindex, UINT materialconstsrootparamindex, bool usemodelmatrix, bool setmvpmatrix, bool supportmaterial, unsigned int instanceCount)
+{
+	if (!m_Allowrender)
+	{
+		return;
+	}
+	renderingcmdlist->IASetVertexBuffers(0, 1, &m_vertexbufferview);
+	XMMATRIX mvp = camMatData.vpMat;
+	if (usemodelmatrix)
+	{
+		mvp = XMMatrixMultiply(m_transform, camMatData.vpMat);
+	}
+	m_shadertransformconsts.mvp = mvp;
+	m_shadertransformconsts.model = m_transform;
+	m_shadertransformconsts.view = camMatData.viewMat;
+	m_shadertransformconsts.projection = camMatData.projectionMat;
+
+	if (setmvpmatrix)
+	{
+		renderingcmdlist->SetGraphicsRoot32BitConstants(mvpmatrixrootparamindex, sizeof(m_shadertransformconsts) / 4, &m_shadertransformconsts, 0);
+
+	}
+	if (supportmaterial)
+	{
+		renderingcmdlist->SetGraphicsRoot32BitConstants(materialconstsrootparamindex, sizeof(m_matconsts) / 4, &m_matconsts, 0);
+	}
+	if (HasIndexBuffer())
+	{
+		renderingcmdlist->IASetIndexBuffer(&m_indexbufferview);
+		renderingcmdlist->DrawIndexedInstanced(GetIndiciesCount(), instanceCount, 0, 0, 0);
+	}
+	else
+	{
+		renderingcmdlist->DrawInstanced(m_verticies.size(), instanceCount, 0, 0);
+	}
+}*/
 void Model::Extratransform(XMMATRIX extratransformmat)
 {
 	//m_transform = XMMatrixMultiply(extratransformmat, m_transform);
@@ -686,6 +759,39 @@ void CompoundModel::Draw(DX12Commandlist& renderingcmdlist, CameraMatriciesData 
 		for (size_t i = 0; i < nonOpaqueModels.size(); i++)
 		{
 			nonOpaqueModels[i]->Draw(renderingcmdlist, camData, mvpmatrixrootparamindex, materialconstsrootparamindex, true, true, m_supportmaterial);
+		}
+	}
+}
+
+void CompoundModel::Draw(DX12Commandlist& renderingcmdlist, CameraMatriciesData camData, DX12Buffer& camConstBuffer, UINT materialconstsrootparamindex, bool drawOpaque, bool drawNonOpaque)
+{
+	vector<Model*> opaqueModels, nonOpaqueModels;
+	for (size_t i = 0; i < m_models.size(); i++)
+	{
+		//if not supporting nonopaque materials for this compound model then all models are sent to opaque node list
+		if (m_models[i]->HasOpaqueMaterial() && m_supportNonOpaqueMaterial)
+		{
+			opaqueModels.push_back(m_models[i]);
+		}
+		else
+		{
+			nonOpaqueModels.push_back(m_models[i]);
+		}
+	}
+	//draw opaque models
+	if (drawOpaque)
+	{
+		for (size_t i = 0; i < opaqueModels.size(); i++)
+		{
+			opaqueModels[i]->Draw(renderingcmdlist, camData, camConstBuffer, materialconstsrootparamindex, true, true, m_supportmaterial);
+		}
+	}
+	//draw nonopaque models
+	if (drawNonOpaque)
+	{
+		for (size_t i = 0; i < nonOpaqueModels.size(); i++)
+		{
+			nonOpaqueModels[i]->Draw(renderingcmdlist, camData, camConstBuffer, materialconstsrootparamindex, true, true, m_supportmaterial);//->Draw(renderingcmdlist, camData, mvpmatrixrootparamindex, materialconstsrootparamindex, true, true, m_supportmaterial);
 		}
 	}
 }
@@ -1301,10 +1407,23 @@ void BasicModelManager::UpdateCamConstBufferForModel(Model& aModel, const Camera
 
 }
 
+void BasicModelManager::UpdateCamConstBufferForModel(Model& aModel, const ShaderTransformConstants_GeneralComplete& transformConstantData, DX12Buffer& camConstBuffer)
+{
+	//update data in buffer
+	BufferMapParams camConstwriteparams = {};
+	camConstwriteparams.range.Begin = 0;
+	camConstwriteparams.range.End = camConstBuffer.GetSize();
+	void* camConstBuffMapped = camConstBuffer.Map(camConstwriteparams);
+	memcpy(camConstBuffMapped, &transformConstantData, camConstBuffer.GetSize());
+	camConstBuffer.UnMap(camConstwriteparams);
+
+}
 void BasicModelManager::InitCamConstBuffer(ComPtr< ID3D12Device> creationDevice, DX12Buffer& camConstBuffer)
 {
 	DX12ResourceCreationProperties camConstDataBufferProps;
 	DX12Buffer::InitResourceCreationProperties(camConstDataBufferProps);
+	camConstDataBufferProps.resdesc.Width = sizeof(ShaderTransformConstants_GeneralComplete) * 1;
+	camConstDataBufferProps.resheapprop.Type = D3D12_HEAP_TYPE_UPLOAD;
 	camConstBuffer.Init(creationDevice, camConstDataBufferProps, ResourceCreationMode::COMMITED);
 	camConstBuffer.SetName(L"camConstdatabuffer_Light_Place");
 }

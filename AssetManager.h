@@ -130,6 +130,7 @@ public:
 	XMMATRIX GetTransform() { return m_transform; }
 	void Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix,UINT mvpmatrixrootparamindex,UINT materialconstsrootparamindex,bool usemodelmatrix=true,bool setmvpmatrix=true,bool supportmaterial=false,unsigned int instanceCount = 1);
 	void Draw(DX12Commandlist& renderingcmdlist, CameraMatriciesData camData, UINT mvpmatrixrootparamindex, UINT materialconstsrootparamindex, bool usemodelmatrix = true, bool setmvpmatrix = true, bool supportmaterial = false, unsigned int instanceCount = 1);
+	void Draw(DX12Commandlist& renderingcmdlist, CameraMatriciesData camData, DX12Buffer& camConstBuffer, UINT materialconstsrootparamindex, bool usemodelmatrix = true, bool setmvpmatrix = true, bool supportmaterial = false, unsigned int instanceCount = 1);
 	void Extratransform(XMMATRIX extratransformmat);
 	Model(ModelDataUploadMode uploadmode=NOCOPY);
 	~Model();
@@ -208,6 +209,7 @@ public:
 	void Extratransform(XMMATRIX extratransformmat);
 	void Draw(DX12Commandlist& renderingcmdlist, XMMATRIX vpmatrix,UINT mvpmatrixrootparamindex, UINT materialconstsrootparamindex=2, bool drawOpaque = true,bool drawNonOpaque = true);
 	void Draw(DX12Commandlist& renderingcmdlist, CameraMatriciesData camData, UINT mvpmatrixrootparamindex, UINT materialconstsrootparamindex = 2, bool drawOpaque = true, bool drawNonOpaque = true);
+	void Draw(DX12Commandlist& renderingcmdlist, CameraMatriciesData camData, DX12Buffer& camConstBuffer, UINT materialconstsrootparamindex = 2, bool drawOpaque = true, bool drawNonOpaque = true);
 	void UploadModelDatatoBuffers();
 	void UploadModelDatatoGPUBuffers(DX12Commandlist& copycmdlist);
 	void UploadModelDataDefaultTexture(DX12Commandlist& copycmdlist);
@@ -264,6 +266,7 @@ public:
 	static void GetTriangleRTVertexData(vector<RTVertexDataV0>& rtvertexdata);
 	static D3D12_ROOT_PARAMETER BuildBasicCameraDataRootConstantParameterCommon(bool initAsdescriptor = true);
 	static void UpdateCamConstBufferForModel(Model& aModel, const CameraMatriciesData& camMatData, DX12Buffer& camConstBuffer);
+	static void UpdateCamConstBufferForModel(Model& aModel, const ShaderTransformConstants_GeneralComplete& transformConstantData, DX12Buffer& camConstBuffer);
 	static void InitCamConstBuffer(ComPtr< ID3D12Device> creationDevice, DX12Buffer& camConstBuffer);
 private:
 	static void GetPlaneVerticiesV0(vector<VertexBase*>& outverticies);
