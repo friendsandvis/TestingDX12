@@ -243,6 +243,9 @@
     <ClCompile Include="DXMathUtil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ps5ModelDataExporter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="windmaker.h">
@@ -444,6 +447,9 @@
       <Filter>Applications</Filter>
     </ClInclude>
     <ClInclude Include="DXMathUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ps5ModelDataExporter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
