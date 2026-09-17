@@ -171,6 +171,8 @@ public:
 	void SetTexPath(wstring texfilesPath) { m_texfilepath = texfilesPath; }
 	wstring GetTexPath() { return m_texfilepath;}
 	bool HasOpaqueMaterial() { return m_hasOpaqueMaterial; }
+	const vector<VertexBase*>& GetVerticies() { return m_verticies; }
+	const vector<unsigned>& Getindicies() { return m_indicies; }
 
 private:
 	SHADERTRANSFORMCONSTANTSSTRUCT m_shadertransformconsts;
