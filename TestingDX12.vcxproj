@@ -204,6 +204,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MipTestApplication.cpp" />
     <ClCompile Include="ModelTestApplication.cpp" />
+    <ClCompile Include="ps5ModelDataExporter.cpp" />
     <ClCompile Include="RayTracingTestApplication.cpp" />
     <ClCompile Include="RayTracingTestApplication2.cpp" />
     <ClCompile Include="RayTracingTestApplication_Advanced.cpp" />
@@ -272,6 +273,7 @@
     <ClInclude Include="LightingTestApplication.h" />
     <ClInclude Include="MipTestApplication.h" />
     <ClInclude Include="ModelTestApplication.h" />
+    <ClInclude Include="ps5ModelDataExporter.h" />
     <ClInclude Include="RayTracingTestApplication.h" />
     <ClInclude Include="RayTracingTestApplication2.h" />
     <ClInclude Include="RayTracingTestApplication_Advanced.h" />
