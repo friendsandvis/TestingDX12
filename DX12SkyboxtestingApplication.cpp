@@ -259,5 +259,6 @@ void SkyboxTestApplication::InitOverlayPSO()
 
 void SkyboxTestApplication::ProcessWindowProcEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	//check movement of camera here not correct
 	m_maincameracontroller.ProcessWindowProcEvent(hwnd, uMsg, wParam, lParam);
 }
