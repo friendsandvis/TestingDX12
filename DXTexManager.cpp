@@ -2,7 +2,7 @@
 #include"DX12CommandList.h"
 #include"StreamableTextureFileReader.h"
 
-
+//the solution used to build directxtex: DirectXTex_Desktop_2022_Win10.sln as it is the one with dx12 support else dx11 support.
 #pragma comment(lib,"DirectXTex.lib")
 //these are needed for windows only extension retrival function used(PathFindExtension)
 #include<shlwapi.h>
