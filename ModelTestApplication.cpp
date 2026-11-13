@@ -1,5 +1,6 @@
 #include"ModelTestApplication.h"
 //only 1 model define to be active at a time
+//conference.obj model cannot be submitted need to copy it manually in models directory from web everytime taking a fresh project code setup
 //#define USECONFERENCEROOMCOMPOUNDMODEL
 //#define USETESTBASICMODELCUBE
 #define USESPHONZAMODEL
@@ -93,7 +94,9 @@ void ModelTestApplication::Render()
 	}
 #ifdef USETESTBASICMODELCUBE
 	{
-		m_cubemodel.Draw(m_primarycmdlist, vpmat, 0, 2, true, true, true);
+		//m_cubemodel.Draw(m_primarycmdlist, vpmat, 0, 2, true, true, true);
+		m_primarycmdlist->SetGraphicsRootConstantBufferView(0, m_CamConstBuffer.GetResource()->GetGPUVirtualAddress());
+		m_loadedmodel.Draw(m_primarycmdlist, m_maincamera.GetMatData(), m_CamConstBuffer, 2, true, true);
 	}
 	DXASSERT(m_primarycmdlist->Close())
 		BasicRender();
