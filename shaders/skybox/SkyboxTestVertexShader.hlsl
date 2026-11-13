@@ -23,7 +23,7 @@ VSOut main(VSIn input)
     VSOut output;
 
 		
-		float4 vposmod=float4(input.vpos,1.0f)+vertexconsts.campos;
+		float4 vposmod=float4(input.vpos,0.0f)+vertexconsts.campos;//possible fix added to set w to 0 to avoid cam movement but need to avoid this campos offset added.
 		output.pos =mul(vertexconsts.mvp,vposmod);
 		//output.pos=output.pos-vertexconsts.campos;
 		
