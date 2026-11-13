@@ -100,6 +100,7 @@ void ModelTestApplication::Render()
 	return;
 #endif
 	//we draw opaque non opaque with diffrent [pso only if compound model supports nonopaque otherwise all rendered by default pso.
+	//constant buffer view set before draw function called from outside not inside the draw function.
 	if (m_loadedcompoundmodel.SupportNonOpaqueMaterial())
 	{
 		//draw opaque models only with opaque pso and switch to alpha blending pso to render non opaque data
@@ -112,7 +113,9 @@ void ModelTestApplication::Render()
 	}
 	else
 	{
-		m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 2, true, true);
+		//m_loadedcompoundmodel.Draw(m_primarycmdlist, vpmat, 0, 2, true, true);//old way unsupported by shader.
+		m_primarycmdlist->SetGraphicsRootConstantBufferView(0, m_CamConstBuffer.GetResource()->GetGPUVirtualAddress());
+		m_loadedcompoundmodel.Draw(m_primarycmdlist, m_maincamera.GetMatData(), m_CamConstBuffer, 2, true, true);
 	}
 	
 	DXASSERT(m_primarycmdlist->Close())
