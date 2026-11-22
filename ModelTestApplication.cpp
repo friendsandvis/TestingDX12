@@ -3,8 +3,8 @@
 //conference.obj model cannot be submitted need to copy it manually in models directory from web everytime taking a fresh project code setup
 //#define USECONFERENCEROOMCOMPOUNDMODEL
 //#define USETESTBASICMODELCUBE
-#define USESPHONZAMODEL
-//#define USEREVOLVERMODEL
+//#define USESPHONZAMODEL
+#define USEREVOLVERMODEL
 //#define USECUBEMODEL
 
 
