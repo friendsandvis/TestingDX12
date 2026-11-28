@@ -146,7 +146,7 @@ void ModelTestApplication::InitExtras()
 	BasicModelManager::LoadModel(m_creationdevice, "models/cubes2.dae", m_loadedcompoundmodel, VERTEXVERSION2);
 #endif // USECUBEMODEL
 #if defined(USEREVOLVERMODEL)
-	float scalefactor = 0.15f;
+	float scalefactor = 0.01f;
 	XMMATRIX scalemat = XMMatrixScalingFromVector(XMVectorSet(scalefactor, scalefactor, scalefactor, 1.0f));
 	BasicModelManager::LoadModel(m_creationdevice, "models/revolver/scene.gltf", m_loadedcompoundmodel, VERTEXVERSION3, L"textures/modeltextures/revolver/", true);
 	//revolver model has albedo as png but it is not expected to be rendered by alphablending.
